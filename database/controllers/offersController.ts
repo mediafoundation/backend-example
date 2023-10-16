@@ -5,6 +5,8 @@ const z = require('zod')
 
 const upsertOffer = async (offer): Promise<[TypeOffer, boolean]> => {
   try {
+    //todo check if metadata should be parse here
+    //offer.metadata = JSON.parse(offer.metadata);
     const [instance, created] = await Offer.upsert(z.array(offerSchema).parse(offer));
     return [instance, created];
   } catch (error) {
