@@ -14,6 +14,7 @@ afterAll(async () => {
 describe('Deal Controller', () => {
 
   test('should create or update a deal', async () => {
+    //creates a deal and checks if it was created
     const deal = {
       id: "1",
       offerId: "1",
@@ -40,7 +41,7 @@ describe('Deal Controller', () => {
 
     await expect(newDeal[0].id).toBe(deal.id);
 
-    // Actualiza el trato y verifica que ha sido actualizado
+    // update deal and check if it was updated
     const updatedDealData = {
       id: "1",
       offerId: "1",

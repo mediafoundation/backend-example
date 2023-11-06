@@ -1,6 +1,6 @@
 import {Deal} from "../models/Deal";
 
-const upsertDeal = async (deal) => {
+const upsertDeal = async (deal: any) => {
   try {
     const [instance, created] = await Deal.upsert(deal);
     return [instance, created];
@@ -9,7 +9,7 @@ const upsertDeal = async (deal) => {
   }
 };
 
-const getDealById = async (id) => {
+const getDealById = async (id: number) => {
   try {
     return await Deal.findByPk(id);
   } catch (error) {
@@ -17,7 +17,7 @@ const getDealById = async (id) => {
   }
 };
 
-const deleteDealById = async (id) => {
+const deleteDealById = async (id: number) => {
   try {
     const deal = await Deal.findByPk(id);
     if (!deal) {

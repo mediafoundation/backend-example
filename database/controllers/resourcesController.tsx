@@ -1,6 +1,6 @@
 const Resource = require('./../models/resource');
 
-const upsertResource = async (resource) => {
+const upsertResource = async (resource: any) => {
   try {
     const [instance, created] = await Resource.upsert(resource);
     return [instance, created];
@@ -9,7 +9,7 @@ const upsertResource = async (resource) => {
   }
 };
 
-const getResourceById = async (id) => {
+const getResourceById = async (id: any) => {
   try {
     return await Resource.findByPk(id);
   } catch (error) {
@@ -17,7 +17,7 @@ const getResourceById = async (id) => {
   }
 };
 
-const deleteResourceById = async (id) => {
+const deleteResourceById = async (id: any) => {
   try {
     const resource = await Resource.findByPk(id);
     if (!resource) {
