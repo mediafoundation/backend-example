@@ -1,6 +1,7 @@
 import {DataTypes} from "sequelize";
-import {sequelize} from "../database";
+import {getSequelizeInstance} from "../../config/config";
 
+let sequelize = getSequelizeInstance()
 
 export const Deal = sequelize.define("Deals",
   {
@@ -25,7 +26,6 @@ export const Deal = sequelize.define("Deals",
     network: DataTypes.STRING
   },
   {
-    sequelize,
     modelName: 'Deal',
     freezeTableName: true
   }

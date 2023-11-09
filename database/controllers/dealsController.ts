@@ -1,6 +1,7 @@
 import {Deal} from "../models/Deal";
 
-class DealsController {
+export class DealsController {
+  constructor() {}
   static async upsertDeal (deal: any)  {
     try {
       const [instance, created] = await Deal.upsert(deal);
@@ -31,8 +32,3 @@ class DealsController {
     }
   };
 }
-
-
-module.exports = {
-  DealsController
-};
