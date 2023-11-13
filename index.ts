@@ -1,18 +1,23 @@
 // @ts-ignore
-import { initSdk } from 'media-sdk';
+import { initSdk, MarketplaceViewer } from 'media-sdk';
 require('dotenv').config()
 
 const init = async () => {
-    console.log(process.env.PRIVATE_KEY)
     initSdk(process.env.PRIVATE_KEY, {
-        id: 1,
-        name: "Ethereum Mainnet",
-        network: "Ethereum Mainnet",
+        id: process.env.chainId,
+        name: process.env.chainName,
+        network: process.env.chainNetwork,
         nativeCurrency: {
-            symbol: "ETH",
-            name: "ETH",
+            symbol: process.env.chainSymbol,
+            name: process.env.symbolName,
         }
     }, process.env.marketplaceId, process.env.RPC_URL);
+
+    let marketplaceViewer: MarketplaceViewer = new MarketplaceViewer();
+
+    let deals = await marketplaceViewer.getDeals(0, 10, true)
+
+    console.log(deals)
 }
 
 init()
