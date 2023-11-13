@@ -1,5 +1,5 @@
 // @ts-ignore
-import { initSdk, MarketplaceViewer } from 'media-sdk';
+import { initSdk, MarketplaceViewer, Resources } from 'media-sdk';
 require('dotenv').config()
 
 const init = async () => {
@@ -14,7 +14,10 @@ const init = async () => {
     }, process.env.marketplaceId, process.env.RPC_URL);
 
     let marketplaceViewer: MarketplaceViewer = new MarketplaceViewer();
+    let resourcesInstance: Resources = new Resources();
 
+    let resources = await resourcesInstance.getResources(process.env.userAddress, 0, 10)
+    console.log(resources)
     let deals = await marketplaceViewer.getDeals(0, 10, true)
 
     console.log(deals)
