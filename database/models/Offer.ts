@@ -1,8 +1,10 @@
 import {DataTypes} from "sequelize";
-import {sequelize} from "../database";
+import {getSequelizeInstance} from "../../config/config";
+
+let sequelizeInstance = getSequelizeInstance()
 
 
-export const Offer = sequelize.define("Offers",
+export const Offer = sequelizeInstance.define("Offers",
   {
     id: {type: DataTypes.STRING, primaryKey: true},
     maximumDeals: DataTypes.INTEGER,
@@ -21,7 +23,6 @@ export const Offer = sequelize.define("Offers",
     bandwidthLimit: DataTypes.STRING,
   },
   {
-    sequelize,
     modelName: 'Deal',
     freezeTableName: true
   }

@@ -2,7 +2,9 @@
   "name": "backend-example",
   "version": "1.0.0",
   "main": "lib/index",
-  "files": ["lib"],
+  "files": [
+    "lib"
+  ],
   "types": "lib/index.d.ts",
   "repository": "git@github.com:mediafoundation/backend-example.git",
   "author": "Media Foundation <hello@media.foundation>",
@@ -18,6 +20,7 @@
   },
   "dependencies": {
     "dotenv": "^16.3.1",
+    "media-sdk": "file:../media-sdk",
     "mysql2": "^3.6.1",
     "pg": "^8.11.3",
     "pg-hstore": "^2.3.4",

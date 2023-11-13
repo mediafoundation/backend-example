@@ -1,9 +1,9 @@
 import {Offer} from "../models/Offer";
 import {offerSchema} from "../models/OfferSchema";
-import {TypeOffer} from "../models/OfferSchema";
+import {Model} from "sequelize";
 const z = require('zod')
 
-const upsertOffer = async (offer: any): Promise<[TypeOffer, boolean]> => {
+const upsertOffer = async (offer: any): Promise<[Model<any>, boolean | null]> => {
   try {
     //todo check if metadata should be parse here
     //offer.metadata = JSON.parse(offer.metadata);
@@ -14,7 +14,7 @@ const upsertOffer = async (offer: any): Promise<[TypeOffer, boolean]> => {
   }
 };
 
-const getOfferById = async (id: number): Promise<TypeOffer> => {
+const getOfferById = async (id: number): Promise<Model<any, any> | null> => {
   try {
     return await Offer.findByPk(id);
   } catch (error) {
