@@ -13,7 +13,7 @@ export class DealsController {
 
   static async getDealById (id: number) {
     try {
-      return await Deal.findByPk(id);
+      return await Deal.findByPk(id, {attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']}});
     } catch (error) {
       throw error;
     }
