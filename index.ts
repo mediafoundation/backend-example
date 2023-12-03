@@ -3,8 +3,7 @@ import {initSdk, MarketplaceViewer, Resources, Blockchain, Encryption} from 'med
 import {resourcesNotMatchingDeal} from "./utils/resources";
 import {DealsController} from "./database/controllers/dealsController";
 import {ResourcesController} from "./database/controllers/resourcesController";
-import {Deal} from "./database/models/Deal";
-import {Resource} from "./database/models/Resource";
+import {resetDB} from "./database/utils";
 
 require('dotenv').config()
 
@@ -27,12 +26,7 @@ const init = async () => {
 
     resources[0] = resources[0].filter((resource: any) => !resourcesWithoutDeal.includes(resource.id))
 
-    await Deal.sync({force: true})
-    await Resource.sync({force: true})
-
-    for (const deal of deals[0]) {
-        await DealsController.upsertDeal(DealsController.formatDeal(deal))
-    }
+    await resetDB()
 
     for (const resource of resources[0]) {
         let attr = JSON.parse(resource.encryptedData)
@@ -51,6 +45,11 @@ const init = async () => {
         let data = JSON.parse(decrypted)
 
         await ResourcesController.upsertResource({id: resource.id, owner: resource.owner, ...data})
+    }
+
+    for (const deal of deals[0]) {
+        await DealsController.upsertDeal(DealsController.formatDeal(deal))
+
     }
 
 }

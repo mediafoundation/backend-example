@@ -5,9 +5,27 @@ export const Deal = sequelize.define("Deals",
   {
     id: {type: DataTypes.BIGINT, primaryKey: true},
     offerId: DataTypes.BIGINT,
-    client: DataTypes.STRING,
-    provider: DataTypes.STRING,
-    resourceId: DataTypes.BIGINT,
+    clientId: {
+        type: DataTypes.BIGINT,
+        references: {
+            model: 'Clients',
+            key: 'id'
+        }
+    },
+    providerId: {
+        type: DataTypes.BIGINT,
+        references: {
+            model: 'Providers',
+            key: 'id'
+        }
+    },
+    resourceId: {
+        type: DataTypes.BIGINT,
+        references: {
+            model: 'Resources',
+            key: 'id'
+        }
+    },
     totalPayment: DataTypes.BIGINT,
     blockedBalance: DataTypes.BIGINT,
     pricePerSecond: DataTypes.BIGINT,
@@ -20,7 +38,13 @@ export const Deal = sequelize.define("Deals",
     active: DataTypes.BOOLEAN,
     cancelled: DataTypes.BOOLEAN,
     cancelledAt: DataTypes.BIGINT,
-    metadata: DataTypes.STRING,
+    metadataId: {
+        type: DataTypes.BIGINT,
+        references: {
+            model: 'DealsMetadata',
+            key: 'id'
+        }
+    },
     network: DataTypes.STRING
   },
   {
@@ -28,3 +52,24 @@ export const Deal = sequelize.define("Deals",
     freezeTableName: true
   }
 );
+
+/*type Deal = {
+    id: number,
+    offerId: number,
+    client: string,
+    provider: string,
+    resourceId: number,
+    totalPayment: number,
+    blockedBalance: number,
+    pricePerSecond: number,
+    minDuration: number,
+    billFullPeriods: boolean,
+    singlePeriodOnly: boolean,
+    createdAt: number,
+    acceptedAt: number,
+    billingStart: number,
+    active: boolean,
+    cancelled: boolean,
+    cancelledAt: number,
+    metadataId: Object,
+}*/

@@ -3,7 +3,7 @@ import {sequelize} from "../database";
 
 export const Resource= sequelize.define("Resources",
     {
-        id: {type: DataTypes.STRING, primaryKey: true},
+        id: {type: DataTypes.BIGINT, primaryKey: true},
         owner: DataTypes.STRING,
         label: DataTypes.STRING,
         protocol: DataTypes.STRING,
