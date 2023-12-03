@@ -1,9 +1,7 @@
 import {DataTypes} from "sequelize";
-import {getSequelizeInstance} from "../../config/config";
+import {sequelize} from "../database";
 
-let sequelizeInstance = getSequelizeInstance()
-
-export const Resource= sequelizeInstance.define("Resources",
+export const Resource= sequelize.define("Resources",
     {
         id: {type: DataTypes.STRING, primaryKey: true},
         owner: DataTypes.STRING,

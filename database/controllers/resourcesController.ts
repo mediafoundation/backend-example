@@ -10,7 +10,15 @@ export class ResourcesController {
     }
   };
 
-  static getResourceById = async (id: any) => {
+  static getResources = async () => {
+    try {
+      return await Resource.findAll({attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']}});
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static getResourceById = async (id: string) => {
     try {
       return await Resource.findByPk(id, {attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']}});
     } catch (error) {

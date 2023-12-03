@@ -1,32 +1,64 @@
 // @ts-ignore
-import { initSdk, MarketplaceViewer, Resources } from 'media-sdk';
+import {initSdk, MarketplaceViewer, Resources, Blockchain, Encryption} from 'media-sdk';
+import {resourcesNotMatchingDeal} from "./utils/resources";
+import {DealsController} from "./database/controllers/dealsController";
+import {ResourcesController} from "./database/controllers/resourcesController";
+import {Deal} from "./database/models/Deal";
+import {Resource} from "./database/models/Resource";
+
 require('dotenv').config()
 
 const init = async () => {
-    initSdk(process.env.PRIVATE_KEY, {
-        id: process.env.chainId,
-        name: process.env.chainName,
-        network: process.env.chainNetwork,
-        nativeCurrency: {
-            symbol: process.env.chainSymbol,
-            name: process.env.symbolName,
-        }
-    }, process.env.marketplaceId, process.env.RPC_URL);
+    initSdk({privateKey: process.env.PRIVATE_KEY!})
 
     let marketplaceViewer: MarketplaceViewer = new MarketplaceViewer();
     let resourcesInstance: Resources = new Resources();
 
-    let resources = await resourcesInstance.getResources(process.env.userAddress, 0, 10)
-    console.log(resources)
-    let deals = await marketplaceViewer.getDeals(0, 10, true)
+    let resources = await resourcesInstance.getPaginatedResources({address: process.env.userAddress, start: 0, end: 10})
+    let deals = await marketplaceViewer.getPaginatedDeals({
+        marketPlaceId: 1,
+        address: process.env.userAddress,
+        isProvider: true
+    })
 
-    console.log(deals)
+    deals[0] = deals[0].filter((deal: any) => deal.status.active == true)
+
+    let resourcesWithoutDeal = resourcesNotMatchingDeal(resources.map((resource: any) => resource.id), deals.map((deal: any) => deal.resourceId))
+
+    resources[0] = resources[0].filter((resource: any) => !resourcesWithoutDeal.includes(resource.id))
+
+    await Deal.sync({force: true})
+    await Resource.sync({force: true})
+
+    for (const deal of deals[0]) {
+        await DealsController.upsertDeal(DealsController.formatDeal(deal))
+    }
+
+    for (const resource of resources[0]) {
+        let attr = JSON.parse(resource.encryptedData)
+        let decryptedSharedKey = await Encryption.ethSigDecrypt(
+            resource.encryptedSharedKey,
+            process.env.PRIVATE_KEY
+        );
+
+        let decrypted = await Encryption.decrypt(
+            decryptedSharedKey,
+            attr.iv,
+            attr.tag,
+            attr.encryptedData
+        );
+
+        let data = JSON.parse(decrypted)
+
+        await ResourcesController.upsertResource({id: resource.id, owner: resource.owner, ...data})
+    }
+
 }
 
 init()
-.then(() => {
-    console.log("Initialized");
-})
-.catch((err) => {
-    console.log("Error initializing", err);
-})
+    .then(() => {
+        console.log("Initialized");
+    })
+    .catch((err) => {
+        console.log("Error initializing", err);
+    })

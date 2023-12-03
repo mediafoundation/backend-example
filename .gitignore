@@ -7,4 +7,6 @@ yarn.lock
 
 .env
 
+lib/.env
+
 lib/**/*

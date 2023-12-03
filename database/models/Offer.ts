@@ -1,10 +1,8 @@
 import {DataTypes} from "sequelize";
-import {getSequelizeInstance} from "../../config/config";
-
-let sequelizeInstance = getSequelizeInstance()
+import {sequelize} from "../database";
 
 
-export const Offer = sequelizeInstance.define("Offers",
+export const Offer = sequelize.define("Offers",
   {
     id: {type: DataTypes.STRING, primaryKey: true},
     maximumDeals: DataTypes.INTEGER,

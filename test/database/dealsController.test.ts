@@ -1,5 +1,3 @@
-import {initDatabase} from "../../config/config";
-initDatabase()
 import {Deal} from "../../database/models/Deal";
 import {DealsController} from "../../database/controllers/dealsController"
 
@@ -71,14 +69,14 @@ describe('Deal Controller', () => {
   });
 
   test("get deal", async () => {
-    const nullDeal = await DealsController.getDealById(2)
+    const nullDeal = await DealsController.getDealById('2')
 
     expect(nullDeal).toBeNull()
 
-    const deal = await DealsController.getDealById(1)
+    const deal = await DealsController.getDealById('1')
 
     // @ts-ignore
-    expect(deal.id).toBe("1")
+    expect(deal.id).toBe(1)
   })
 
   test("delete deal", async () => {
@@ -89,6 +87,6 @@ describe('Deal Controller', () => {
     const deal = await DealsController.deleteDealById(1)
 
     // @ts-ignore
-    expect(deal.id).toBe("1")
+    expect(deal.id).toBe(1)
   })
 });
