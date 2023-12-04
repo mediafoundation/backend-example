@@ -6,7 +6,6 @@ import {Client} from "../models/Client";
 import {BandwidthLimit} from "../models/deals/DealsBandwidthLimit";
 import {DealsNodeLocations} from "../models/deals/DealsNodeLocations";
 import {DealsMetadataNodeLocations} from "../models/deals/DealsMetadataNodeLocations";
-import {Model} from "sequelize";
 
 export class DealsController {
     constructor() {
