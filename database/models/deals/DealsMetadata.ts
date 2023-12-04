@@ -7,7 +7,7 @@ export const DealsMetadata = sequelize.define("DealsMetadata", {
     bandwidthLimitId: {
         type: DataTypes.BIGINT,
         references: {
-            model: 'BandwidthLimit',
+            model: 'DealsBandwidthLimit',
             key: 'id'
         }
     },

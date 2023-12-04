@@ -4,6 +4,7 @@ import {resourcesNotMatchingDeal} from "./utils/resources";
 import {DealsController} from "./database/controllers/dealsController";
 import {ResourcesController} from "./database/controllers/resourcesController";
 import {resetDB} from "./database/utils";
+import {OffersController} from "./database/controllers/offersController";
 
 require('dotenv').config()
 
@@ -19,6 +20,9 @@ const init = async () => {
         address: process.env.userAddress,
         isProvider: true
     })
+
+    let offers = await marketplaceViewer.getAllOffersPaginating({marketPlaceId: 1, start: 0, steps: 10})
+    console.log("Offers", offers)
 
     deals[0] = deals[0].filter((deal: any) => deal.status.active == true)
 
@@ -47,11 +51,12 @@ const init = async () => {
         await ResourcesController.upsertResource({id: resource.id, owner: resource.owner, ...data})
     }
 
-    for (const deal of deals[0]) {
-        console.log(deal)
-        console.log(DealsController.formatDeal(deal))
-        await DealsController.upsertDeal(DealsController.formatDeal(deal))
+    for (const offer of offers) {
+        await OffersController.upsertOffer(OffersController.formatOffer(offer))
+    }
 
+    for (const deal of deals[0]) {
+        await DealsController.upsertDeal(DealsController.formatDeal(deal))
     }
 
 }

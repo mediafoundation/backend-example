@@ -3,7 +3,7 @@ import {DealsMetadata} from "../models/deals/DealsMetadata";
 import {Resource} from "../models/Resource";
 import {Provider} from "../models/Provider";
 import {Client} from "../models/Client";
-import {BandwidthLimit} from "../models/deals/DealsBandwidthLimit";
+import {DealsBandwidthLimit} from "../models/deals/DealsBandwidthLimit";
 import {DealsNodeLocations} from "../models/deals/DealsNodeLocations";
 import {DealsMetadataNodeLocations} from "../models/deals/DealsMetadataNodeLocations";
 
@@ -38,7 +38,7 @@ export class DealsController {
         let rawMetadata = JSON.parse(deal.metadata);
 
         // Ensure the bandwidth limit exists
-        const [bandwidthLimit] = await BandwidthLimit.upsert(rawMetadata.bandwidthLimit);
+        const [bandwidthLimit] = await DealsBandwidthLimit.upsert(rawMetadata.bandwidthLimit);
 
         rawMetadata.bandwidthLimitId = bandwidthLimit.get('id');
 
