@@ -21,7 +21,6 @@ export const Offer = sequelize.define("Offers",
     bandwidthLimit: DataTypes.STRING,
   },
   {
-    sequelize,
     modelName: 'Deal',
     freezeTableName: true
   }
