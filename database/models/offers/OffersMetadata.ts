@@ -1,9 +1,9 @@
 import {DataTypes} from "sequelize";
 import {sequelize} from "../../database";
 
-export const OffersMetadata = sequelize.define("Offers",
+export const OffersMetadata = sequelize.define("OffersMetadata",
     {
-        id: {type: DataTypes.BIGINT, primaryKey: true},
+        id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
         offerId: {
             type: DataTypes.BIGINT,
             references: {
@@ -21,12 +21,11 @@ export const OffersMetadata = sequelize.define("Offers",
         },
         autoSsl: DataTypes.BOOLEAN,
         burstSpeed: DataTypes.BIGINT,
-        nodeLocations: DataTypes.STRING,
         apiEndpoint: DataTypes.STRING,
         customCnames: DataTypes.STRING,
     },
     {
-        modelName: 'Deal',
+        modelName: 'OffersMetadata',
         freezeTableName: true
     }
 );

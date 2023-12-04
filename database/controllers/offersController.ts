@@ -6,35 +6,17 @@ import {DealsBandwidthLimit} from "../models/deals/DealsBandwidthLimit";
 import {OffersMetadata} from "../models/offers/OffersMetadata";
 import {OffersNodeLocations} from "../models/offers/OffersNodeLocations";
 import {OffersMetadataNodeLocations} from "../models/offers/OffersMetadataNodeLocations";
+import {OffersBandwidthLimit} from "../models/offers/OffersBandwidthLimit";
 export class OffersController{
 
-  static async upsertOffer(deal: any) {
-    const [client] = await Client.findOrCreate({
-      where: {account: deal.client},
-      defaults: {account: deal.client}
-    });
-
-    // Ensure the provider exists
-    const [provider] = await Provider.findOrCreate({
-      where: {account: deal.provider},
-      defaults: {account: deal.provider}
-    });
-
-    // Find the resource or fail
-    const resource = await Resource.findOne({
-      where: {id: deal.resourceId}
-    });
-
-    if (!resource) {
-      throw new Error('Resource not found');
-    }
+  static async upsertOffer(offer: any) {
 
     // Ensure the metadata exists
     // Parse the metadata from the deal
-    let rawMetadata = JSON.parse(deal.metadata);
+    let rawMetadata = JSON.parse(offer.metadata);
 
     // Ensure the bandwidth limit exists
-    const [bandwidthLimit] = await DealsBandwidthLimit.upsert(rawMetadata.bandwidthLimit);
+    const [bandwidthLimit] = await OffersBandwidthLimit.upsert(rawMetadata.bandwidthLimit);
 
     rawMetadata.bandwidthLimitId = bandwidthLimit.get('id');
 
@@ -56,13 +38,9 @@ export class OffersController{
         defaults: { metadataId, nodeId }
       });
     }
+    offer.metadataId = metadata.get('id');
 
-    deal.clientId = client.get('id');
-    deal.providerId = provider.get('id');
-    deal.resourceId = resource.get('id');
-    deal.metadataId = metadata.get('id');
-
-    const [instance, created] = await Offer.upsert(deal);
+    const [instance, created] = await Offer.upsert(offer);
     return [instance, created];
 
   };
