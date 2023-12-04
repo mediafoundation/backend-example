@@ -1,5 +1,5 @@
-import {Offer} from "../models/Offer";
-import {offerSchema} from "../models/OfferSchema";
+import {Offer} from "../models/offers/Offer";
+import {offerSchema} from "../models/offers/OfferSchema";
 import {Model} from "sequelize";
 const z = require('zod')
 

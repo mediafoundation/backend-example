@@ -1,6 +1,6 @@
 // database/models/DealsMetadataNodeLocations.ts
 import {DataTypes} from "sequelize";
-import {sequelize} from "../database";
+import {sequelize} from "../../database";
 
 export const DealsMetadataNodeLocations = sequelize.define("DealsMetadataNodeLocations", {
     id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},

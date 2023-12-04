@@ -1,5 +1,5 @@
 import {DataTypes} from "sequelize";
-import {sequelize} from "../database";
+import {sequelize} from "../../database";
 
 export const BandwidthLimit = sequelize.define("BandwidthLimit", {
     id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},

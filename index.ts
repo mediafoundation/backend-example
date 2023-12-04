@@ -48,6 +48,8 @@ const init = async () => {
     }
 
     for (const deal of deals[0]) {
+        console.log(deal)
+        console.log(DealsController.formatDeal(deal))
         await DealsController.upsertDeal(DealsController.formatDeal(deal))
 
     }

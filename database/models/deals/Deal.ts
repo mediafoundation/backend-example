@@ -1,5 +1,5 @@
 import {DataTypes} from "sequelize";
-import {sequelize} from "../database";
+import {sequelize} from "../../database";
 
 export const Deal = sequelize.define("Deals",
   {
@@ -53,7 +53,7 @@ export const Deal = sequelize.define("Deals",
   }
 );
 
-/*type Deal = {
+/*export type FormattedDeal = {
     id: number,
     offerId: number,
     client: string,
@@ -71,5 +71,12 @@ export const Deal = sequelize.define("Deals",
     active: boolean,
     cancelled: boolean,
     cancelledAt: number,
-    metadataId: Object,
+    metadata: string,
+}*/
+
+/*export type ExtendedDeal = FormattedDeal & {
+  clientId?: number,
+  providerId?: number,
+  resourceId?: number,
+  metadataId?: number,
 }*/

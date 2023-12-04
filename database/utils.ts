@@ -2,11 +2,11 @@ import {sequelize} from "./database";
 import {Client} from "./models/Client";
 import {Provider} from "./models/Provider";
 import {Resource} from "./models/Resource";
-import {DealsMetadata} from "./models/DealsMetadata";
-import {Deal} from "./models/Deal";
-import {BandwidthLimit} from "./models/DealsBandwidthLimit";
-import {DealsNodeLocations} from "./models/DealsNodeLocations";
-import {DealsMetadataNodeLocations} from "./models/DealsMetadataNodeLocations";
+import {DealsMetadata} from "./models/deals/DealsMetadata";
+import {Deal} from "./models/deals/Deal";
+import {BandwidthLimit} from "./models/deals/DealsBandwidthLimit";
+import {DealsNodeLocations} from "./models/deals/DealsNodeLocations";
+import {DealsMetadataNodeLocations} from "./models/deals/DealsMetadataNodeLocations";
 
 const resetDB = async () => {
     await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');

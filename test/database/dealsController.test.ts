@@ -1,4 +1,4 @@
-import {Deal} from "../../database/models/Deal";
+import {Deal} from "../../database/models/deals/Deal";
 import {DealsController} from "../../database/controllers/dealsController"
 
 beforeAll(async () => {
