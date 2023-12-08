@@ -1,11 +1,11 @@
 // @ts-ignore
-import {initSdk, MarketplaceViewer, Resources, Blockchain, Encryption} from 'media-sdk';
+import {initSdk, MarketplaceViewer, Resources, Encryption} from 'media-sdk';
 import {resourcesNotMatchingDeal} from "./utils/resources";
 import {DealsController} from "./database/controllers/dealsController";
 import {ResourcesController} from "./database/controllers/resourcesController";
 import {resetDB} from "./database/utils";
 import {OffersController} from "./database/controllers/offersController";
-import {z, ZodCatch, ZodInvalidTypeIssue} from "zod";
+import {z} from "zod";
 import {OffersMetadataType} from "./database/models/offers/OffersMetadata";
 import {DealsMetadataType} from "./database/models/deals/DealsMetadata";
 
