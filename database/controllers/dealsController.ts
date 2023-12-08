@@ -1,20 +1,18 @@
-import {Deal} from "../models/Deal";
-import {DealsMetadata} from "../models/DealsMetadata";
+import {Deal} from "../models/deals/Deal";
+import {DealsMetadata, DealsMetadataType} from "../models/deals/DealsMetadata";
 import {Resource} from "../models/Resource";
 import {Provider} from "../models/Provider";
 import {Client} from "../models/Client";
-import {BandwidthLimit} from "../models/DealsBandwidthLimit";
-import {DealsNodeLocations} from "../models/DealsNodeLocations";
-import {DealsMetadataNodeLocations} from "../models/DealsMetadataNodeLocations";
+import {DealsBandwidthLimit} from "../models/deals/DealsBandwidthLimit";
+import {DealsNodeLocations} from "../models/deals/DealsNodeLocations";
+import {DealsMetadataNodeLocations} from "../models/deals/DealsMetadataNodeLocations";
 
 export class DealsController {
     constructor() {
     }
 
-    static async upsertDeal(deal: any) {
 
-        console.log("Deal", deal)
-        // Ensure the client exists
+    static async upsertDeal(deal: any) {
         const [client] = await Client.findOrCreate({
             where: {account: deal.client},
             defaults: {account: deal.client}
@@ -40,30 +38,19 @@ export class DealsController {
         let rawMetadata = JSON.parse(deal.metadata);
 
         // Ensure the bandwidth limit exists
-        const [bandwidthLimit] = await BandwidthLimit.upsert(rawMetadata.bandwidthLimit);
-
-        console.log("BandwidthLimit", await BandwidthLimit.findAll())
+        const [bandwidthLimit] = await DealsBandwidthLimit.upsert(rawMetadata.bandwidthLimit);
 
         rawMetadata.bandwidthLimitId = bandwidthLimit.get('id');
-
-        console.log("RawMetadata", rawMetadata)
 
         // Create or update the metadata
         const [metadata] = await DealsMetadata.upsert(rawMetadata);
 
         // Handle the node locations
         for (const location of rawMetadata.nodeLocations) {
-            console.log("Location", location)
             const [nodeLocation] = await DealsNodeLocations.findOrCreate({
                 where: { location },
                 defaults: { location }
             });
-
-            console.log("NodeLocation", nodeLocation.get('id'))
-            console.log("Metadata", metadata.get('id'))
-
-            console.log("MetadataAll", await DealsMetadata.findAll())
-            console.log("NodeLocationAll", await DealsNodeLocations.findAll())
 
             const metadataId = await metadata.get('id');
             const nodeId = await nodeLocation.get('id');
@@ -74,9 +61,6 @@ export class DealsController {
             });
         }
 
-
-        // Replace client, provider, resource and metadata names with their IDs
-        console.log("ResourceId", resource.get('id'));
         deal.clientId = client.get('id');
         deal.providerId = provider.get('id');
         deal.resourceId = resource.get('id');
@@ -117,10 +101,6 @@ export class DealsController {
     };
 
     static formatDeal(deal: any): any {
-        // Check if the input is an object
-        if (typeof deal !== 'object' || deal === null) {
-            return deal;
-        }
 
         // Create a new object to hold the result
         let result: any = {};
@@ -139,5 +119,9 @@ export class DealsController {
             }
         }
         return result;
+    }
+
+    static parseDealMetadata(metadata: string){
+        DealsMetadataType.parse(JSON.parse(metadata));
     }
 }

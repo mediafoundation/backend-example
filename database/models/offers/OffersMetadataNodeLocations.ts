@@ -1,24 +1,24 @@
 // database/models/DealsMetadataNodeLocations.ts
 import {DataTypes} from "sequelize";
-import {sequelize} from "../database";
+import {sequelize} from "../../database";
 
-export const DealsMetadataNodeLocations = sequelize.define("DealsMetadataNodeLocations", {
+export const OffersMetadataNodeLocations = sequelize.define("OffersMetadataNodeLocations", {
     id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
     metadataId: {
         type: DataTypes.BIGINT,
         references: {
-            model: 'DealsMetadata',
+            model: 'OffersMetadata',
             key: 'id'
         }
     },
     nodeId: {
         type: DataTypes.BIGINT,
         references: {
-            model: 'DealsNodeLocations',
+            model: 'OffersNodeLocations',
             key: 'id'
         }
     },
 }, {
-    modelName: 'DealsMetadataNodeLocations',
+    modelName: 'OffersMetadataNodeLocations',
     freezeTableName: true
 });

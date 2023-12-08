@@ -1,5 +1,6 @@
 import {DataTypes} from "sequelize";
-import {sequelize} from "../database";
+import {sequelize} from "../../database";
+import {array, boolean, number, object, string, z} from "zod";
 
 export const DealsMetadata = sequelize.define("DealsMetadata", {
     id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
@@ -7,7 +8,7 @@ export const DealsMetadata = sequelize.define("DealsMetadata", {
     bandwidthLimitId: {
         type: DataTypes.BIGINT,
         references: {
-            model: 'BandwidthLimit',
+            model: 'DealsBandwidthLimit',
             key: 'id'
         }
     },
@@ -20,13 +21,16 @@ export const DealsMetadata = sequelize.define("DealsMetadata", {
     freezeTableName: true
 });
 
-export type DealsMetadata = {
-    id: number,
-    label: string,
-    bandwidthLimit: string,
-    autoSsl: boolean,
-    burstSpeed: number,
-    nodeLocations: string,
-    apiEndpoint: string,
-    customCnames: string
-}
+export const DealsMetadataType = z.object({
+    label: string(),
+    bandwidthLimit: object({
+        amount: number(),
+        period: string(),
+        unit: string()
+    }),
+    autoSsl: boolean(),
+    burstSpeed: number(),
+    nodeLocations: array(string()),
+    apiEndpoint: string(),
+    customCnames: boolean()
+})
