@@ -1,5 +1,5 @@
 import {Offer} from "../models/offers/Offer";
-import {OffersMetadata} from "../models/offers/OffersMetadata";
+import {OffersMetadata, OffersMetadataType} from "../models/offers/OffersMetadata";
 import {OffersNodeLocations} from "../models/offers/OffersNodeLocations";
 import {OffersMetadataNodeLocations} from "../models/offers/OffersMetadataNodeLocations";
 import {OffersBandwidthLimit} from "../models/offers/OffersBandwidthLimit";
@@ -70,28 +70,32 @@ export class OffersController{
     }
   };
 
-  static formatOffer(deal: any): any {
+  static formatOffer(offer: any): any {
     // Check if the input is an object
-    if (typeof deal !== 'object' || deal === null) {
-      return deal;
+    if (typeof offer !== 'object' || offer === null) {
+      return offer;
     }
 
     // Create a new object to hold the result
     let result: any = {};
 
     // Iterate over the properties of the object
-    for (const key in deal) {
+    for (const key in offer) {
       // If the property is an object, merge its properties with the result
-      if (typeof deal[key] === 'object' && deal[key] !== null) {
-        result = {...result, ...OffersController.formatOffer(deal[key])};
-      } else if (typeof deal[key] === 'bigint') {
+      if (typeof offer[key] === 'object' && offer[key] !== null) {
+        result = {...result, ...OffersController.formatOffer(offer[key])};
+      } else if (typeof offer[key] === 'bigint') {
         // If the property is a bigint, parse it to a number
-        result[key] = Number(deal[key]);
+        result[key] = Number(offer[key]);
       } else {
         // Otherwise, just copy the property to the result
-        result[key] = deal[key];
+        result[key] = offer[key];
       }
     }
     return result;
+  }
+
+  static parseOffer(offerMetadata: string){
+    OffersMetadataType.parse(JSON.parse(offerMetadata));
   }
 }

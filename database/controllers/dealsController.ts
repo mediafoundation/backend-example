@@ -1,5 +1,5 @@
 import {Deal} from "../models/deals/Deal";
-import {DealsMetadata} from "../models/deals/DealsMetadata";
+import {DealsMetadata, DealsMetadataType} from "../models/deals/DealsMetadata";
 import {Resource} from "../models/Resource";
 import {Provider} from "../models/Provider";
 import {Client} from "../models/Client";
@@ -101,10 +101,6 @@ export class DealsController {
     };
 
     static formatDeal(deal: any): any {
-        // Check if the input is an object
-        if (typeof deal !== 'object' || deal === null) {
-            return deal;
-        }
 
         // Create a new object to hold the result
         let result: any = {};
@@ -123,5 +119,9 @@ export class DealsController {
             }
         }
         return result;
+    }
+
+    static parseDealMetadata(metadata: string){
+        DealsMetadataType.parse(JSON.parse(metadata));
     }
 }

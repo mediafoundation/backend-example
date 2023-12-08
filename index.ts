@@ -5,6 +5,9 @@ import {DealsController} from "./database/controllers/dealsController";
 import {ResourcesController} from "./database/controllers/resourcesController";
 import {resetDB} from "./database/utils";
 import {OffersController} from "./database/controllers/offersController";
+import {z, ZodCatch, ZodInvalidTypeIssue} from "zod";
+import {OffersMetadataType} from "./database/models/offers/OffersMetadata";
+import {DealsMetadataType} from "./database/models/deals/DealsMetadata";
 
 require('dotenv').config()
 
@@ -22,7 +25,6 @@ const init = async () => {
     })
 
     let offers = await marketplaceViewer.getAllOffersPaginating({marketPlaceId: 1, start: 0, steps: 10})
-    console.log("Offers", offers)
 
     deals[0] = deals[0].filter((deal: any) => deal.status.active == true)
 
@@ -52,11 +54,33 @@ const init = async () => {
     }
 
     for (const offer of offers) {
-        await OffersController.upsertOffer(OffersController.formatOffer(offer))
+        try{
+            OffersController.parseOffer(offer.metadata)
+            await OffersController.upsertOffer(OffersController.formatOffer(offer))
+        } catch (e: any) {
+            if (e instanceof z.ZodError) {
+                console.log("Offer Id: ", offer.id)
+                console.error("Metadata Validation failed!\n", "Expected: ", OffersMetadataType.keyof()._def.values, " Got: ", offer.metadata);
+            } else {
+                console.log("Offer Id: ", offer.id)
+                console.error("Unknown error", e);
+            }
+        }
     }
 
     for (const deal of deals[0]) {
-        await DealsController.upsertDeal(DealsController.formatDeal(deal))
+        try{
+            DealsController.parseDealMetadata(deal.metadata)
+            await DealsController.upsertDeal(DealsController.formatDeal(deal))
+        } catch (e: any) {
+            if (e instanceof z.ZodError) {
+                console.log("Deal Id: ", deal.id)
+                console.error("Metadata Validation failed!\n", "Expected: ", DealsMetadataType.keyof()._def.values, " Got: ", deal.metadata);
+            } else {
+                console.log("Deal Id: ", deal.id)
+                console.error("Unknown error", e);
+            }
+        }
     }
 
 }
