@@ -3,8 +3,13 @@ import {Resource} from '../models/Resource';
 export class ResourcesController {
   static upsertResource = async (resource: any) => {
     try {
+      const originalResource = await Resource.findByPk(resource.id);
       const [instance, created] = await Resource.upsert(resource);
-      return [instance, created];
+      return {
+        instance: instance,
+        created: created,
+        originalResource: originalResource
+      };
     } catch (error) {
       throw error;
     }
