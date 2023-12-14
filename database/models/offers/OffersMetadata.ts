@@ -5,13 +5,6 @@ import {array, boolean, number, object, string, z} from "zod";
 export const OffersMetadata = sequelize.define("OffersMetadata",
     {
         id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
-        offerId: {
-            type: DataTypes.BIGINT,
-            references: {
-                model: 'Offers',
-                key: 'id'
-            }
-        },
         label: DataTypes.STRING,
         bandwidthLimitId: {
             type: DataTypes.BIGINT,
