@@ -1,6 +1,7 @@
-// database/models/DealsMetadataNodeLocations.ts
 import {DataTypes} from "sequelize";
 import {sequelize} from "../../database";
+import {DealsMetadata} from "./DealsMetadata";
+import {DealsNodeLocations} from "./DealsNodeLocations";
 
 export const DealsMetadataNodeLocations = sequelize.define("DealsMetadataNodeLocations", {
     id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
@@ -22,3 +23,6 @@ export const DealsMetadataNodeLocations = sequelize.define("DealsMetadataNodeLoc
     modelName: 'DealsMetadataNodeLocations',
     freezeTableName: true
 });
+
+DealsNodeLocations.belongsToMany(DealsMetadata, {through: DealsMetadataNodeLocations, foreignKey: 'nodeId'})
+DealsMetadata.belongsToMany(DealsNodeLocations, {through: DealsMetadataNodeLocations, foreignKey: "metadataId"});

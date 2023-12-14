@@ -71,9 +71,29 @@ export class DealsController {
 
     };
 
-    static async getDeals() {
+    //todo: Create an interface to improve the return type
+    static async getDeals(): Promise<Array<any>> {
         try {
-            return await Deal.findAll({attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']}});
+            return await Deal.findAll({
+                attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']},
+                include: [
+                    {
+                        model: DealsMetadata,
+                        as: "Metadata",
+                        attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']},
+                        include: [
+                            {
+                                model: DealsBandwidthLimit,
+                                as: "BandwidthLimit",
+                                attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']}
+                            }
+                        ]
+                    }
+                ],
+                raw: true,
+                nest: true,
+                group: "Deals.id"
+            });
         } catch (error) {
             throw error;
         }

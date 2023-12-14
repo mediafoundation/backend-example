@@ -1,5 +1,6 @@
 import {DataTypes} from "sequelize";
 import {sequelize} from "../../database";
+import {DealsMetadata} from "./DealsMetadata";
 
 export const Deal = sequelize.define("Deals",
   {
@@ -43,7 +44,8 @@ export const Deal = sequelize.define("Deals",
         references: {
             model: 'DealsMetadata',
             key: 'id'
-        }
+        },
+        allowNull: false,
     },
     network: DataTypes.STRING
   },
@@ -52,6 +54,11 @@ export const Deal = sequelize.define("Deals",
     freezeTableName: true
   }
 );
+
+Deal.belongsTo(DealsMetadata, {
+    foreignKey: 'metadataId',
+    as: "Metadata"
+});
 
 /*export type FormattedDeal = {
     id: number,

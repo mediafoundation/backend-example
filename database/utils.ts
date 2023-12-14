@@ -25,11 +25,11 @@ const resetDB = async () => {
     await Provider.drop();
     await Resource.drop();
 
-    await Offer.drop();
+    /*await Offer.drop();
     await OffersMetadataNodeLocations.drop();
     await OffersMetadata.drop();
     await OffersNodeLocations.drop();
-    await OffersBandwidthLimit.drop();
+    await OffersBandwidthLimit.drop();*/
 
     // Recreate tables
     await Resource.sync({force: true});
@@ -42,11 +42,11 @@ const resetDB = async () => {
     await DealsMetadataNodeLocations.sync({force: true});
     await Deal.sync({force: true});
 
-    await OffersBandwidthLimit.sync({force: true});
+    /*await OffersBandwidthLimit.sync({force: true});
     await OffersNodeLocations.sync({force: true});
     await OffersMetadata.sync({force: true});
     await OffersMetadataNodeLocations.sync({force: true});
-    await Offer.sync({force: true});
+    await Offer.sync({force: true});*/
 }
 
 export {resetDB}
