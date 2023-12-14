@@ -71,7 +71,6 @@ export class DealsController {
 
     };
 
-    //todo: Create an interface to improve the return type
     static async getDeals(): Promise<Array<any>> {
         try {
             return await Deal.findAll({
