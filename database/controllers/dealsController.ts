@@ -6,6 +6,7 @@ import {Client} from "../models/Client";
 import {DealsBandwidthLimit} from "../models/deals/DealsBandwidthLimit";
 import {DealsNodeLocations} from "../models/deals/DealsNodeLocations";
 import {DealsLocations} from "../models/deals/DealsLocations";
+import {DealsResources} from "../models/associations/DealsResources";
 
 export class DealsController {
     constructor() {
@@ -69,6 +70,12 @@ export class DealsController {
                 defaults: { dealId, nodeId }
             });
         }
+
+        await DealsResources.findOrCreate({
+            where: { dealId: instance.get('id'), resourceId: instance.get('resourceId') },
+            defaults: { dealId: instance.get('id'), resourceId: instance.get('resourceId ') }
+
+        })
         return [instance, created];
 
     };
