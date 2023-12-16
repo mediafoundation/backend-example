@@ -1,6 +1,5 @@
 import {DataTypes} from "sequelize";
 import {sequelize} from "../../database";
-import {DealsMetadata} from "./DealsMetadata";
 
 export const Deal = sequelize.define("Deals",
   {

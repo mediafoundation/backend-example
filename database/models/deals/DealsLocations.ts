@@ -2,13 +2,14 @@ import {DataTypes} from "sequelize";
 import {sequelize} from "../../database";
 import {DealsMetadata} from "./DealsMetadata";
 import {DealsNodeLocations} from "./DealsNodeLocations";
+import {Deal} from "./Deal";
 
-export const DealsMetadataNodeLocations = sequelize.define("DealsMetadataNodeLocations", {
+export const DealsLocations = sequelize.define("DealsLocations", {
     id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
-    metadataId: {
+    dealId: {
         type: DataTypes.BIGINT,
         references: {
-            model: 'DealsMetadata',
+            model: 'Deal',
             key: 'id'
         }
     },
@@ -20,9 +21,9 @@ export const DealsMetadataNodeLocations = sequelize.define("DealsMetadataNodeLoc
         }
     },
 }, {
-    modelName: 'DealsMetadataNodeLocations',
+    modelName: 'DealsLocations',
     freezeTableName: true
 });
 
-DealsNodeLocations.belongsToMany(DealsMetadata, {through: DealsMetadataNodeLocations, foreignKey: 'nodeId'})
-DealsMetadata.belongsToMany(DealsNodeLocations, {through: DealsMetadataNodeLocations, foreignKey: "metadataId"});
+DealsNodeLocations.belongsToMany(Deal, {through: DealsLocations, foreignKey: 'nodeId'})
+Deal.belongsToMany(DealsNodeLocations, {through: DealsLocations, foreignKey: "dealId"});

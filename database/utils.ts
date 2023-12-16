@@ -5,7 +5,7 @@ import {DealsMetadata} from "./models/deals/DealsMetadata";
 import {Deal} from "./models/deals/Deal";
 import {DealsBandwidthLimit} from "./models/deals/DealsBandwidthLimit";
 import {DealsNodeLocations} from "./models/deals/DealsNodeLocations";
-import {DealsMetadataNodeLocations} from "./models/deals/DealsMetadataNodeLocations";
+import {DealsLocations} from "./models/deals/DealsLocations";
 import {Offer} from "./models/offers/Offer";
 import {OffersMetadata} from "./models/offers/OffersMetadata";
 import {OffersBandwidthLimit} from "./models/offers/OffersBandwidthLimit";
@@ -15,7 +15,7 @@ import {OffersMetadataNodeLocations} from "./models/offers/OffersMetadataNodeLoc
 const resetDB = async () => {
 
     // Drop tables
-    await DealsMetadataNodeLocations.drop();
+    await DealsLocations.drop();
     await DealsMetadata.drop();
     await DealsNodeLocations.drop();
     await DealsBandwidthLimit.drop();
@@ -40,7 +40,7 @@ const resetDB = async () => {
     await DealsBandwidthLimit.sync({force: true});
     await DealsNodeLocations.sync({force: true});
     await DealsMetadata.sync({force: true});
-    await DealsMetadataNodeLocations.sync({force: true});
+    await DealsLocations.sync({force: true});
 
     await OffersBandwidthLimit.sync({force: true});
     await OffersNodeLocations.sync({force: true});

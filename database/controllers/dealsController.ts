@@ -5,7 +5,7 @@ import {Provider} from "../models/Provider";
 import {Client} from "../models/Client";
 import {DealsBandwidthLimit} from "../models/deals/DealsBandwidthLimit";
 import {DealsNodeLocations} from "../models/deals/DealsNodeLocations";
-import {DealsMetadataNodeLocations} from "../models/deals/DealsMetadataNodeLocations";
+import {DealsLocations} from "../models/deals/DealsLocations";
 
 export class DealsController {
     constructor() {
@@ -46,20 +46,7 @@ export class DealsController {
         const [metadata] = await DealsMetadata.upsert(rawMetadata);
 
         // Handle the node locations
-        for (const location of rawMetadata.nodeLocations) {
-            const [nodeLocation] = await DealsNodeLocations.findOrCreate({
-                where: { location },
-                defaults: { location }
-            });
 
-            const metadataId = await metadata.get('id');
-            const nodeId = await nodeLocation.get('id');
-
-            await DealsMetadataNodeLocations.findOrCreate({
-                where: { metadataId, nodeId },
-                defaults: { metadataId, nodeId }
-            });
-        }
 
         deal.clientId = client.get('id');
         deal.providerId = provider.get('id');
@@ -67,6 +54,21 @@ export class DealsController {
         deal.metadataId = metadata.get('id');
 
         const [instance, created] = await Deal.upsert(deal);
+
+        for (const location of rawMetadata.nodeLocations) {
+            const [nodeLocation] = await DealsNodeLocations.findOrCreate({
+                where: { location },
+                defaults: { location }
+            });
+
+            const dealId = instance.get('id');
+            const nodeId = nodeLocation.get('id');
+
+            await DealsLocations.findOrCreate({
+                where: { dealId, nodeId },
+                defaults: { dealId, nodeId }
+            });
+        }
         return [instance, created];
 
     };
