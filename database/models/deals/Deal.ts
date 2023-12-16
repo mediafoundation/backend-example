@@ -39,14 +39,6 @@ export const Deal = sequelize.define("Deals",
     active: DataTypes.BOOLEAN,
     cancelled: DataTypes.BOOLEAN,
     cancelledAt: DataTypes.BIGINT,
-    metadataId: {
-        type: DataTypes.BIGINT,
-        references: {
-            model: 'DealsMetadata',
-            key: 'id'
-        },
-        allowNull: false,
-    },
     network: DataTypes.STRING
   },
   {
@@ -54,11 +46,6 @@ export const Deal = sequelize.define("Deals",
     freezeTableName: true
   }
 );
-
-Deal.belongsTo(DealsMetadata, {
-    foreignKey: 'metadataId',
-    as: "Metadata"
-});
 
 /*export type FormattedDeal = {
     id: number,

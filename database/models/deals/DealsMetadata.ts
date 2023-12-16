@@ -2,9 +2,17 @@ import {DataTypes} from "sequelize";
 import {sequelize} from "../../database";
 import {array, boolean, number, object, string, z} from "zod";
 import {DealsBandwidthLimit} from "./DealsBandwidthLimit";
+import {Deal} from "./Deal";
 
 export const DealsMetadata = sequelize.define("DealsMetadata", {
     id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
+    dealId: {
+        type: DataTypes.BIGINT,
+        references: {
+            model: 'Deals',
+            key: 'id'
+        }
+    },
     label: DataTypes.STRING,
     bandwidthLimitId: {
         type: DataTypes.BIGINT,
@@ -27,6 +35,11 @@ DealsMetadata.belongsTo(DealsBandwidthLimit, {
     foreignKey: 'bandwidthLimitId',
     as: "BandwidthLimit"
 });
+
+DealsMetadata.belongsTo(Deal, {
+    foreignKey: 'dealId',
+    as: "Deal"
+})
 
 export const DealsMetadataType = z.object({
     label: string(),

@@ -15,9 +15,9 @@ import {OffersMetadataNodeLocations} from "./models/offers/OffersMetadataNodeLoc
 const resetDB = async () => {
 
     // Drop tables
-    await Deal.drop();
     await DealsMetadataNodeLocations.drop();
     await DealsMetadata.drop();
+    await Deal.drop();
     await DealsNodeLocations.drop();
     await DealsBandwidthLimit.drop();
 
@@ -38,9 +38,9 @@ const resetDB = async () => {
 
     await DealsBandwidthLimit.sync({force: true});
     await DealsNodeLocations.sync({force: true});
+    await Deal.sync({force: true});
     await DealsMetadata.sync({force: true});
     await DealsMetadataNodeLocations.sync({force: true});
-    await Deal.sync({force: true});
 
     await OffersBandwidthLimit.sync({force: true});
     await OffersNodeLocations.sync({force: true});
