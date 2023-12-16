@@ -17,9 +17,9 @@ const resetDB = async () => {
     // Drop tables
     await DealsMetadataNodeLocations.drop();
     await DealsMetadata.drop();
-    await Deal.drop();
     await DealsNodeLocations.drop();
     await DealsBandwidthLimit.drop();
+    await Deal.drop();
 
     await Client.drop();
     await Provider.drop();
@@ -36,9 +36,9 @@ const resetDB = async () => {
     await Provider.sync({force: true});
     await Client.sync({force: true});
 
+    await Deal.sync({force: true});
     await DealsBandwidthLimit.sync({force: true});
     await DealsNodeLocations.sync({force: true});
-    await Deal.sync({force: true});
     await DealsMetadata.sync({force: true});
     await DealsMetadataNodeLocations.sync({force: true});
 

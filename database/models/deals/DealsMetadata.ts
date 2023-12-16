@@ -14,14 +14,6 @@ export const DealsMetadata = sequelize.define("DealsMetadata", {
         }
     },
     label: DataTypes.STRING,
-    bandwidthLimitId: {
-        type: DataTypes.BIGINT,
-        references: {
-            model: 'DealsBandwidthLimit',
-            key: 'id'
-        },
-        allowNull: false,
-    },
     autoSsl: DataTypes.BOOLEAN,
     burstSpeed: DataTypes.BIGINT,
     apiEndpoint: DataTypes.STRING,
@@ -29,11 +21,6 @@ export const DealsMetadata = sequelize.define("DealsMetadata", {
 }, {
     modelName: 'DealsMetadata',
     freezeTableName: true
-});
-
-DealsMetadata.belongsTo(DealsBandwidthLimit, {
-    foreignKey: 'bandwidthLimitId',
-    as: "BandwidthLimit"
 });
 
 DealsMetadata.belongsTo(Deal, {
