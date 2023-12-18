@@ -14,18 +14,6 @@ export class DealsController {
 
 
     static async upsertDeal(deal: any) {
-        const [client] = await Client.findOrCreate({
-            where: {account: deal.client},
-            defaults: {account: deal.client}
-        });
-
-        // Ensure the provider exists
-        const [provider] = await Provider.findOrCreate({
-            where: {account: deal.provider},
-            defaults: {account: deal.provider}
-        });
-
-        // Find the resource or fail
         const resource = await Resource.findOne({
             where: {id: deal.resourceId}
         });
@@ -34,27 +22,36 @@ export class DealsController {
             throw new Error('Resource not found');
         }
 
-        // Ensure the metadata exists
-        // Parse the metadata from the deal
-        let rawMetadata = JSON.parse(deal.metadata);
+        const [client] = await Client.findOrCreate({
+            where: {account: deal.client},
+            defaults: {account: deal.client}
+        });
+        // Ensure the provider exists
 
-        // Ensure the bandwidth limit exists
-        const [bandwidthLimit] = await DealsBandwidthLimit.upsert(rawMetadata.bandwidthLimit);
-
-        rawMetadata.bandwidthLimitId = bandwidthLimit.get('id');
-
-        // Create or update the metadata
-        const [metadata] = await DealsMetadata.upsert(rawMetadata);
-
-        // Handle the node locations
-
+        const [provider] = await Provider.findOrCreate({
+            where: {account: deal.provider},
+            defaults: {account: deal.provider}
+        });
 
         deal.clientId = client.get('id');
         deal.providerId = provider.get('id');
         deal.resourceId = resource.get('id');
-        deal.metadataId = metadata.get('id');
 
         const [instance, created] = await Deal.upsert(deal);
+
+        let rawMetadata = JSON.parse(deal.metadata);
+        let rawBandwidthLimit = rawMetadata.bandwidthLimit;
+
+        rawMetadata.dealId = instance.get('id');
+        rawBandwidthLimit.dealId = instance.get('id');
+
+        // Ensure the bandwidth limit exists
+        await DealsBandwidthLimit.upsert(rawBandwidthLimit);
+
+
+
+        // Create or update the metadata
+        await DealsMetadata.upsert(rawMetadata);
 
         for (const location of rawMetadata.nodeLocations) {
             const [nodeLocation] = await DealsNodeLocations.findOrCreate({
@@ -89,18 +86,15 @@ export class DealsController {
                         model: DealsMetadata,
                         as: "Metadata",
                         attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']},
-                        include: [
-                            {
-                                model: DealsBandwidthLimit,
-                                as: "BandwidthLimit",
-                                attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']}
-                            }
-                        ]
+                    },
+                    {
+                        model: DealsBandwidthLimit,
+                        as: "BandwidthLimit",
+                        attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']},
                     }
                 ],
                 raw: true,
                 nest: true,
-                group: "Deals.id"
             });
         } catch (error) {
             throw error;

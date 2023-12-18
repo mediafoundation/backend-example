@@ -23,11 +23,6 @@ export const DealsMetadata = sequelize.define("DealsMetadata", {
     freezeTableName: true
 });
 
-DealsMetadata.belongsTo(Deal, {
-    foreignKey: 'dealId',
-    as: "Deal"
-})
-
 export const DealsMetadataType = z.object({
     label: string(),
     bandwidthLimit: object({

@@ -50,6 +50,16 @@ const resetDB = async () => {
     await OffersMetadata.sync({force: true});
     await OffersMetadataNodeLocations.sync({force: true});
     await Offer.sync({force: true});
+
+    Deal.hasOne(DealsMetadata, {
+        foreignKey: 'dealId',
+        as: 'Metadata', // This alias should match the one used in your query
+    });
+
+    Deal.hasOne(DealsBandwidthLimit, {
+        foreignKey: 'dealId',
+        as: 'BandwidthLimit', // This alias should match the one used in your query
+    });
 }
 
 export {resetDB}

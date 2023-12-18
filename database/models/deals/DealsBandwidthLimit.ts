@@ -18,8 +18,3 @@ export const DealsBandwidthLimit = sequelize.define("DealsBandwidthLimit", {
     modelName: 'DealsBandwidthLimit',
     freezeTableName: true
 });
-
-DealsBandwidthLimit.belongsTo(Deal, {
-    foreignKey: 'dealId',
-    as: "Deal"
-})
