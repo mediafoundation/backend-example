@@ -69,8 +69,8 @@ export class DealsController {
         }
 
         await DealsResources.findOrCreate({
-            where: { dealId: instance.get('id'), resourceId: instance.get('resourceId') },
-            defaults: { dealId: instance.get('id'), resourceId: instance.get('resourceId ') }
+            where: { dealId: deal.id, resourceId: deal.resourceId },
+            defaults: { dealId: deal.id, resourceId: deal.resourceId }
 
         })
         return [instance, created];

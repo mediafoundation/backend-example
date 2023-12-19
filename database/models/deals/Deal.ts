@@ -19,13 +19,6 @@ export const Deal = sequelize.define("Deals",
             key: 'id'
         }
     },
-    resourceId: {
-        type: DataTypes.BIGINT,
-        references: {
-            model: 'Resources',
-            key: 'id'
-        }
-    },
     totalPayment: DataTypes.BIGINT,
     blockedBalance: DataTypes.BIGINT,
     pricePerSecond: DataTypes.BIGINT,
