@@ -1,8 +1,6 @@
 import {sequelize} from "../../database";
 import {DataTypes} from "sequelize";
-import {DealsNodeLocations} from "../deals/DealsNodeLocations";
 import {Deal} from "../deals/Deal";
-import {DealsLocations} from "../deals/DealsLocations";
 import {Resource} from "../Resource";
 
 export const DealsResources = sequelize.define("DealsResources", {
