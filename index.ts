@@ -1,5 +1,5 @@
 // @ts-ignore
-import {initSdk, MarketplaceViewer, Resources, Encryption} from 'media-sdk';
+import {initSdk, MarketplaceViewer, Resources, Encryption, validChains} from 'media-sdk';
 import {resourcesNotMatchingDeal} from "./utils/resources";
 import {DealsController} from "./database/controllers/dealsController";
 import {ResourcesController} from "./database/controllers/resourcesController";
@@ -11,56 +11,77 @@ import {DealsMetadataType} from "./database/models/deals/DealsMetadata";
 
 require('dotenv').config()
 
-const init = async () => {
-    initSdk({privateKey: process.env.PRIVATE_KEY!})
+const init = async (chain: any) => {
+    initSdk({privateKey: process.env.PRIVATE_KEY!, chain: chain})
 
     let marketplaceViewer: MarketplaceViewer = new MarketplaceViewer();
     let resourcesInstance: Resources = new Resources();
 
     let resources = await resourcesInstance.getPaginatedResources({address: process.env.userAddress, start: 0, end: 10})
+
+    console.log("Resources", resources)
     let deals = await marketplaceViewer.getPaginatedDeals({
-        marketPlaceId: 1,
+        marketplaceId: 1,
         address: process.env.userAddress,
         isProvider: true
     })
+    console.log("Deals", deals)
 
-    let offers = await marketplaceViewer.getAllOffersPaginating({marketPlaceId: 1, start: 0, steps: 10})
+    let offers = await marketplaceViewer.getAllOffersPaginating({marketplaceId: 1, start: 0, steps: 10})
 
-    deals[0] = deals[0].filter((deal: any) => deal.status.active == true)
+    console.log("Offers", offers)
 
-    let resourcesWithoutDeal = resourcesNotMatchingDeal(resources.map((resource: any) => resource.id), deals.map((deal: any) => deal.resourceId))
-
-    resources[0] = resources[0].filter((resource: any) => !resourcesWithoutDeal.includes(resource.id))
-
-    await resetDB()
-
-    for (const resource of resources[0]) {
-        let attr = JSON.parse(resource.encryptedData)
-        let decryptedSharedKey = await Encryption.ethSigDecrypt(
-            resource.encryptedSharedKey,
-            process.env.PRIVATE_KEY
-        );
-
-        let decrypted = await Encryption.decrypt(
-            decryptedSharedKey,
-            attr.iv,
-            attr.tag,
-            attr.encryptedData
-        );
-
-        let data = JSON.parse(decrypted)
-
-        await ResourcesController.upsertResource({id: resource.id, owner: resource.owner, ...data})
+    if(deals[0].length !== 0) {
+        deals[0] = deals[0].filter((deal: any) => deal.status.active == true)
+        for (const deal of deals[0]) {
+            try{
+                DealsController.parseDealMetadata(deal.metadata)
+                await DealsController.upsertDeal(DealsController.formatDeal(deal))
+            } catch (e: any) {
+                if (e instanceof z.ZodError) {
+                    console.log("Deal Id: ", deal.id)
+                    console.error("Metadata Validation failed!\n", "Expected: ", DealsMetadataType.keyof()._def.values, " Got: ", deal.metadata);
+                } else {
+                    console.log("Deal Id: ", deal.id)
+                    console.error("Unknown error", e);
+                }
+            }
+        }
     }
+
+    if(deals[0].length !== 0 && resources.length !== 0) {
+        let resourcesWithoutDeal = resourcesNotMatchingDeal(resources.map((resource: any) => resource.id), deals.map((deal: any) => deal.resourceId))
+        resources[0] = resources[0].filter((resource: any) => !resourcesWithoutDeal.includes(resource.id))
+        for (const resource of resources[0]) {
+            let attr = JSON.parse(resource.encryptedData)
+            let decryptedSharedKey = await Encryption.ethSigDecrypt(
+                resource.encryptedSharedKey,
+                process.env.PRIVATE_KEY
+            );
+
+            let decrypted = await Encryption.decrypt(
+                decryptedSharedKey,
+                attr.iv,
+                attr.tag,
+                attr.encryptedData
+            );
+
+            let data = JSON.parse(decrypted)
+
+            await ResourcesController.upsertResource({id: resource.id, owner: resource.owner, ...data})
+        }
+    }
+
+
 
     for (const offer of offers) {
         try{
-            OffersController.parseOffer(offer.metadata)
+            OffersController.parseOffer(offer.terms.metadata)
             await OffersController.upsertOffer(OffersController.formatOffer(offer))
         } catch (e: any) {
             if (e instanceof z.ZodError) {
                 console.log("Offer Id: ", offer.id)
-                console.error("Metadata Validation failed!\n", "Expected: ", OffersMetadataType.keyof()._def.values, " Got: ", offer.metadata);
+                console.error("Metadata Validation failed!\n", "Expected: ", OffersMetadataType.keyof()._def.values, " Got: ", offer.terms.metadata);
             } else {
                 console.log("Offer Id: ", offer.id)
                 console.error("Unknown error", e);
@@ -68,26 +89,22 @@ const init = async () => {
         }
     }
 
-    for (const deal of deals[0]) {
+
+
+    console.log("Deals from db", await DealsController.getDeals())
+}
+
+async function start() {
+    const validChainKeys = Object.keys(validChains)
+    await resetDB()
+    for (const validChainKey of validChainKeys) {
         try{
-            DealsController.parseDealMetadata(deal.metadata)
-            await DealsController.upsertDeal(DealsController.formatDeal(deal))
-        } catch (e: any) {
-            if (e instanceof z.ZodError) {
-                console.log("Deal Id: ", deal.id)
-                console.error("Metadata Validation failed!\n", "Expected: ", DealsMetadataType.keyof()._def.values, " Got: ", deal.metadata);
-            } else {
-                console.log("Deal Id: ", deal.id)
-                console.error("Unknown error", e);
-            }
+            await init(validChains[validChainKey])
+            console.log("Initialized on chain: ", validChains[validChainKey].name)
+        } catch (e){
+            console.log("Error", e)
         }
     }
 }
 
-init()
-    .then(() => {
-        console.log("Initialized");
-    })
-    .catch((err) => {
-        console.log("Error initializing", err);
-    })
+start()
