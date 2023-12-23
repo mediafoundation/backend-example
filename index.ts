@@ -19,41 +19,20 @@ const init = async (chain: any) => {
 
     let resources = await resourcesInstance.getPaginatedResources({address: process.env.userAddress, start: 0, end: 10})
 
-    console.log("Resources", resources)
     let deals = await marketplaceViewer.getPaginatedDeals({
         marketplaceId: 1,
         address: process.env.userAddress,
         isProvider: true
     })
-    console.log("Deals", deals)
+
 
     let offers = await marketplaceViewer.getAllOffersPaginating({marketplaceId: 1, start: 0, steps: 10})
-
-    console.log("Offers", offers)
-
-    if(deals[0].length !== 0) {
-        deals[0] = deals[0].filter((deal: any) => deal.status.active == true)
-        for (const deal of deals[0]) {
-            try{
-                DealsController.parseDealMetadata(deal.metadata)
-                await DealsController.upsertDeal(DealsController.formatDeal(deal))
-            } catch (e: any) {
-                if (e instanceof z.ZodError) {
-                    console.log("Deal Id: ", deal.id)
-                    console.error("Metadata Validation failed!\n", "Expected: ", DealsMetadataType.keyof()._def.values, " Got: ", deal.metadata);
-                } else {
-                    console.log("Deal Id: ", deal.id)
-                    console.error("Unknown error", e);
-                }
-            }
-        }
-    }
 
     if(deals[0].length !== 0 && resources.length !== 0) {
         let resourcesWithoutDeal = resourcesNotMatchingDeal(resources.map((resource: any) => resource.id), deals.map((deal: any) => deal.resourceId))
         resources[0] = resources[0].filter((resource: any) => !resourcesWithoutDeal.includes(resource.id))
         for (const resource of resources[0]) {
-            let attr = JSON.parse(resource.encryptedData)
+            /*let attr = JSON.parse(resource.encryptedData)
             let decryptedSharedKey = await Encryption.ethSigDecrypt(
                 resource.encryptedSharedKey,
                 process.env.PRIVATE_KEY
@@ -66,11 +45,39 @@ const init = async (chain: any) => {
                 attr.encryptedData
             );
 
-            let data = JSON.parse(decrypted)
+            let data = JSON.parse(decrypted)*/
 
-            await ResourcesController.upsertResource({id: resource.id, owner: resource.owner, ...data})
+            try{
+                console.log("Resource", resource.encryptedData)
+                let data = JSON.parse(resource.encryptedData)
+
+                await ResourcesController.upsertResource({id: resource.id, owner: resource.owner, ...data})
+            }catch (e) {
+                console.log("Error for resource", resource.id, e)
+            }
+
         }
     }
+
+    if(deals[0].length !== 0) {
+        deals[0] = deals[0].filter((deal: any) => deal.status.active == true)
+        for (const deal of deals[0]) {
+            try{
+                DealsController.parseDealMetadata(deal.terms.metadata)
+                await DealsController.upsertDeal(DealsController.formatDeal(deal))
+            } catch (e: any) {
+                if (e instanceof z.ZodError) {
+                    console.log("Deal Id: ", deal.id)
+                    console.error("Metadata Validation failed!\n", "Expected: ", DealsMetadataType.keyof()._def.values, " Got: ", deal.metadata);
+                } else {
+                    console.log("Deal Id: ", deal.id)
+                    console.error("Unknown error", e.message, "With deal", deal);
+                }
+            }
+        }
+    }
+
+
 
 
 
@@ -84,7 +91,7 @@ const init = async (chain: any) => {
                 console.error("Metadata Validation failed!\n", "Expected: ", OffersMetadataType.keyof()._def.values, " Got: ", offer.terms.metadata);
             } else {
                 console.log("Offer Id: ", offer.id)
-                console.error("Unknown error", e);
+                console.error("Unknown error", e.message, "With offer", offer);
             }
         }
     }

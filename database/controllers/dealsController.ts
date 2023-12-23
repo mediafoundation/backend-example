@@ -18,9 +18,9 @@ export class DealsController {
             where: {id: deal.resourceId}
         });
 
-        if (!resource) {
+        /*if (!resource) {
             throw new Error('Resource not found');
-        }
+        }*/
 
         const [client] = await Client.findOrCreate({
             where: {account: deal.client},
@@ -35,7 +35,8 @@ export class DealsController {
 
         deal.clientId = client.get('id');
         deal.providerId = provider.get('id');
-        deal.resourceId = resource.get('id');
+        //deal.resourceId = resource.get('id');
+        deal.resourceId = 3
 
         const [instance, created] = await Deal.upsert(deal);
 
