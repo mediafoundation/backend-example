@@ -32,7 +32,7 @@ const init = async (chain: any) => {
         let resourcesWithoutDeal = resourcesNotMatchingDeal(resources.map((resource: any) => resource.id), deals.map((deal: any) => deal.resourceId))
         resources[0] = resources[0].filter((resource: any) => !resourcesWithoutDeal.includes(resource.id))
         for (const resource of resources[0]) {
-            /*let attr = JSON.parse(resource.encryptedData)
+            let attr = JSON.parse(resource.encryptedData)
             let decryptedSharedKey = await Encryption.ethSigDecrypt(
                 resource.encryptedSharedKey,
                 process.env.PRIVATE_KEY
@@ -45,12 +45,9 @@ const init = async (chain: any) => {
                 attr.encryptedData
             );
 
-            let data = JSON.parse(decrypted)*/
+            let data = JSON.parse(decrypted)
 
             try{
-                console.log("Resource", resource.encryptedData)
-                let data = JSON.parse(resource.encryptedData)
-
                 await ResourcesController.upsertResource({id: resource.id, owner: resource.owner, ...data})
             }catch (e) {
                 console.log("Error for resource", resource.id, e)
