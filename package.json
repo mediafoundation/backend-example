@@ -36,6 +36,6 @@
   "scripts": {
     "test": "NODE_ENV=test jest",
     "build": "rm -rd ./lib/* && tsc && cp .env ./lib/.env",
-    "startApi": "./dist/api.js"
+    "startApi": "node ./lib/api.js"
   }
 }
