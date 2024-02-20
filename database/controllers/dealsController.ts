@@ -7,6 +7,7 @@ import {DealsBandwidthLimit} from "../models/deals/DealsBandwidthLimit";
 import {DealsNodeLocations} from "../models/deals/DealsNodeLocations";
 import {DealsLocations} from "../models/deals/DealsLocations";
 import {DealsResources} from "../models/associations/DealsResources";
+import {WhereOptions} from "sequelize";
 
 export class DealsController {
     constructor() {
@@ -77,10 +78,11 @@ export class DealsController {
 
     };
 
-    static async getDeals(): Promise<Array<any>> {
+    static async getDeals(filter: WhereOptions<any> = {}): Promise<Array<any>> {
         try {
             return await Deal.findAll({
                 attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']},
+                where: filter,
                 include: [
                     {
                         model: DealsMetadata,

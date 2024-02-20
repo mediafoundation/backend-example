@@ -1,4 +1,5 @@
 import {Resource} from '../models/Resource';
+import {WhereOptions} from "sequelize";
 
 export class ResourcesController {
   static upsertResource = async (resource: any) => {
@@ -15,9 +16,9 @@ export class ResourcesController {
     }
   };
 
-  static getResources = async () => {
+  static getResources = async (filter: WhereOptions<any> = {}) => {
     try {
-      return await Resource.findAll({attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']}});
+      return await Resource.findAll({attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']}, where: filter});
     } catch (error) {
       throw error;
     }

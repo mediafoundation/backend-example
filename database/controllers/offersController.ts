@@ -3,6 +3,7 @@ import {OffersMetadata, OffersMetadataType} from "../models/offers/OffersMetadat
 import {OffersNodeLocations} from "../models/offers/OffersNodeLocations";
 import {OffersMetadataNodeLocations} from "../models/offers/OffersMetadataNodeLocations";
 import {OffersBandwidthLimit} from "../models/offers/OffersBandwidthLimit";
+import {WhereOptions} from "sequelize";
 export class OffersController{
 
   static async upsertOffer(offer: any) {
@@ -41,9 +42,9 @@ export class OffersController{
 
   };
 
-  static async getOffers() {
+  static async getOffers(filter: WhereOptions<any> = {}) {
     try {
-      return await Offer.findAll({attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']}});
+      return await Offer.findAll({attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']}, where: filter});
     } catch (error) {
       throw error;
     }

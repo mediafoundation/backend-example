@@ -104,22 +104,11 @@ const init = async (chain: any) => {
 }
 
 async function start() {
-    const validChainKeys = Object.keys(validChains)
+    //const validChainKeys = Object.keys(validChains)
     await resetDB()
     try{
         await init(validChains[0])
         console.log("Initialized on chain: ", validChains[0].name)
-        /*
-                    let eventHandler = new EventHandler();
-
-                    let result = await eventHandler.getResourcesPastEvents({
-                        eventName: "AddedResource",
-                        fromBlock: 10273858,
-                        toBlock: "latest",
-                    })
-                    console.log(result)
-
-         */
     } catch (e){
         console.log("Error", e)
     }
