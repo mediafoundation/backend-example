@@ -1,8 +1,8 @@
 import {Op} from "sequelize";
 import {parseFilter} from "../../utils/filter";
 
-describe('parseFilter function', () => {
-    it('should parse a simple filter with "gt" and "is" operators', () => {
+describe('parseFilter', () => {
+    it('should without operators', () => {
         const filter = {authorId: 2}
 
         const expectedResult = {
@@ -27,11 +27,6 @@ describe('parseFilter function', () => {
             ]
         }
 
-        let stringFilter = JSON.stringify(filter);
-        let filterAgain = JSON.parse(stringFilter);
-
-        console.log("FilterAgain", filterAgain)
-
         const expectedResult = {
             [Op.and]: [
                 {authorId: 2},
@@ -42,6 +37,24 @@ describe('parseFilter function', () => {
                     ]
                 }
             ]
+        }
+
+        let result = parseFilter(filter);
+
+        expect(result).toEqual(expectedResult);
+    })
+
+    it("contains operator", () => {
+        const filter = {
+            title: {
+                contains: ['title', 'second title']
+            }
+        }
+
+        const expectedResult = {
+            title: {
+                [Op.contains]: ['title', 'second title']
+            }
         }
 
         let result = parseFilter(filter);
