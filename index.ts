@@ -1,5 +1,5 @@
 // @ts-ignore
-import {initSdk, MarketplaceViewer, Resources, Encryption, validChains} from 'media-sdk';
+import {Sdk, MarketplaceViewer, Resources, Encryption, validChains, EventHandler} from 'media-sdk';
 import {resourcesNotMatchingDeal} from "./utils/resources";
 import {DealsController} from "./database/controllers/dealsController";
 import {ResourcesController} from "./database/controllers/resourcesController";
@@ -12,12 +12,14 @@ import {DealsMetadataType} from "./database/models/deals/DealsMetadata";
 require('dotenv').config()
 
 const init = async (chain: any) => {
-    initSdk({privateKey: process.env.PRIVATE_KEY!, chain: chain})
+    let sdkInstance = new Sdk({privateKey: process.env.PRIVATE_KEY!, chain: chain})
 
-    let marketplaceViewer: MarketplaceViewer = new MarketplaceViewer();
-    let resourcesInstance: Resources = new Resources();
+    let marketplaceViewer: MarketplaceViewer = new MarketplaceViewer(sdkInstance);
+    let resourcesInstance: Resources = new Resources(sdkInstance);
 
     let resources = await resourcesInstance.getPaginatedResources({address: process.env.userAddress, start: 0, end: 10})
+
+    console.log("Resources", resources)
 
     let deals = await marketplaceViewer.getPaginatedDeals({
         marketplaceId: 1,
@@ -47,6 +49,8 @@ const init = async (chain: any) => {
 
             let data = JSON.parse(decrypted)
 
+            console.log("Resource data", data)
+
             try{
                 await ResourcesController.upsertResource({id: resource.id, owner: resource.owner, ...data})
             }catch (e) {
@@ -62,6 +66,7 @@ const init = async (chain: any) => {
             try{
                 DealsController.parseDealMetadata(deal.terms.metadata)
                 await DealsController.upsertDeal(DealsController.formatDeal(deal))
+                console.log("Deal Correct", deal)
             } catch (e: any) {
                 if (e instanceof z.ZodError) {
                     console.log("Deal Id: ", deal.id)
@@ -101,13 +106,22 @@ const init = async (chain: any) => {
 async function start() {
     const validChainKeys = Object.keys(validChains)
     await resetDB()
-    for (const validChainKey of validChainKeys) {
-        try{
-            await init(validChains[validChainKey])
-            console.log("Initialized on chain: ", validChains[validChainKey].name)
-        } catch (e){
-            console.log("Error", e)
-        }
+    try{
+        await init(validChains[0])
+        console.log("Initialized on chain: ", validChains[0].name)
+        /*
+                    let eventHandler = new EventHandler();
+
+                    let result = await eventHandler.getResourcesPastEvents({
+                        eventName: "AddedResource",
+                        fromBlock: 10273858,
+                        toBlock: "latest",
+                    })
+                    console.log(result)
+
+         */
+    } catch (e){
+        console.log("Error", e)
     }
 }
 

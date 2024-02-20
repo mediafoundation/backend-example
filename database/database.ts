@@ -1,4 +1,4 @@
-import {Dialect, Sequelize} from "sequelize";
+import {Dialect, Op, Sequelize} from "sequelize";
 require('dotenv').config()
 
 let sequelize: Sequelize;
@@ -16,4 +16,4 @@ else{
     });
 }
 
-export {sequelize}
+export {sequelize, Op}
