@@ -21,7 +21,7 @@ describe('parseFilter', () => {
                 {
                     or: [
                         {title: 'title1'},
-                        {title: 'title2'}
+                        {title2: 'title2'}
                     ]
                 }
             ]
@@ -33,7 +33,7 @@ describe('parseFilter', () => {
                 {
                     [Op.or]: [
                         {title: 'title1'},
-                        {title: 'title2'}
+                        {title2: 'title2'}
                     ]
                 }
             ]
@@ -54,6 +54,24 @@ describe('parseFilter', () => {
         const expectedResult = {
             title: {
                 [Op.contains]: ['title', 'second title']
+            }
+        }
+
+        let result = parseFilter(filter);
+
+        expect(result).toEqual(expectedResult);
+    })
+
+    it("gt operator", () => {
+        const filter = {
+            price: {
+                gt: 10
+            }
+        }
+
+        const expectedResult = {
+            price: {
+                [Op.gt]: 10
             }
         }
 

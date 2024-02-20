@@ -15,6 +15,12 @@ export function parseFilter(obj: any = {}) {
                 obj[key] = parseFilter(obj[key]);
             }
         }
+        else{
+            if(sequelizeOperators.includes(key as OpKeyType)){
+                obj[Op[key as OpKeyType]] = obj[key];
+                delete obj[key];
+            }
+        }
     });
 
     return obj;
