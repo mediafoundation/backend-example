@@ -3,6 +3,8 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import { DealsController } from './database/controllers/dealsController';
 import { ResourcesController } from './database/controllers/resourcesController';
+import {OffersController} from "./database/controllers/offersController";
+import {parseFilter} from "./utils/filter";
 
 const app = express();
 
@@ -25,6 +27,13 @@ app.get('/resources', async (req, res) => {
     const resources = await ResourcesController.getResources();
     res.json(resources);
 });
+
+app.get('/offers', async (req, res) => {
+    let filter = JSON.parse(req.query.filter as string)
+    let parsedFilter = parseFilter(filter)
+    const offers = await OffersController.getOffers(parsedFilter);
+    res.json(offers);
+})
 
 // Start the server
 const port = 5000;
