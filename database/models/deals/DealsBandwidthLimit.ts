@@ -1,16 +1,16 @@
 import {DataTypes} from "sequelize";
-import {sequelize} from "../../database";
+import {DECIMALS_DIGITS, sequelize} from "../../database";
 
 export const DealsBandwidthLimit = sequelize.define("DealsBandwidthLimit", {
     id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
     dealId: {
-        type: DataTypes.BIGINT,
+        type: DataTypes.STRING,
         references: {
             model: 'Deals',
-            key: 'id'
+            key: 'id',
         }
     },
-    amount: DataTypes.BIGINT,
+    amount: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
     period: DataTypes.STRING,
     unit: DataTypes.STRING,
 }, {

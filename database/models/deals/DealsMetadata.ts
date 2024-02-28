@@ -1,19 +1,19 @@
 import {DataTypes} from "sequelize";
-import {sequelize} from "../../database";
+import {DECIMALS_DIGITS, sequelize} from "../../database";
 import {array, boolean, number, object, string, z} from "zod";
 
 export const DealsMetadata = sequelize.define("DealsMetadata", {
     id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
     dealId: {
-        type: DataTypes.BIGINT,
+        type: DataTypes.STRING,
         references: {
             model: 'Deals',
-            key: 'id'
+            key: 'id',
         }
     },
     label: DataTypes.STRING,
     autoSsl: DataTypes.BOOLEAN,
-    burstSpeed: DataTypes.BIGINT,
+    burstSpeed: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
     apiEndpoint: DataTypes.STRING,
     customCnames: DataTypes.STRING,
 }, {

@@ -8,8 +8,3 @@ export const DealsNodeLocations = sequelize.define("DealsNodeLocations", {
     modelName: 'DealsNodeLocations',
     freezeTableName: true
 });
-
-export type NodesLocationType = {
-    id: number,
-    location: string
-}
