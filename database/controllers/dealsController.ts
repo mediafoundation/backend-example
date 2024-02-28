@@ -78,8 +78,9 @@ export class DealsController {
 
     };
 
-    static async getDeals(filter: WhereOptions<any> = {}): Promise<Array<any>> {
+    static async getDeals(filter: WhereOptions<any> = {}, page = 1, pageSize = 10): Promise<Array<any>> {
         try {
+            const offset = (page - 1) * pageSize;
             return await Deal.findAll({
                 attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']},
                 where: filter,
@@ -97,6 +98,8 @@ export class DealsController {
                 ],
                 raw: true,
                 nest: true,
+                offset: offset,
+                limit: pageSize,
             });
         } catch (error) {
             throw error;

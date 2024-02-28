@@ -1,4 +1,5 @@
 import {Resource} from '../models/Resource';
+import {WhereOptions} from "sequelize";
 
 export class ResourcesController {
   static upsertResource = async (resource: any) => {
@@ -15,7 +16,7 @@ export class ResourcesController {
     }
   };
 
-  static getResources = async (filter = {}, page = 1, pageSize = 10) => {
+  static getResources = async (filter: WhereOptions<any> = {}, page = 1, pageSize = 10) => {
     try {
       const offset = (page - 1) * pageSize;
       return await Resource.findAll({

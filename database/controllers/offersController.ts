@@ -42,9 +42,16 @@ export class OffersController{
 
   };
 
-  static async getOffers(filter: WhereOptions<any> = {}) {
+  static async getOffers(filter: WhereOptions<any> = {}, page = 1, pageSize = 10) {
     try {
-      return await Offer.findAll({attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']}, where: filter});
+      const offset = (page - 1) * pageSize;
+      return await Offer.findAll({
+        attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']},
+        where: filter,
+        offset: offset,
+        limit: pageSize,
+        raw: true
+      });
     } catch (error) {
       throw error;
     }
