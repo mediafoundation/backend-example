@@ -6,8 +6,6 @@ import {ResourcesController} from "./database/controllers/resourcesController";
 import {resetDB} from "./database/utils";
 import {OffersController} from "./database/controllers/offersController";
 import {z} from "zod";
-import {OffersMetadataType} from "./database/models/offers/OffersMetadata";
-import {DealsMetadataType} from "./database/models/deals/DealsMetadata";
 
 require('dotenv').config()
 
@@ -17,20 +15,24 @@ const init = async (chain: any) => {
     let marketplaceViewer: MarketplaceViewer = new MarketplaceViewer(sdkInstance);
     let resourcesInstance: Resources = new Resources(sdkInstance);
 
-    let resources = await resourcesInstance.getPaginatedResources({address: process.env.userAddress, start: 0, end: 10})
+    let resources = await resourcesInstance.getAllResourcesPaginating({address: process.env.userAddress, start: 0, end: 10})
 
     console.log("Resources", resources)
 
-    let deals = await marketplaceViewer.getPaginatedDeals({
+    let deals = await marketplaceViewer.getAllDealsPaginating({
         marketplaceId: 1,
         address: process.env.userAddress,
         isProvider: true
     })
 
+    console.log("Deals", deals)
+
 
     let offers = await marketplaceViewer.getAllOffersPaginating({marketplaceId: 1, start: 0, steps: 10})
 
-    if(deals[0].length !== 0 && resources.length !== 0) {
+    console.log("Offers", offers)
+
+    /*if(deals[0].length !== 0 && resources.length !== 0) {
         let resourcesWithoutDeal = resourcesNotMatchingDeal(resources.map((resource: any) => resource.id), deals.map((deal: any) => deal.resourceId))
         resources[0] = resources[0].filter((resource: any) => !resourcesWithoutDeal.includes(resource.id))
         for (const resource of resources[0]) {
@@ -70,7 +72,7 @@ const init = async (chain: any) => {
             } catch (e: any) {
                 if (e instanceof z.ZodError) {
                     console.log("Deal Id: ", deal.id)
-                    console.error("Metadata Validation failed!\n", "Expected: ", DealsMetadataType.keyof()._def.values, " Got: ", deal.metadata);
+                    //console.error("Metadata Validation failed!\n", "Expected: ", DealsMetadataType.keyof()._def.values, " Got: ", deal.metadata);
                 } else {
                     console.log("Deal Id: ", deal.id)
                     console.error("Unknown error", e.message, "With deal", deal);
@@ -90,7 +92,7 @@ const init = async (chain: any) => {
         } catch (e: any) {
             if (e instanceof z.ZodError) {
                 console.log("Offer Id: ", offer.id)
-                console.error("Metadata Validation failed!\n", "Expected: ", OffersMetadataType.keyof()._def.values, " Got: ", offer.terms.metadata);
+                //console.error("Metadata Validation failed!\n", "Expected: ", OffersMetadataType.keyof()._def.values, " Got: ", offer.terms.metadata);
             } else {
                 console.log("Offer Id: ", offer.id)
                 console.error("Unknown error", e.message, "With offer", offer);
@@ -100,15 +102,17 @@ const init = async (chain: any) => {
 
 
 
-    console.log("Deals from db", await DealsController.getDeals())
+    console.log("Deals from db", await DealsController.getDeals())*/
 }
 
 async function start() {
-    //const validChainKeys = Object.keys(validChains)
+    const validChainKeys = Object.keys(validChains)
     await resetDB()
     try{
-        await init(validChains[0])
-        console.log("Initialized on chain: ", validChains[0].name)
+        for (const chain of validChainKeys) {
+            await init(validChains[chain])
+            console.log("Initialized on chain: ", validChains[chain].network)
+        }
     } catch (e){
         console.log("Error", e)
     }

@@ -1,12 +1,9 @@
 import {Deal} from "../models/deals/Deal";
-import {DealsMetadata, DealsMetadataType} from "../models/deals/DealsMetadata";
 import {Resource} from "../models/Resource";
 import {Provider} from "../models/Provider";
 import {Client} from "../models/Client";
-import {DealsBandwidthLimit} from "../models/deals/DealsBandwidthLimit";
-import {DealsNodeLocations} from "../models/deals/DealsNodeLocations";
-import {DealsLocations} from "../models/deals/DealsLocations";
-import {DealsResources} from "../models/associations/DealsResources";
+//import {DealsLocations} from "../models/deals/DealsLocations";
+//import {DealsResources} from "../models/associations/DealsResources";
 import {WhereOptions} from "sequelize";
 
 export class DealsController {
@@ -47,33 +44,33 @@ export class DealsController {
         rawBandwidthLimit.dealId = instance.get('id');
 
         // Ensure the bandwidth limit exists
-        await DealsBandwidthLimit.upsert(rawBandwidthLimit);
+        //await DealsBandwidthLimit.upsert(rawBandwidthLimit);
 
 
 
         // Create or update the metadata
-        await DealsMetadata.upsert(rawMetadata);
+        //await DealsMetadata.upsert(rawMetadata);
 
         for (const location of rawMetadata.nodeLocations) {
-            const [nodeLocation] = await DealsNodeLocations.findOrCreate({
+            /*const [nodeLocation] = await DealsNodeLocations.findOrCreate({
                 where: { location },
                 defaults: { location }
-            });
+            });*/
 
             const dealId = instance.get('id');
-            const nodeId = nodeLocation.get('id');
+            //const nodeId = nodeLocation.get('id');
 
-            await DealsLocations.findOrCreate({
+            /*await DealsLocations.findOrCreate({
                 where: { dealId, nodeId },
                 defaults: { dealId, nodeId }
-            });
+            });*/
         }
 
-        await DealsResources.findOrCreate({
+        /*await DealsResources.findOrCreate({
             where: { dealId: deal.id, resourceId: deal.resourceId },
             defaults: { dealId: deal.id, resourceId: deal.resourceId }
 
-        })
+        })*/
         return [instance, created];
 
     };
@@ -84,7 +81,7 @@ export class DealsController {
             return await Deal.findAll({
                 attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']},
                 where: filter,
-                include: [
+                /*include: [
                     {
                         model: DealsMetadata,
                         as: "Metadata",
@@ -95,7 +92,7 @@ export class DealsController {
                         as: "BandwidthLimit",
                         attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']},
                     }
-                ],
+                ],*/
                 raw: true,
                 nest: true,
                 offset: offset,
@@ -149,6 +146,6 @@ export class DealsController {
     }
 
     static parseDealMetadata(metadata: string){
-        DealsMetadataType.parse(JSON.parse(metadata));
+        //DealsMetadataType.parse(JSON.parse(metadata));
     }
 }

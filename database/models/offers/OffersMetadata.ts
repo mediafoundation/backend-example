@@ -6,20 +6,12 @@ export const OffersMetadata = sequelize.define("OffersMetadata",
     {
         id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
         label: DataTypes.STRING,
-        bandwidthLimitId: {
-            type: DataTypes.BIGINT,
-            references: {
-                model: 'OffersBandwidthLimit',
-                key: 'id'
-            }
-        },
         autoSsl: DataTypes.BOOLEAN,
         burstSpeed: DataTypes.BIGINT,
         apiEndpoint: DataTypes.STRING,
         customCnames: DataTypes.STRING,
     },
     {
-        modelName: 'OffersMetadata',
         freezeTableName: true
     }
 );

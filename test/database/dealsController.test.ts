@@ -1,13 +1,17 @@
 import {Deal} from "../../database/models/deals/Deal";
 import {DealsController} from "../../database/controllers/dealsController"
+import {Resource} from "../../database/models/Resource";
+import {ResourcesController} from "../../database/controllers/resourcesController";
+import {resetDB} from "../../database/utils";
 
 beforeAll(async () => {
-  await Deal.sync({force: true})
+  await resetDB()
 });
 
-afterAll(async () => {
+/*afterAll(async () => {
   await Deal.drop();
-})
+  await Resource.drop();
+})*/
 
 describe('Deal Controller', () => {
 
@@ -18,7 +22,7 @@ describe('Deal Controller', () => {
       offerId: "1",
       client: "DataTypes.STRING",
       provider: "DataTypes.STRING",
-      resourceId: "DataTypes.STRING",
+      resourceId: "1",
       totalPayment: "DataTypes.STRING",
       blockedBalance: "DataTypes.STRING",
       pricePerSecond: "DataTypes.STRING",
@@ -34,6 +38,19 @@ describe('Deal Controller', () => {
       metadata: "DataTypes.STRING",
       network: "DataTypes.STRING"
     };
+
+    const resource = {
+      id: "1",
+      owner: "DataTypes.STRING",
+      label: "DataTypes.STRING",
+      protocol: "DataTypes.STRING",
+      origin: "DataTypes.STRING",
+      path: "DataTypes.STRING",
+      domain: "DataTypes.STRING",
+      network: "DataTypes.STRING",
+    };
+
+    await ResourcesController.upsertResource(resource)
 
     const newDeal = await DealsController.upsertDeal(deal)
     // @ts-ignore

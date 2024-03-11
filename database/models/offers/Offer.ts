@@ -11,13 +11,6 @@ export const Offer = sequelize.define("Offers",
         provider: DataTypes.STRING,
         autoAccept: DataTypes.BOOLEAN,
         minDealDuration: DataTypes.INTEGER,
-        metadataId: {
-            type: DataTypes.BIGINT,
-            references: {
-                model: 'OffersMetadata',
-                key: 'id'
-            }
-        }
     },
     {
         modelName: 'Deal',

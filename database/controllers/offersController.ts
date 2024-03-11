@@ -1,8 +1,4 @@
 import {Offer} from "../models/offers/Offer";
-import {OffersMetadata, OffersMetadataType} from "../models/offers/OffersMetadata";
-import {OffersNodeLocations} from "../models/offers/OffersNodeLocations";
-import {OffersMetadataNodeLocations} from "../models/offers/OffersMetadataNodeLocations";
-import {OffersBandwidthLimit} from "../models/offers/OffersBandwidthLimit";
 import {WhereOptions} from "sequelize";
 export class OffersController{
 
@@ -13,29 +9,29 @@ export class OffersController{
     let rawMetadata = JSON.parse(offer.metadata);
 
     // Ensure the bandwidth limit exists
-    const [bandwidthLimit] = await OffersBandwidthLimit.upsert(rawMetadata.bandwidthLimit);
+    //const [bandwidthLimit] = await OffersBandwidthLimit.upsert(rawMetadata.bandwidthLimit);
 
-    rawMetadata.bandwidthLimitId = bandwidthLimit.get('id');
+    //rawMetadata.bandwidthLimitId = bandwidthLimit.get('id');
 
     // Create or update the metadata
-    const [metadata] = await OffersMetadata.upsert(rawMetadata);
+    //const [metadata] = await OffersMetadata.upsert(rawMetadata);
 
     // Handle the node locations
     for (const location of rawMetadata.nodeLocations) {
-      const [nodeLocation] = await OffersNodeLocations.findOrCreate({
+      /*const [nodeLocation] = await OffersNodeLocations.findOrCreate({
         where: { location },
         defaults: { location }
-      });
+      });*/
 
-      const metadataId = await metadata.get('id');
-      const nodeId = await nodeLocation.get('id');
+      //const metadataId = await metadata.get('id');
+      /*const nodeId = await nodeLocation.get('id');
 
       await OffersMetadataNodeLocations.findOrCreate({
         where: { metadataId, nodeId },
         defaults: { metadataId, nodeId }
-      });
+      });*/
     }
-    offer.metadataId = metadata.get('id');
+    //offer.metadataId = metadata.get('id');
 
     const [instance, created] = await Offer.upsert(offer);
     return [instance, created];
@@ -104,6 +100,6 @@ export class OffersController{
   }
 
   static parseOffer(offerMetadata: string){
-    OffersMetadataType.parse(JSON.parse(offerMetadata));
+    //OffersMetadataType.parse(JSON.parse(offerMetadata));
   }
 }

@@ -1,10 +1,9 @@
+import {sequelize} from "../database";
 import {DataTypes} from "sequelize";
-import {sequelize} from "../../database";
 
-export const DealsNodeLocations = sequelize.define("DealsNodeLocations", {
+export const NodeLocation = sequelize.define("NodeLocation", {
     id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
     location: DataTypes.STRING,
 }, {
-    modelName: 'DealsNodeLocations',
     freezeTableName: true
 });
