@@ -1,6 +1,4 @@
-import {Deal, DealMetadata} from "../../database/models/deals/Deal";
 import {DealsController} from "../../database/controllers/dealsController"
-import {Resource} from "../../database/models/Resource";
 import {ResourcesController} from "../../database/controllers/resourcesController";
 import {resetDB} from "../../database/utils";
 

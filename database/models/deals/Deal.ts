@@ -10,6 +10,7 @@ import {
     HasOneCreateAssociationMixin,
 } from 'sequelize';
 import {DECIMALS_DIGITS, sequelize} from "../../database";
+import {DealMetadata} from "./DealsMetadata";
 
 export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<Deal>> {
     declare id: string;
@@ -35,19 +36,7 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
     };
 }
 
-export class DealMetadata extends Model<
-  InferAttributes<DealMetadata>,
-  InferCreationAttributes<DealMetadata>
->{
-    declare id: CreationOptional<number>;
-    declare dealId: ForeignKey<Deal['id']>
-    declare type: string;
-    declare label: string;
-    declare autoSsl: boolean;
-    declare burstSpeed: number;
-    declare apiEndpoint: string;
-    declare customCnames: boolean;
-}
+
 
 
 Deal.init({
@@ -66,19 +55,5 @@ Deal.init({
     cancelledAt: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
     network: DataTypes.STRING
 }, {
-    sequelize,
-    tableName: 'deals'
-})
-
-DealMetadata.init({
-    id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
-    type: DataTypes.STRING,
-    label: DataTypes.STRING,
-    autoSsl: DataTypes.BOOLEAN,
-    burstSpeed: DataTypes.NUMBER,
-    apiEndpoint: DataTypes.STRING,
-    customCnames: DataTypes.BOOLEAN
-}, {
-    sequelize,
-    tableName: 'deals_metadata'
+    sequelize
 })

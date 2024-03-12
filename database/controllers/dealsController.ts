@@ -1,13 +1,13 @@
-import {Deal, DealMetadata} from "../models/deals/Deal";
+import {Deal} from "../models/deals/Deal";
 import {Resource} from "../models/Resource";
-import {Provider} from "../models/Provider";
 import {Client} from "../models/Client";
-//import {DealsLocations} from "../models/deals/DealsLocations";
-//import {DealsResources} from "../models/associations/DealsResources";
-import {string, z} from "zod";
-import {DealsMetadata, DealsMetadataType} from "../models/deals/DealsMetadata";
+/**
+ * import {DealsLocations} from "../models/deals/DealsLocations";
+ * import {DealsResources} from "../models/associations/DealsResources";
+ */
 import {WhereOptions} from "sequelize";
 import {DealFormatted, DealRawSchema, DealRawType, DealTransformed, MetadataSchema} from "../models/types/deal";
+import {DealMetadata} from "../models/deals/DealsMetadata";
 
 export class DealsController {
     constructor() {
@@ -48,7 +48,7 @@ export class DealsController {
                 where: filter,
                 include: [
                     {
-                        model: DealsMetadata,
+                        model: DealMetadata,
                         as: "Metadata",
                         attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']},
                     },
@@ -70,7 +70,7 @@ export class DealsController {
 
     static async upsertMetadata(deal: any) {
         let metadata = JSON.parse(deal.metadata);
-        const [instance, created] = await DealsMetadata.findOrCreate({
+        const [instance, created] = await DealMetadata.findOrCreate({
             where: {dealId: deal.id},
             defaults: {
                 dealId: deal.id,

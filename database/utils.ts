@@ -6,7 +6,7 @@ import {NodeLocation} from "./models/NodeLocation";
 import {BandwidthLimit} from "./models/BandwidthLimit";
 import {Offer} from "./models/offers/Offer";
 import {Provider} from "./models/Provider";
-import {DealsMetadata} from "./models/deals/DealsMetadata";
+import {DealMetadata} from "./models/deals/DealsMetadata";
 import {OffersMetadata} from "./models/offers/OffersMetadata";
 
 const resetDB = async () => {
@@ -29,7 +29,7 @@ const createRelationsBetweenTables = async () => {
     Client.hasMany(Deal)
     Deal.belongsTo(Client, {})
 
-    Deal.hasOne(DealsMetadata, {
+    Deal.hasOne(DealMetadata, {
         onDelete: 'CASCADE',
         as: 'Metadata',
         sourceKey: 'id',

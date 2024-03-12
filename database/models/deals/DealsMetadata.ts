@@ -1,18 +1,33 @@
-import {DataTypes} from "sequelize";
+import {CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model} from "sequelize";
 import {DECIMALS_DIGITS, sequelize} from "../../database";
 import {array, boolean, number, object, string, z} from "zod";
+import {Deal} from "./Deal";
 
-export const DealsMetadata = sequelize.define("DealsMetadata", {
+export class DealMetadata extends Model<
+  InferAttributes<DealMetadata>,
+  InferCreationAttributes<DealMetadata>
+>{
+    declare id: CreationOptional<number>;
+    declare dealId: ForeignKey<Deal['id']>
+    declare type: string;
+    declare label: string;
+    declare autoSsl: boolean;
+    declare burstSpeed: number;
+    declare apiEndpoint: string;
+    declare customCnames: boolean;
+}
+
+DealMetadata.init({
     id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
     type: DataTypes.STRING,
     label: DataTypes.STRING,
     autoSsl: DataTypes.BOOLEAN,
-    burstSpeed: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
+    burstSpeed: DataTypes.NUMBER,
     apiEndpoint: DataTypes.STRING,
-    customCnames: DataTypes.STRING,
+    customCnames: DataTypes.BOOLEAN
 }, {
-    freezeTableName: true
-});
+    sequelize
+})
 
 export const DealsMetadataType = z.object({
     type: string(),
