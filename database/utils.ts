@@ -29,8 +29,12 @@ const createRelationsBetweenTables = async () => {
     Client.hasMany(Deal)
     Deal.belongsTo(Client, {})
 
-    Deal.hasOne(DealsMetadata, {onDelete: 'CASCADE'})
-    DealsMetadata.belongsTo(Deal);
+    Deal.hasOne(DealsMetadata, {
+        onDelete: 'CASCADE',
+        as: 'Metadata',
+        sourceKey: 'id',
+        foreignKey: 'dealId'
+    })
 
     Deal.hasOne(BandwidthLimit, {onDelete: 'CASCADE'});
     BandwidthLimit.belongsTo(Deal);

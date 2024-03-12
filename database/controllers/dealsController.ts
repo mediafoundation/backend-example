@@ -1,17 +1,20 @@
-import {Deal} from "../models/deals/Deal";
+import {Deal, DealMetadata} from "../models/deals/Deal";
 import {Resource} from "../models/Resource";
 import {Provider} from "../models/Provider";
 import {Client} from "../models/Client";
 //import {DealsLocations} from "../models/deals/DealsLocations";
 //import {DealsResources} from "../models/associations/DealsResources";
+import {string, z} from "zod";
+import {DealsMetadata, DealsMetadataType} from "../models/deals/DealsMetadata";
 import {WhereOptions} from "sequelize";
+import {DealFormatted, DealRawSchema, DealRawType, DealTransformed, MetadataSchema} from "../models/types/deal";
 
 export class DealsController {
     constructor() {
     }
 
 
-    static async upsertDeal(deal: any) {
+    static async upsertDeal(deal: DealFormatted) {
         const resource = await Resource.findOne({
             where: {id: deal.resourceId}
         });
@@ -20,59 +23,21 @@ export class DealsController {
             throw new Error('Resource not found for deal: ' + deal.id + ' with resource id: ' + deal.resourceId);
         }
 
-        const [client] = await Client.findOrCreate({
+        await Client.findOrCreate({
             where: {account: deal.client},
             defaults: {account: deal.client}
         });
-        // Ensure the provider exists
 
-        const [provider] = await Provider.findOrCreate({
-            where: {account: deal.provider},
-            defaults: {account: deal.provider}
-        });
-
-        deal.clientId = client.get('id');
-        deal.providerId = provider.get('id');
-        deal.resourceId = resource.get('id');
-
-        const [instance, created] = await Deal.upsert(deal);
-
-        let rawMetadata = JSON.parse(deal.metadata);
-        let rawBandwidthLimit = rawMetadata.bandwidthLimit;
-
-        rawMetadata.dealId = instance.get('id');
-        rawBandwidthLimit.dealId = instance.get('id');
-
-        // Ensure the bandwidth limit exists
-        //await DealsBandwidthLimit.upsert(rawBandwidthLimit);
+        const [instance, created] = await Deal.upsert(deal, {returning: true});
 
 
+        await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata});
 
-        // Create or update the metadata
-        //await DealsMetadata.upsert(rawMetadata);
 
-        for (const location of rawMetadata.nodeLocations) {
-            /*const [nodeLocation] = await DealsNodeLocations.findOrCreate({
-                where: { location },
-                defaults: { location }
-            });*/
-
-            const dealId = instance.get('id');
-            //const nodeId = nodeLocation.get('id');
-
-            /*await DealsLocations.findOrCreate({
-                where: { dealId, nodeId },
-                defaults: { dealId, nodeId }
-            });*/
-        }
-
-        /*await DealsResources.findOrCreate({
-            where: { dealId: deal.id, resourceId: deal.resourceId },
-            defaults: { dealId: deal.id, resourceId: deal.resourceId }
-
-        })*/
-        return [instance, created];
-
+        return {
+            deal: instance.dataValues,
+            created: created
+        };
     };
 
     static async getDeals(filter: WhereOptions<any> = {}, page = 1, pageSize = 10): Promise<Array<any>> {
@@ -81,18 +46,18 @@ export class DealsController {
             return await Deal.findAll({
                 attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']},
                 where: filter,
-                /*include: [
+                include: [
                     {
                         model: DealsMetadata,
                         as: "Metadata",
                         attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']},
                     },
-                    {
-                        model: DealsBandwidthLimit,
+                    /*{
+                        model: BandwidthLimit,
                         as: "BandwidthLimit",
                         attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']},
-                    }
-                ],*/
+                    }*/
+                ],
                 raw: true,
                 nest: true,
                 offset: offset,
@@ -101,6 +66,37 @@ export class DealsController {
         } catch (error) {
             throw error;
         }
+    }
+
+    static async upsertMetadata(deal: any) {
+        let metadata = JSON.parse(deal.metadata);
+        const [instance, created] = await DealsMetadata.findOrCreate({
+            where: {dealId: deal.id},
+            defaults: {
+                dealId: deal.id,
+                type: metadata.type,
+                label: metadata.label,
+                autoSsl: metadata.autoSsl,
+                burstSpeed: metadata.burstSpeed,
+                apiEndpoint: metadata.apiEndpoint,
+                customCnames: metadata.customCnames
+            }
+        });
+
+        console.log("Metadata", metadata, instance, created)
+
+        if(!created){
+            await instance.update({
+                type: metadata.type,
+                label: metadata.label,
+                autoSsl: metadata.autoSsl,
+                burstSpeed: metadata.burstSpeed,
+                apiEndpoint: metadata.apiEndpoint,
+                customCnames: metadata.customCnames
+            });
+        }
+
+        return [instance.dataValues, created];
     }
 
     static async getDealById(id: string) {
@@ -124,16 +120,31 @@ export class DealsController {
         }
     };
 
-    static formatDeal(deal: any): any {
+    static formatDeal(deal: any): DealFormatted {
 
-        // Create a new object to hold the result
+        DealRawSchema.parse(deal)
+
+        let transformed = this.transformObj(deal)
+
+        transformed['metadata'] = JSON.parse(transformed.metadata)
+
+        MetadataSchema.parse(transformed.metadata)
+
+        return transformed as unknown as DealFormatted;
+    }
+
+    static parseDealMetadata(metadata: string){
+        //DealsMetadataType.parse(JSON.parse(metadata));
+    }
+
+    static transformObj(deal: any): DealTransformed {
         let result: any = {};
 
         // Iterate over the properties of the object
         for (const key in deal) {
             // If the property is an object, merge its properties with the result
             if (typeof deal[key] === 'object' && deal[key] !== null) {
-                result = {...result, ...DealsController.formatDeal(deal[key])};
+                result = {...result, ...DealsController.transformObj(deal[key])};
             } else if (typeof deal[key] === 'bigint') {
                 // If the property is a bigint, parse it to a number
                 result[key] = Number(deal[key]);
@@ -142,10 +153,7 @@ export class DealsController {
                 result[key] = deal[key];
             }
         }
-        return result;
-    }
 
-    static parseDealMetadata(metadata: string){
-        //DealsMetadataType.parse(JSON.parse(metadata));
+        return result;
     }
 }
