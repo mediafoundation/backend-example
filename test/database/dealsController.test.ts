@@ -53,7 +53,7 @@ describe('Deal Controller', () => {
 
     const formattedDeal = DealsController.formatDeal(mockDeal)
 
-    const result = await DealsController.upsertDeal(formattedDeal)
+    const result = await DealsController.upsertDeal(formattedDeal, "ganache")
 
     expect(result.deal).not.toBeNull()
   });
@@ -65,8 +65,9 @@ describe('Deal Controller', () => {
 
     const deal = await DealsController.getDealById('1')
 
-    // @ts-ignore
-    expect(deal.id).toBe(1)
+    expect(deal!.id).toBe("1")
+
+    console.log("Deal", deal, await deal!.getBandwidthLimit())
   })
 
   test("delete deal", async () => {
@@ -76,7 +77,6 @@ describe('Deal Controller', () => {
 
     const deal = await DealsController.deleteDealById(1)
 
-    // @ts-ignore
-    expect(deal.id).toBe(1)
+    expect(deal!.id).toBe("1")
   })
 });

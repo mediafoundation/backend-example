@@ -5,10 +5,11 @@ import {
     InferAttributes,
     InferCreationAttributes,
     HasOneGetAssociationMixin,
-    HasOneCreateAssociationMixin,
+    HasOneCreateAssociationMixin, ForeignKey,
 } from 'sequelize';
 import {DECIMALS_DIGITS, sequelize} from "../../database";
 import {DealMetadata} from "./DealsMetadata";
+import {BandwidthLimit} from "../BandwidthLimit";
 
 export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<Deal>> {
     declare id: string;
@@ -29,9 +30,13 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
     declare getMetadata: HasOneGetAssociationMixin<DealMetadata>;
     declare createMetadata: HasOneCreateAssociationMixin<DealMetadata>;
 
-    declare static associations: {
+    declare getBandwidthLimit: HasOneGetAssociationMixin<BandwidthLimit>
+    declare createBandwidthLimit: HasOneCreateAssociationMixin<BandwidthLimit>
+
+    /*declare static associations: {
         metadata: Association<Deal, DealMetadata>
-    };
+        bandwidthLimit: Association<Deal, BandwidthLimit>
+    };*/
 }
 
 

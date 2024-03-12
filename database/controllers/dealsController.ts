@@ -14,7 +14,7 @@ export class DealsController {
     }
 
 
-    static async upsertDeal(deal: DealFormatted) {
+    static async upsertDeal(deal: DealFormatted, network: string) {
         const resource = await Resource.findOne({
             where: {id: deal.resourceId}
         });
@@ -23,15 +23,17 @@ export class DealsController {
             throw new Error('Resource not found for deal: ' + deal.id + ' with resource id: ' + deal.resourceId);
         }
 
-        await Client.findOrCreate({
+        let client = await Client.findOrCreate({
             where: {account: deal.client},
             defaults: {account: deal.client}
         });
 
-        const [instance, created] = await Deal.upsert(deal, {returning: true});
+        const [instance, created] = await Deal.upsert({...deal, network: network}, {returning: true});
 
 
         await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata});
+
+        await instance.createBandwidthLimit({dealId: instance.dataValues.id, ...deal.metadata.bandwidthLimit})
 
 
         return {

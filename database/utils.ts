@@ -23,11 +23,17 @@ const resetDB = async () => {
 const createRelationsBetweenTables = async () => {
 
     //Deals
-    Resource.hasMany(Deal);
-    Deal.belongsTo(Resource);
+    Resource.hasMany(Deal, {
+        as: 'Deals',
+        foreignKey: 'resourceId'
+    });
+    //Deal.belongsTo(Resource);
 
-    Client.hasMany(Deal)
-    Deal.belongsTo(Client, {})
+    /*Client.hasMany(Deal, {
+        as: 'Deals',
+        foreignKey: 'clientId'
+    })*/
+    //Deal.belongsTo(Client, {})
 
     Deal.hasOne(DealMetadata, {
         onDelete: 'CASCADE',
@@ -36,18 +42,25 @@ const createRelationsBetweenTables = async () => {
         foreignKey: 'dealId'
     })
 
-    Deal.hasOne(BandwidthLimit, {onDelete: 'CASCADE'});
-    BandwidthLimit.belongsTo(Deal);
+    Deal.hasOne(BandwidthLimit, {
+        onDelete: 'CASCADE',
+        as: 'BandwidthLimit',
+        sourceKey: 'id',
+        foreignKey: 'dealId'
+    });
+    //BandwidthLimit.belongsTo(Deal);
 
     Deal.belongsToMany(NodeLocation, {through: 'DealsNodeLocations'});
     NodeLocation.belongsToMany(Deal, {through: 'DealsNodeLocations'});
 
     //Offers
 
-    Offer.hasMany(Deal);
-    Deal.belongsTo(Offer);
+    /*Offer.hasMany(Deal, {
+        as: 'Deals',
+        foreignKey: 'offerId'
+    });*/
 
-    Offer.hasOne(OffersMetadata, {onDelete: 'CASCADE'});
+    /*Offer.hasOne(OffersMetadata, {onDelete: 'CASCADE'});
     OffersMetadata.belongsTo(Offer);
 
     Offer.hasOne(BandwidthLimit, {onDelete: 'CASCADE'});
@@ -57,7 +70,7 @@ const createRelationsBetweenTables = async () => {
     NodeLocation.belongsToMany(Offer, {through: 'OffersNodeLocations'});
 
     Provider.hasMany(Offer);
-    Offer.belongsTo(Provider);
+    Offer.belongsTo(Provider);*/
 
 }
 
