@@ -1,5 +1,5 @@
 import {CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model} from "sequelize";
-import {DECIMALS_DIGITS, sequelize} from "../../database";
+import {sequelize} from "../../database";
 import {array, boolean, number, object, string, z} from "zod";
 import {Deal} from "./Deal";
 

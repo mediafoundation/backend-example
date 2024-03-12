@@ -6,7 +6,7 @@ import {Client} from "../models/Client";
  * import {DealsResources} from "../models/associations/DealsResources";
  */
 import {WhereOptions} from "sequelize";
-import {DealFormatted, DealRawSchema, DealRawType, DealTransformed, MetadataSchema} from "../models/types/deal";
+import {DealFormatted, DealRawSchema, DealTransformed, MetadataSchema} from "../models/types/deal";
 import {DealMetadata} from "../models/deals/DealsMetadata";
 
 export class DealsController {
@@ -132,11 +132,6 @@ export class DealsController {
 
         return transformed as unknown as DealFormatted;
     }
-
-    static parseDealMetadata(metadata: string){
-        //DealsMetadataType.parse(JSON.parse(metadata));
-    }
-
     static transformObj(deal: any): DealTransformed {
         let result: any = {};
 
