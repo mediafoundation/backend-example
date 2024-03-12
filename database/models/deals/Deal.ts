@@ -39,7 +39,7 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
     declare createBandwidthLimit: HasOneCreateAssociationMixin<BandwidthLimit>
 
     declare getNodeLocations: HasManyGetAssociationsMixin<NodeLocation>
-    declare createNodeLocation: HasManyCreateAssociationMixin<NodeLocation, 'dealId'>
+    declare createNodeLocation: HasManyCreateAssociationMixin<NodeLocation, 'id'>
 
     /*declare static associations: {
         metadata: Association<Deal, DealMetadata>

@@ -1,6 +1,9 @@
 import {DealsController} from "../../database/controllers/dealsController"
 import {ResourcesController} from "../../database/controllers/resourcesController";
 import {resetDB} from "../../database/utils";
+import {DealMetadata} from "../../database/models/deals/DealsMetadata";
+import {BandwidthLimit} from "../../database/models/BandwidthLimit";
+import {NodeLocation} from "../../database/models/NodeLocation";
 
 const mockDeal = {
   id: 1,
@@ -64,12 +67,18 @@ describe('Deal Controller', () => {
     expect(nullDeal).toBeNull()
 
     const deal = await DealsController.getDealById('1')
+    const metadata = await deal!.getMetadata()
+    const bandwidthLimit = await deal!.getBandwidthLimit()
+    const nodeLocations = await deal!.getNodeLocations()
 
     expect(deal!.id).toBe("1")
 
-    expect(await deal!.getBandwidthLimit()).not.toBeNull()
-    expect(await deal!.getNodeLocations({})).not.toBeNull()
-    expect(await deal!.getMetadata()).not.toBeNull()
+    expect(metadata).not.toBeNull()
+    expect(nodeLocations).not.toBeNull()
+    expect(bandwidthLimit).not.toBeNull()
+
+    expect(nodeLocations.length).toBe(3)
+    expect(nodeLocations[0].location).toBe("ABB")
   })
 
   test("delete deal", async () => {
@@ -79,6 +88,15 @@ describe('Deal Controller', () => {
 
     const deal = await DealsController.deleteDealById(1)
 
+
+    let bandwidthLimit = await BandwidthLimit.findAll()
+    let nodeLocations = await NodeLocation.findAll()
+    let metadata = await DealMetadata.findAll()
+
+    expect(metadata.length).toBe(0)
+    expect(bandwidthLimit.length).toBe(0)
+    expect(nodeLocations.length).toBe(3)
     expect(deal!.id).toBe("1")
+    expect(await deal!.getNodeLocations()).toStrictEqual([])
   })
 });
