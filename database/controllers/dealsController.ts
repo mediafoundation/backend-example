@@ -35,6 +35,10 @@ export class DealsController {
 
         await instance.createBandwidthLimit({dealId: instance.dataValues.id, ...deal.metadata.bandwidthLimit})
 
+        for (const nodeLocation of deal.metadata.nodeLocations) {
+            await instance.createNodeLocation({location: nodeLocation}, {returning: true});
+        }
+
 
         return {
             deal: instance.dataValues,

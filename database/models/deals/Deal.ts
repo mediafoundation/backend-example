@@ -5,11 +5,16 @@ import {
     InferAttributes,
     InferCreationAttributes,
     HasOneGetAssociationMixin,
-    HasOneCreateAssociationMixin, ForeignKey,
+    HasOneCreateAssociationMixin,
+    ForeignKey,
+    HasManyGetAssociationsMixin,
+    HasManyCreateAssociationMixin,
+    BelongsToManyGetAssociationsMixin, BelongsToManyCreateAssociationMixin,
 } from 'sequelize';
 import {DECIMALS_DIGITS, sequelize} from "../../database";
 import {DealMetadata} from "./DealsMetadata";
 import {BandwidthLimit} from "../BandwidthLimit";
+import {NodeLocation} from "../NodeLocation";
 
 export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<Deal>> {
     declare id: string;
@@ -32,6 +37,9 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
 
     declare getBandwidthLimit: HasOneGetAssociationMixin<BandwidthLimit>
     declare createBandwidthLimit: HasOneCreateAssociationMixin<BandwidthLimit>
+
+    declare getNodeLocations: HasManyGetAssociationsMixin<NodeLocation>
+    declare createNodeLocation: HasManyCreateAssociationMixin<NodeLocation, 'dealId'>
 
     /*declare static associations: {
         metadata: Association<Deal, DealMetadata>

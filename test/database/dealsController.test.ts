@@ -15,7 +15,7 @@ const mockDeal = {
     minDealDuration: 900n,
     billFullPeriods: false,
     singlePeriodOnly: false,
-    metadata: '{"type":"cdn","label":"Testing Backend","apiEndpoint":"http:localhost:5000/","bandwidthLimit":{"amount":1,"unit":"tb","period":"monthly"},"autoSsl":true,"burstSpeed":1000,"nodeLocations":["ABB"],"customCnames":true}'
+    metadata: '{"type":"cdn","label":"Testing Backend","apiEndpoint":"http:localhost:5000/","bandwidthLimit":{"amount":1,"unit":"tb","period":"monthly"},"autoSsl":true,"burstSpeed":1000,"nodeLocations":["ABB", "CL", "BR"],"customCnames":true}'
   },
   status: {
     active: true,
@@ -67,7 +67,9 @@ describe('Deal Controller', () => {
 
     expect(deal!.id).toBe("1")
 
-    console.log("Deal", deal, await deal!.getBandwidthLimit())
+    expect(await deal!.getBandwidthLimit()).not.toBeNull()
+    expect(await deal!.getNodeLocations({})).not.toBeNull()
+    expect(await deal!.getMetadata()).not.toBeNull()
   })
 
   test("delete deal", async () => {

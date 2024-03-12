@@ -50,8 +50,13 @@ const createRelationsBetweenTables = async () => {
     });
     //BandwidthLimit.belongsTo(Deal);
 
-    Deal.belongsToMany(NodeLocation, {through: 'DealsNodeLocations'});
-    NodeLocation.belongsToMany(Deal, {through: 'DealsNodeLocations'});
+    Deal.hasMany(NodeLocation, {
+        onDelete: 'CASCADE',
+        as: 'NodeLocations',
+        sourceKey: 'id',
+        foreignKey: 'dealId'
+    });
+    //NodeLocation.belongsToMany(Deal, {through: 'DealsNodeLocations'});
 
     //Offers
 
