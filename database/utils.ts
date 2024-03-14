@@ -47,15 +47,23 @@ const createRelationsBetweenTables = async () => {
         as: 'BandwidthLimit',
         sourceKey: 'id',
         foreignKey: 'dealId'
-    });
-    //BandwidthLimit.belongsTo(Deal);
+    })
 
     Deal.belongsToMany(NodeLocation, {
+        through: 'DealNodeLocation', // Nombre de la tabla intermedia
+        foreignKey: 'dealId',
+        otherKey: 'nodeLocationId',
+    });
+
+    //BandwidthLimit.belongsTo(Deal);
+
+    /*Deal.belongsToMany(NodeLocation, {
         through: 'DealsNodeLocations'
     });
 
     NodeLocation.belongsToMany(Deal, {through: 'DealsNodeLocations'});
-    NodeLocation.belongsToMany(Deal, {through: 'DealsNodeLocations'});
+    Deal.belongsToMany(NodeLocation, {through: 'DealsNodeLocations'});*/
+
 
     //Offers
 

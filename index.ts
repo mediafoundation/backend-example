@@ -32,10 +32,10 @@ const init = async (chain: any) => {
 
     console.log("Offers", offers)
 
-    /*if(deals[0].length !== 0 && resources.length !== 0) {
-        let resourcesWithoutDeal = resourcesNotMatchingDeal(resources.map((resource: any) => resource.id), deals.map((deal: any) => deal.resourceId))
-        resources[0] = resources[0].filter((resource: any) => !resourcesWithoutDeal.includes(resource.id))
-        for (const resource of resources[0]) {
+    if(deals.length !== 0 && resources.length !== 0) {
+        /*let resourcesWithoutDeal = resourcesNotMatchingDeal(resources.map((resource: any) => resource.id), deals.map((deal: any) => deal.resourceId))
+        resources = resources.filter((resource: any) => !resourcesWithoutDeal.includes(resource.id))*/
+        for (const resource of resources) {
             let attr = JSON.parse(resource.encryptedData)
             let decryptedSharedKey = await Encryption.ethSigDecrypt(
                 resource.encryptedSharedKey,
@@ -62,13 +62,15 @@ const init = async (chain: any) => {
         }
     }
 
-    if(deals[0].length !== 0) {
-        deals[0] = deals[0].filter((deal: any) => deal.status.active == true)
-        for (const deal of deals[0]) {
+    if(deals.length !== 0) {
+        deals = deals.filter((deal: any) => deal.status.active == true)
+        for (const deal of deals) {
             try{
-                DealsController.parseDealMetadata(deal.terms.metadata)
+                /*DealsController.parseDealMetadata(deal.terms.metadata)
                 await DealsController.upsertDeal(DealsController.formatDeal(deal))
-                console.log("Deal Correct", deal)
+                console.log("Deal Correct", deal)*/
+
+                console.log(DealsController.formatDeal(deal))
             } catch (e: any) {
                 if (e instanceof z.ZodError) {
                     console.log("Deal Id: ", deal.id)
@@ -102,7 +104,7 @@ const init = async (chain: any) => {
 
 
 
-    console.log("Deals from db", await DealsController.getDeals())*/
+    console.log("Deals from db", await DealsController.getDeals())
 }
 
 async function start() {

@@ -1,5 +1,6 @@
 import {sequelize} from "../database";
 import {
+    BelongsToGetAssociationMixin,
     BelongsToManyGetAssociationsMixin,
     CreationOptional,
     DataTypes, ForeignKey, HasManyCreateAssociationMixin, HasManyGetAssociationsMixin,
@@ -11,9 +12,8 @@ import {Deal} from "./deals/Deal";
 
 export class NodeLocation extends Model<InferAttributes<NodeLocation>, InferCreationAttributes<NodeLocation>> {
     declare id: CreationOptional<number>
+    declare dealId: ForeignKey<Deal['id']>
     declare location: string;
-
-    declare getDeals: HasManyGetAssociationsMixin<Deal>
 }
 
 NodeLocation.init({
@@ -21,5 +21,6 @@ NodeLocation.init({
     location: DataTypes.STRING,
 }, {
     sequelize,
+    timestamps: false,
     freezeTableName: true
 })

@@ -26,7 +26,8 @@ DealMetadata.init({
     apiEndpoint: DataTypes.STRING,
     customCnames: DataTypes.BOOLEAN
 }, {
-    sequelize
+    sequelize,
+    timestamps: false,
 })
 
 export const DealsMetadataType = z.object({

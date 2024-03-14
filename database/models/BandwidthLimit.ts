@@ -17,5 +17,6 @@ BandwidthLimit.init({
     unit: DataTypes.STRING,
 }, {
     sequelize,
+    timestamps: false,
     freezeTableName: true
 })

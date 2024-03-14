@@ -9,7 +9,7 @@ import {
     ForeignKey,
     HasManyGetAssociationsMixin,
     HasManyCreateAssociationMixin,
-    BelongsToManyGetAssociationsMixin, BelongsToManyCreateAssociationMixin,
+    BelongsToManyGetAssociationsMixin, BelongsToManyCreateAssociationMixin, CreationOptional,
 } from 'sequelize';
 import {DECIMALS_DIGITS, sequelize} from "../../database";
 import {DealMetadata} from "./DealsMetadata";
@@ -39,12 +39,7 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
     declare createBandwidthLimit: HasOneCreateAssociationMixin<BandwidthLimit>
 
     declare getNodeLocations: HasManyGetAssociationsMixin<NodeLocation>
-    declare createNodeLocation: HasManyCreateAssociationMixin<NodeLocation, 'id'>
-
-    /*declare static associations: {
-        metadata: Association<Deal, DealMetadata>
-        bandwidthLimit: Association<Deal, BandwidthLimit>
-    };*/
+    declare createNodeLocation: HasManyCreateAssociationMixin<NodeLocation>
 }
 
 
@@ -66,5 +61,6 @@ Deal.init({
     cancelledAt: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
     network: DataTypes.STRING
 }, {
-    sequelize
+    sequelize,
+    timestamps: false
 })
