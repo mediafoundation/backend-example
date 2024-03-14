@@ -1,5 +1,4 @@
 import {
-    Association,
     DataTypes,
     Model,
     InferAttributes,
@@ -9,9 +8,6 @@ import {
     ForeignKey,
     HasManyGetAssociationsMixin,
     HasManyCreateAssociationMixin,
-    BelongsToManyGetAssociationsMixin,
-    BelongsToManyCreateAssociationMixin,
-    CreationOptional,
     BelongsToCreateAssociationMixin,
 } from 'sequelize';
 import {DECIMALS_DIGITS, sequelize} from "../../database";
@@ -20,11 +16,13 @@ import {BandwidthLimit} from "../BandwidthLimit";
 import {NodeLocation} from "../NodeLocation";
 import {Resource} from "../Resource";
 import {Client} from "../Client";
+import {Provider} from "../Provider";
 
 export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<Deal>> {
     declare id: string;
     declare resourceId: ForeignKey<Resource['id']>;
     declare client: ForeignKey<Client['account']>;
+    declare provider: ForeignKey<Provider['account']>;
     declare totalPayment: number;
     declare blockedBalance: number;
     declare pricePerSecond: number;
@@ -52,7 +50,7 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
 
     declare setClient: BelongsToCreateAssociationMixin<Client>
 
-    //setProvider: BelongsToCreateAssociationMixin<Client>
+    declare setProvider: BelongsToCreateAssociationMixin<Provider>
 }
 
 

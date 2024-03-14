@@ -10,6 +10,7 @@ import {DealFormatted, DealRawSchema, DealTransformed, MetadataSchema} from "../
 import {DealMetadata} from "../models/deals/DealsMetadata";
 import {NodeLocation} from "../models/NodeLocation";
 import {BandwidthLimit} from "../models/BandwidthLimit";
+import {Provider} from "../models/Provider";
 
 export class DealsController {
   constructor() {
@@ -30,11 +31,18 @@ export class DealsController {
       defaults: {account: deal.client}
     });
 
+    let provider = await Provider.findOrCreate({
+      where: {account: deal.provider},
+      defaults: {account: deal.provider}
+    });
+
     const [instance, created] = await Deal.upsert({...deal, network: network}, {returning: true});
 
     await instance.setResource(resource);
 
     await instance.setClient(client[0]);
+
+    await instance.setProvider(provider[0])
 
     await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata});
 

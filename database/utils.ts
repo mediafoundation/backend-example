@@ -4,10 +4,8 @@ import {Deal} from "./models/deals/Deal";
 import {sequelize} from "./database";
 import {NodeLocation} from "./models/NodeLocation";
 import {BandwidthLimit} from "./models/BandwidthLimit";
-import {Offer} from "./models/offers/Offer";
 import {Provider} from "./models/Provider";
 import {DealMetadata} from "./models/deals/DealsMetadata";
-import {OffersMetadata} from "./models/offers/OffersMetadata";
 
 const resetDB = async () => {
 
@@ -43,6 +41,11 @@ const createRelationsBetweenTables = async () => {
     Deal.belongsTo(Client, {
         foreignKey: 'client',
         as: 'Client' // Alias opcional para la relación
+    });
+
+    Deal.belongsTo(Provider, {
+        foreignKey: 'provider',
+        as: 'Provider' // Alias opcional para la relación
     });
 
     Deal.hasOne(DealMetadata, {
