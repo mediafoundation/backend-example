@@ -49,50 +49,46 @@ export class DealsController {
   };
 
   static async getDeals(dealFilter: WhereOptions<any> = {}, metadataFilter: WhereOptions<any> = {}, bandwidthFilter: WhereOptions<any> = {}, nodeLocationFilter: WhereOptions<any> = {}, page = 1, pageSize = 10): Promise<Array<any>> {
-    try {
-      const offset = (page - 1) * pageSize
 
-      let deals = await Deal.findAll({
-        include: [
-          {
-            model: NodeLocation,
-            attributes: ['location'],
-            through: {
-              attributes: []
-            },
-            where: nodeLocationFilter
+    const offset = (page - 1) * pageSize
+
+    let deals = await Deal.findAll({
+      include: [
+        {
+          model: NodeLocation,
+          attributes: ['location'],
+          through: {
+            attributes: []
           },
+          where: nodeLocationFilter
+        },
 
-          {
-            model: BandwidthLimit,
-            as: "BandwidthLimit",
-            where: bandwidthFilter
-          },
+        {
+          model: BandwidthLimit,
+          as: "BandwidthLimit",
+          where: bandwidthFilter
+        },
 
-          {
-            model: DealMetadata,
-            as: "Metadata",
-            where: metadataFilter
-          }
-        ],
-        where: dealFilter,
-        offset: offset,
-        limit: pageSize
-      });
+        {
+          model: DealMetadata,
+          as: "Metadata",
+          where: metadataFilter
+        }
+      ],
+      where: dealFilter,
+      offset: offset,
+      limit: pageSize
+    });
 
-      const mappedDeals = deals.map((deal: Deal) => {
-        return deal.toJSON()
-      })
+    const mappedDeals = deals.map((deal: Deal) => {
+      return deal.toJSON()
+    })
 
-      return mappedDeals.map((deal) => {
-        // @ts-ignore
-        deal.NodeLocations = deal.NodeLocations.map((location: any) => location.location);
-        return deal;
-      })
-
-    } catch (error) {
-      throw error;
-    }
+    return mappedDeals.map((deal) => {
+      // @ts-ignore
+      deal.NodeLocations = deal.NodeLocations.map((location: any) => location.location);
+      return deal;
+    })
   }
 
   static filterArray(array: any[], amountOfRepetitions: number) {
