@@ -22,7 +22,7 @@ DealMetadata.init({
     type: DataTypes.STRING,
     label: DataTypes.STRING,
     autoSsl: DataTypes.BOOLEAN,
-    burstSpeed: DataTypes.NUMBER,
+    burstSpeed: DataTypes.INTEGER,
     apiEndpoint: DataTypes.STRING,
     customCnames: DataTypes.BOOLEAN
 }, {
