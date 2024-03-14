@@ -82,7 +82,7 @@ export type DealFormatted = {
 export type DealRawType = z.infer<typeof DealRawSchema>;
 
 export const DealRawSchema = z.object({
-  id: z.number(),
+  id: z.bigint(),
   offerId: z.bigint(),
   client: z.string(),
   provider: z.string(),

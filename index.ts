@@ -1,10 +1,8 @@
 // @ts-ignore
 import {Sdk, MarketplaceViewer, Resources, Encryption, validChains, EventHandler} from 'media-sdk';
-import {resourcesNotMatchingDeal} from "./utils/resources";
 import {DealsController} from "./database/controllers/dealsController";
 import {ResourcesController} from "./database/controllers/resourcesController";
 import {resetDB} from "./database/utils";
-import {OffersController} from "./database/controllers/offersController";
 import {z} from "zod";
 
 require('dotenv').config()
@@ -17,20 +15,13 @@ const init = async (chain: any) => {
 
     let resources = await resourcesInstance.getAllResourcesPaginating({address: process.env.userAddress, start: 0, end: 10})
 
-    console.log("Resources", resources)
-
     let deals = await marketplaceViewer.getAllDealsPaginating({
         marketplaceId: 1,
         address: process.env.userAddress,
         isProvider: true
     })
 
-    console.log("Deals", deals)
-
-
-    let offers = await marketplaceViewer.getAllOffersPaginating({marketplaceId: 1, start: 0, steps: 10})
-
-    console.log("Offers", offers)
+    //let offers = await marketplaceViewer.getAllOffersPaginating({marketplaceId: 1, start: 0, steps: 10})
 
     if(deals.length !== 0 && resources.length !== 0) {
         /*let resourcesWithoutDeal = resourcesNotMatchingDeal(resources.map((resource: any) => resource.id), deals.map((deal: any) => deal.resourceId))
@@ -70,11 +61,14 @@ const init = async (chain: any) => {
                 await DealsController.upsertDeal(DealsController.formatDeal(deal))
                 console.log("Deal Correct", deal)*/
 
-                console.log(DealsController.formatDeal(deal))
+                let formattedDeal = DealsController.formatDeal(deal)
+
+                await DealsController.upsertDeal(formattedDeal, chain.network)
+
             } catch (e: any) {
                 if (e instanceof z.ZodError) {
                     console.log("Deal Id: ", deal.id)
-                    //console.error("Metadata Validation failed!\n", "Expected: ", DealsMetadataType.keyof()._def.values, " Got: ", deal.metadata);
+                    console.error(e);
                 } else {
                     console.log("Deal Id: ", deal.id)
                     console.error("Unknown error", e.message, "With deal", deal);
@@ -87,7 +81,7 @@ const init = async (chain: any) => {
 
 
 
-    for (const offer of offers) {
+    /*for (const offer of offers) {
         try{
             OffersController.parseOffer(offer.terms.metadata)
             await OffersController.upsertOffer(OffersController.formatOffer(offer))
@@ -104,7 +98,7 @@ const init = async (chain: any) => {
 
 
 
-    console.log("Deals from db", await DealsController.getDeals())
+    console.log("Deals from db", await DealsController.getDeals())*/
 }
 
 async function start() {

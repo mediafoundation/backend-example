@@ -6,7 +6,7 @@ import {BandwidthLimit} from "../../database/models/BandwidthLimit";
 import {NodeLocation} from "../../database/models/NodeLocation";
 
 const mockDeal = {
-  id: 1,
+  id: 1n,
   offerId: 1n,
   client: '0xB76c9A2fC1367f92cBB73b1ECE0c98Abb0c5097B',
   provider: '0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31',
