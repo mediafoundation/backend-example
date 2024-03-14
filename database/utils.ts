@@ -35,6 +35,11 @@ const createRelationsBetweenTables = async () => {
     })*/
     //Deal.belongsTo(Client, {})
 
+    Deal.belongsTo(Resource, {
+        foreignKey: 'resourceId',
+        as: 'Resource' // Alias opcional para la relación
+    });
+
     Deal.hasOne(DealMetadata, {
         onDelete: 'CASCADE',
         as: 'Metadata',
@@ -50,7 +55,7 @@ const createRelationsBetweenTables = async () => {
     })
 
     Deal.belongsToMany(NodeLocation, {
-        through: 'DealNodeLocation', // Nombre de la tabla intermedia
+        through: 'DealNodeLocation',
         foreignKey: 'dealId',
         otherKey: 'nodeLocationId',
     });

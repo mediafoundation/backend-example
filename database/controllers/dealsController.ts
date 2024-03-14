@@ -32,6 +32,7 @@ export class DealsController {
 
     const [instance, created] = await Deal.upsert({...deal, network: network}, {returning: true});
 
+    await instance.setResource(resource);
 
     await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata});
 

@@ -154,6 +154,8 @@ describe('Deal Controller', () => {
 
     deal = await DealsController.getDeals({}, {}, {}, nodeLocationFilter, 1, 10)
 
+    console.log(deal)
+
     expect(deal.length).toBe(1)
   })
 

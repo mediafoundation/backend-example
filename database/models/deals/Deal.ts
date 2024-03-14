@@ -9,15 +9,20 @@ import {
     ForeignKey,
     HasManyGetAssociationsMixin,
     HasManyCreateAssociationMixin,
-    BelongsToManyGetAssociationsMixin, BelongsToManyCreateAssociationMixin, CreationOptional,
+    BelongsToManyGetAssociationsMixin,
+    BelongsToManyCreateAssociationMixin,
+    CreationOptional,
+    BelongsToCreateAssociationMixin,
 } from 'sequelize';
 import {DECIMALS_DIGITS, sequelize} from "../../database";
 import {DealMetadata} from "./DealsMetadata";
 import {BandwidthLimit} from "../BandwidthLimit";
 import {NodeLocation} from "../NodeLocation";
+import {Resource} from "../Resource";
 
 export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<Deal>> {
     declare id: string;
+    declare resourceId: ForeignKey<Resource['id']>;
     declare totalPayment: number;
     declare blockedBalance: number;
     declare pricePerSecond: number;
@@ -40,6 +45,8 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
 
     declare getNodeLocations: HasManyGetAssociationsMixin<NodeLocation>
     declare createNodeLocation: HasManyCreateAssociationMixin<NodeLocation>
+
+    declare setResource: BelongsToCreateAssociationMixin<Resource>
 }
 
 
