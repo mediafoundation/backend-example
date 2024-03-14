@@ -34,6 +34,8 @@ export class DealsController {
 
     await instance.setResource(resource);
 
+    await instance.setClient(client[0]);
+
     await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata});
 
     await instance.createBandwidthLimit({dealId: instance.dataValues.id, ...deal.metadata.bandwidthLimit})

@@ -1,15 +1,14 @@
-import {DataTypes} from "sequelize";
+import {DataTypes, InferAttributes, InferCreationAttributes, Model} from "sequelize";
 import {sequelize} from "../database";
 
-export const Client = sequelize.define("Clients", {
-    id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
-    account: DataTypes.STRING,
+export class Client extends Model<InferAttributes<Client>, InferCreationAttributes<Client>> {
+    declare account: string
+}
+
+Client.init({
+    account: {type: DataTypes.STRING, primaryKey: true},
 }, {
-    modelName: 'Client',
+    sequelize,
+    timestamps: false,
     freezeTableName: true
 });
-
-export type ClientType = {
-    id: number,
-    account: string
-}

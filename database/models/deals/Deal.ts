@@ -19,10 +19,12 @@ import {DealMetadata} from "./DealsMetadata";
 import {BandwidthLimit} from "../BandwidthLimit";
 import {NodeLocation} from "../NodeLocation";
 import {Resource} from "../Resource";
+import {Client} from "../Client";
 
 export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<Deal>> {
     declare id: string;
     declare resourceId: ForeignKey<Resource['id']>;
+    declare client: ForeignKey<Client['account']>;
     declare totalPayment: number;
     declare blockedBalance: number;
     declare pricePerSecond: number;
@@ -47,6 +49,10 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
     declare createNodeLocation: HasManyCreateAssociationMixin<NodeLocation>
 
     declare setResource: BelongsToCreateAssociationMixin<Resource>
+
+    declare setClient: BelongsToCreateAssociationMixin<Client>
+
+    //setProvider: BelongsToCreateAssociationMixin<Client>
 }
 
 
