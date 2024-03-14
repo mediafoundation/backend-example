@@ -81,6 +81,82 @@ describe('Deal Controller', () => {
     expect(nodeLocations[0].location).toBe("ABB")
   })
 
+  test("filter deals, expecting no matching criteria", async () => {
+    const metadataFilter = {
+      apiEndpoint: "Endpoint"
+    }
+
+    const dealFilter = {
+      singlePeriodOnly: true
+    }
+
+    const bandwidthFilter = {
+      amount: 1,
+      unit: "tb",
+      period: "daily"
+    }
+
+    const nodeLocationFilter = {
+      location: "ABBC"
+    }
+
+    let deal = await DealsController.getDeals(dealFilter, {}, {}, {}, 1, 10)
+
+    expect(deal.length).toBe(0)
+
+    deal = await DealsController.getDeals({}, metadataFilter, {}, {}, 1, 10)
+
+    expect(deal.length).toBe(0)
+
+    deal = await DealsController.getDeals({}, {}, bandwidthFilter, {}, 1, 10)
+
+    expect(deal.length).toBe(0)
+
+    deal = await DealsController.getDeals({}, {}, {}, nodeLocationFilter, 1, 10)
+
+    expect(deal.length).toBe(0)
+
+    deal = await DealsController.getDeals({}, {}, {}, {}, 1, 10)
+
+    expect(deal.length).toBe(1)
+  })
+
+  test("filter deals, expecting matching criteria", async () => {
+    const metadataFilter = {
+      apiEndpoint: "http:localhost:5000/"
+    }
+
+    const dealFilter = {
+      singlePeriodOnly: false
+    }
+
+    const bandwidthFilter = {
+      amount: 1,
+      unit: "tb",
+      period: "monthly"
+    }
+
+    const nodeLocationFilter = {
+      location: "ABB"
+    }
+
+    let deal = await DealsController.getDeals(dealFilter, {}, {}, {}, 1, 10)
+
+    expect(deal.length).toBe(1)
+
+    deal = await DealsController.getDeals({}, metadataFilter, {}, {}, 1, 10)
+
+    expect(deal.length).toBe(1)
+
+    deal = await DealsController.getDeals({}, {}, bandwidthFilter, {}, 1, 10)
+
+    expect(deal.length).toBe(1)
+
+    deal = await DealsController.getDeals({}, {}, {}, nodeLocationFilter, 1, 10)
+
+    expect(deal.length).toBe(1)
+  })
+
   test("delete deal", async () => {
     const nullDeal = await DealsController.deleteDealById(2)
 

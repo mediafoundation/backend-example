@@ -48,7 +48,7 @@ export class DealsController {
     };
   };
 
-  static async getDeals(filter: WhereOptions<any> = {}, page = 1, pageSize = 10): Promise<Array<any>> {
+  static async getDeals(dealFilter: WhereOptions<any> = {}, metadataFilter: WhereOptions<any> = {}, bandwidthFilter: WhereOptions<any> = {}, nodeLocationFilter: WhereOptions<any> = {}, page = 1, pageSize = 10): Promise<Array<any>> {
     try {
       const offset = (page - 1) * pageSize
 
@@ -59,19 +59,23 @@ export class DealsController {
             attributes: ['location'],
             through: {
               attributes: []
-            }
+            },
+            where: nodeLocationFilter
           },
 
           {
             model: BandwidthLimit,
-            as: "BandwidthLimit"
+            as: "BandwidthLimit",
+            where: bandwidthFilter
           },
 
           {
             model: DealMetadata,
-            as: "Metadata"
+            as: "Metadata",
+            where: metadataFilter
           }
         ],
+        where: dealFilter,
         offset: offset,
         limit: pageSize
       });
@@ -85,6 +89,7 @@ export class DealsController {
         deal.NodeLocations = deal.NodeLocations.map((location: any) => location.location);
         return deal;
       })
+
     } catch (error) {
       throw error;
     }
