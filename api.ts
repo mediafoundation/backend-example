@@ -5,6 +5,7 @@ import { DealsController } from './database/controllers/dealsController';
 import { ResourcesController } from './database/controllers/resourcesController';
 import {OffersController} from "./database/controllers/offersController";
 import {parseFilter} from "./utils/filter";
+import {createRelationsBetweenTables} from "./database/utils";
 
 const app = express();
 
@@ -14,7 +15,11 @@ app.use(cors());
 
 // Routes
 app.get('/deals', async (req, res) => {
-    const deals = await DealsController.getDeals();
+    let formattedFilter = parseFilter(JSON.parse(req.query.filter as string))
+
+    console.log("Formatted filter", formattedFilter)
+
+    const deals = await DealsController.getDeals({}, formattedFilter, {}, {}, 1, 10);
     res.json(deals);
 });
 
@@ -38,3 +43,8 @@ app.get('/offers', async (req, res) => {
 // Start the server
 const port = 5000;
 app.listen(port, () => console.log(`Server is running on port ${port}`));
+
+createRelationsBetweenTables()
+.then(() => {
+    console.log("Tables created")
+})
