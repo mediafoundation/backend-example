@@ -15,11 +15,19 @@ app.use(cors());
 
 // Routes
 app.get('/deals', async (req, res) => {
-    let formattedFilter = parseFilter(JSON.parse(req.query.filter as string))
 
-    console.log("Formatted filter", formattedFilter)
+    const filters = JSON.parse(req.query.filters ? req.query.filters as string : "{}")
 
-    const deals = await DealsController.getDeals({}, formattedFilter, {}, {}, 1, 10);
+    const page = filters.page ? filters.page : 1
+
+    const pageSize = filters.pageSize ? filters.pageSize : 10
+
+    const dealFilter = parseFilter(filters.dealFilter ? filters.dealFilter : {})
+    const metadataFilter = parseFilter(filters.metadataFilter ? filters.metadataFilter : {})
+    const bandwidthFilter = parseFilter(filters.bandwidthFilter ? filters.bandwidthFilter : {})
+    const nodeLocationFilter = parseFilter(filters.nodeLocationFilter ? filters.nodeLocationFilter : {})
+
+    const deals = await DealsController.getDeals(dealFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize);
     res.json(deals);
 });
 
