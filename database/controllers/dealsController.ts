@@ -13,10 +13,6 @@ import {BandwidthLimit} from "../models/BandwidthLimit";
 import {Provider} from "../models/Provider";
 
 export class DealsController {
-  constructor() {
-  }
-
-
   static async upsertDeal(deal: DealFormatted, network: string) {
     const resource = await Resource.findOne({
       where: {id: deal.resourceId}
@@ -49,7 +45,9 @@ export class DealsController {
     await instance.createBandwidthLimit({dealId: instance.dataValues.id, ...deal.metadata.bandwidthLimit})
 
     for (const nodeLocation of deal.metadata.nodeLocations) {
-      await instance.createNodeLocation({dealId: instance.dataValues.id, location: nodeLocation}, {returning: true});
+      await instance.createNodeLocation(
+        {dealId: instance.dataValues.id, location: nodeLocation},
+        {returning: true});
     }
 
 
@@ -59,7 +57,14 @@ export class DealsController {
     };
   };
 
-  static async getDeals(dealFilter: WhereOptions<any> = {}, metadataFilter: WhereOptions<any> = {}, bandwidthFilter: WhereOptions<any> = {}, nodeLocationFilter: WhereOptions<any> = {}, page = 1, pageSize = 10): Promise<Array<any>> {
+  static async getDeals(
+    dealFilter: WhereOptions<any> = {},
+    metadataFilter: WhereOptions<any> = {},
+    bandwidthFilter: WhereOptions<any> = {},
+    nodeLocationFilter: WhereOptions<any> = {},
+    page = 1,
+    pageSize = 10
+  ): Promise<Array<any>> {
 
     const offset = (page - 1) * pageSize
 
@@ -102,56 +107,24 @@ export class DealsController {
     })
   }
 
-  static filterArray(array: any[], amountOfRepetitions: number) {
-
-    // Paso 1: Crear un mapa de frecuencias
-    const mapaFrecuencias = array.reduce((acc, val) => {
-      acc[val] = (acc[val] || 0) + 1;
-      return acc;
-    }, {});
-
-    // Paso 2: Filtrar el mapa de frecuencias
-    const mapaFiltrado = Object.keys(mapaFrecuencias).filter(key => mapaFrecuencias[key] >= amountOfRepetitions);
-
-    // Paso 3: Convertir el mapa filtrado de vuelta a un array
-    return mapaFiltrado.map(Number);
-
-  }
-
-  static async upsertMetadata(deal: any) {
-    let metadata = JSON.parse(deal.metadata);
-    const [instance, created] = await DealMetadata.findOrCreate({
-      where: {dealId: deal.id},
-      defaults: {
-        dealId: deal.id,
-        type: metadata.type,
-        label: metadata.label,
-        autoSsl: metadata.autoSsl,
-        burstSpeed: metadata.burstSpeed,
-        apiEndpoint: metadata.apiEndpoint,
-        customCnames: metadata.customCnames
-      }
-    });
-
-    console.log("Metadata", metadata, instance, created)
-
-    if (!created) {
-      await instance.update({
-        type: metadata.type,
-        label: metadata.label,
-        autoSsl: metadata.autoSsl,
-        burstSpeed: metadata.burstSpeed,
-        apiEndpoint: metadata.apiEndpoint,
-        customCnames: metadata.customCnames
-      });
-    }
-
-    return [instance.dataValues, created];
-  }
-
   static async getDealById(id: string) {
     try {
-      return await Deal.findByPk(id, {attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']}});
+      let deal = await Deal.findByPk(id);
+      if (!deal) {
+        return null
+      }
+
+      let metadata = await deal.getMetadata()
+      let bandwidthLimit = await deal.getBandwidthLimit()
+      let nodeLocations = await deal.getNodeLocations()
+
+      return {
+        deal: deal.dataValues,
+        metadata: metadata.dataValues,
+        bandwidthLimit: bandwidthLimit.dataValues,
+        nodeLocations: nodeLocations.map((location: NodeLocation) => location.dataValues.location)
+      }
+
     } catch (error) {
       throw error;
     }
@@ -174,7 +147,7 @@ export class DealsController {
 
     DealRawSchema.parse(deal)
 
-    let transformed = this.transformObj(deal)
+    let transformed = this.transformObj(deal);
 
     transformed['metadata'] = JSON.parse(transformed.metadata)
 
@@ -183,14 +156,14 @@ export class DealsController {
     return transformed as unknown as DealFormatted;
   }
 
-  static transformObj(deal: any): DealTransformed {
+  private static transformObj(deal: any): DealTransformed {
     let result: any = {};
 
     // Iterate over the properties of the object
     for (const key in deal) {
       // If the property is an object, merge its properties with the result
       if (typeof deal[key] === 'object' && deal[key] !== null) {
-        result = {...result, ...DealsController.transformObj(deal[key])};
+        result = {...result, ...this.transformObj(deal[key])};
       } else if (typeof deal[key] === 'bigint') {
         // If the property is a bigint, parse it to a number
         result[key] = Number(deal[key]);

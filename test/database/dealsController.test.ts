@@ -67,18 +67,17 @@ describe('Deal Controller', () => {
     expect(nullDeal).toBeNull()
 
     const deal = await DealsController.getDealById('1')
-    const metadata = await deal!.getMetadata()
-    const bandwidthLimit = await deal!.getBandwidthLimit()
-    const nodeLocations = await deal!.getNodeLocations()
 
-    expect(deal!.id).toBe("1")
+    console.log(deal)
 
-    expect(metadata).not.toBeNull()
-    expect(nodeLocations).not.toBeNull()
-    expect(bandwidthLimit).not.toBeNull()
+    expect(deal!.deal.id).toBe("1")
 
-    expect(nodeLocations.length).toBe(3)
-    expect(nodeLocations[0].location).toBe("ABB")
+    expect(deal!.metadata).not.toBeNull()
+    expect(deal!.nodeLocations).not.toBeNull()
+    expect(deal!.bandwidthLimit).not.toBeNull()
+
+    expect(deal!.nodeLocations.length).toBe(3)
+    expect(deal!.nodeLocations[0]).toBe("ABB")
   })
 
   test("filter deals, expecting no matching criteria", async () => {
