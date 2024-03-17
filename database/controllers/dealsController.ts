@@ -46,7 +46,7 @@ export class DealsController {
 
     for (const nodeLocation of deal.metadata.nodeLocations) {
       await instance.createNodeLocation(
-        {dealId: instance.dataValues.id, location: nodeLocation},
+        {itemId: instance.dataValues.id, location: nodeLocation},
         {returning: true});
     }
 

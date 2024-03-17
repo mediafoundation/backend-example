@@ -9,10 +9,11 @@ import {
     Model
 } from "sequelize";
 import {Deal} from "./deals/Deal";
+import {Offer} from "./offers/Offer";
 
 export class NodeLocation extends Model<InferAttributes<NodeLocation>, InferCreationAttributes<NodeLocation>> {
     declare id: CreationOptional<number>
-    declare dealId: ForeignKey<Deal['id']>
+    declare itemId: ForeignKey<Deal['id'] | Offer['id']>
     declare location: string;
 }
 
