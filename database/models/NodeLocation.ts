@@ -1,9 +1,8 @@
 import {sequelize} from "../database";
 import {
-    BelongsToGetAssociationMixin,
-    BelongsToManyGetAssociationsMixin,
     CreationOptional,
-    DataTypes, ForeignKey, HasManyCreateAssociationMixin, HasManyGetAssociationsMixin,
+    DataTypes,
+    ForeignKey,
     InferAttributes,
     InferCreationAttributes,
     Model

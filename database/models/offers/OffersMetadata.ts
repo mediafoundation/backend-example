@@ -1,6 +1,5 @@
 import {DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model} from "sequelize";
 import {sequelize} from "../../database";
-import {array, boolean, number, object, string, z} from "zod";
 import {Offer} from "./Offer";
 
 export class OfferMetadata extends Model<InferAttributes<OfferMetadata>, InferCreationAttributes<Offer>> {

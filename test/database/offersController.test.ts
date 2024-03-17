@@ -1,7 +1,5 @@
 import {OffersController} from "../../database/controllers/offersController";
-import {before} from "node:test";
 import {resetDB} from "../../database/utils";
-import {DealsController} from "../../database/controllers/dealsController";
 import {BandwidthLimit} from "../../database/models/BandwidthLimit";
 import {OfferMetadata} from "../../database/models/offers/OffersMetadata";
 import {NodeLocation} from "../../database/models/NodeLocation";
