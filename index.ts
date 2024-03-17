@@ -4,6 +4,7 @@ import {DealsController} from "./database/controllers/dealsController";
 import {ResourcesController} from "./database/controllers/resourcesController";
 import {resetDB} from "./database/utils";
 import {z} from "zod";
+import {OffersController} from "./database/controllers/offersController";
 
 require('dotenv').config()
 
@@ -21,7 +22,7 @@ const init = async (chain: any) => {
         isProvider: true
     })
 
-    //let offers = await marketplaceViewer.getAllOffersPaginating({marketplaceId: 1, start: 0, steps: 10})
+    let offers = await marketplaceViewer.getAllOffersPaginating({marketplaceId: 1, start: 0, steps: 10})
 
     if(deals.length !== 0 && resources.length !== 0) {
         /*let resourcesWithoutDeal = resourcesNotMatchingDeal(resources.map((resource: any) => resource.id), deals.map((deal: any) => deal.resourceId))
@@ -42,8 +43,6 @@ const init = async (chain: any) => {
 
             let data = JSON.parse(decrypted)
 
-            console.log("Resource data", data)
-
             try{
                 await ResourcesController.upsertResource({id: resource.id, owner: resource.owner, ...data})
             }catch (e) {
@@ -57,10 +56,6 @@ const init = async (chain: any) => {
         deals = deals.filter((deal: any) => deal.status.active == true)
         for (const deal of deals) {
             try{
-                /*DealsController.parseDealMetadata(deal.terms.metadata)
-                await DealsController.upsertDeal(DealsController.formatDeal(deal))
-                console.log("Deal Correct", deal)*/
-
                 let formattedDeal = DealsController.formatDeal(deal)
 
                 await DealsController.upsertDeal(formattedDeal, chain.network)
@@ -81,24 +76,19 @@ const init = async (chain: any) => {
 
 
 
-    /*for (const offer of offers) {
+    for (const offer of offers) {
         try{
-            OffersController.parseOffer(offer.terms.metadata)
             await OffersController.upsertOffer(OffersController.formatOffer(offer))
         } catch (e: any) {
             if (e instanceof z.ZodError) {
                 console.log("Offer Id: ", offer.id)
-                //console.error("Metadata Validation failed!\n", "Expected: ", OffersMetadataType.keyof()._def.values, " Got: ", offer.terms.metadata);
+                console.log(e)
             } else {
                 console.log("Offer Id: ", offer.id)
                 console.error("Unknown error", e.message, "With offer", offer);
             }
         }
     }
-
-
-
-    console.log("Deals from db", await DealsController.getDeals())*/
 }
 
 async function start() {
