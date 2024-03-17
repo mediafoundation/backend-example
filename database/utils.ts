@@ -6,6 +6,8 @@ import {NodeLocation} from "./models/NodeLocation";
 import {BandwidthLimit} from "./models/BandwidthLimit";
 import {Provider} from "./models/Provider";
 import {DealMetadata} from "./models/deals/DealsMetadata";
+import {Offer} from "./models/offers/Offer";
+import {OfferMetadata} from "./models/offers/OffersMetadata";
 
 const resetDB = async () => {
 
@@ -25,13 +27,6 @@ const createRelationsBetweenTables = async () => {
         as: 'Deals',
         foreignKey: 'resourceId'
     });
-    //Deal.belongsTo(Resource);
-
-    /*Client.hasMany(Deal, {
-        as: 'Deals',
-        foreignKey: 'clientId'
-    })*/
-    //Deal.belongsTo(Client, {})
 
     Deal.belongsTo(Resource, {
         foreignKey: 'resourceId',
@@ -68,34 +63,30 @@ const createRelationsBetweenTables = async () => {
         otherKey: 'nodeLocationId',
     });
 
-    //BandwidthLimit.belongsTo(Deal);
+    Offer.hasOne(BandwidthLimit, {
+        onDelete: 'CASCADE',
+        as: 'BandwidthLimit',
+        sourceKey: 'id',
+        foreignKey: 'offerId'
+    })
 
-    /*Deal.belongsToMany(NodeLocation, {
-        through: 'DealsNodeLocations'
+    Offer.hasOne(OfferMetadata, {
+        onDelete: 'CASCADE',
+        as: 'Metadata',
+        sourceKey: 'id',
+        foreignKey: 'offerId'
+    })
+
+    Offer.belongsTo(Provider, {
+        foreignKey: 'providerId',
+        as: 'Provider'
     });
 
-    NodeLocation.belongsToMany(Deal, {through: 'DealsNodeLocations'});
-    Deal.belongsToMany(NodeLocation, {through: 'DealsNodeLocations'});*/
-
-
-    //Offers
-
-    /*Offer.hasMany(Deal, {
-        as: 'Deals',
-        foreignKey: 'offerId'
-    });*/
-
-    /*Offer.hasOne(OffersMetadata, {onDelete: 'CASCADE'});
-    OffersMetadata.belongsTo(Offer);
-
-    Offer.hasOne(BandwidthLimit, {onDelete: 'CASCADE'});
-    BandwidthLimit.belongsTo(Offer);
-
-    Offer.belongsToMany(NodeLocation, {through: 'OffersNodeLocations'});
-    NodeLocation.belongsToMany(Offer, {through: 'OffersNodeLocations'});
-
-    Provider.hasMany(Offer);
-    Offer.belongsTo(Provider);*/
+    Offer.belongsToMany(NodeLocation, {
+        through: 'OfferNodeLocation',
+        foreignKey: 'offerId',
+        otherKey: 'nodeLocationId',
+    });
 
 }
 

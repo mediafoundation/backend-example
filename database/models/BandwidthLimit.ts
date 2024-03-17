@@ -1,10 +1,12 @@
 import {sequelize} from "../database";
 import {CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model} from "sequelize";
 import {Deal} from "./deals/Deal";
+import {Offer} from "./offers/Offer";
 
 export class BandwidthLimit extends Model<InferAttributes<BandwidthLimit>, InferCreationAttributes<BandwidthLimit>> {
     declare id: CreationOptional<number>;
-    declare dealId: ForeignKey<Deal['id']>
+    declare dealId: CreationOptional<ForeignKey<Deal['id']>>
+    declare offerId: CreationOptional<ForeignKey<Offer['id']>>
     declare amount: number;
     declare period: string;
     declare unit: string;
