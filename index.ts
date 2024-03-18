@@ -80,7 +80,6 @@ const init = async (chain: any) => {
 
   for (const offer of offers) {
     try{
-      console.log("Offer", offer)
       await OffersController.upsertOffer(OffersController.formatOffer(offer))
     } catch (e: any) {
       if (e instanceof z.ZodError) {

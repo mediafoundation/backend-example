@@ -38,7 +38,8 @@
   },
   "scripts": {
     "test": "NODE_ENV=test jest",
-    "build": "rm -rd ./lib/* && tsc && cp .env ./lib/.env",
+    "build": "rm -rd ./lib && tsc && cp .env ./lib/.env",
+    "init": "npm run build && node lib/index.js",
     "startApi": "node ./lib/api.js"
   }
 }
