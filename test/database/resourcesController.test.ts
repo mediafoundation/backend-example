@@ -1,5 +1,6 @@
 import {Resource} from "../../database/models/Resource";
 import {ResourcesController} from "../../database/controllers/resourcesController"
+import {sequelize} from "../../database/database";
 
 beforeAll(async () => {
     await Resource.sync({force: true})
@@ -24,8 +25,7 @@ describe('Resource Controller', () => {
 
         const newResource = await ResourcesController.upsertResource(resource)
 
-        // @ts-ignore
-        expect(newResource[0].dataValues).toStrictEqual(resource);
+        expect(newResource.instance).toStrictEqual(resource);
 
         // update resource and check if it was updated
 
@@ -42,13 +42,12 @@ describe('Resource Controller', () => {
 
         const updatedResource = await ResourcesController.upsertResource(updatedResourceData)
 
-        // @ts-ignore
-        expect(updatedResource[0].dataValues).toStrictEqual(updatedResourceData);
+        expect(updatedResource.instance).toStrictEqual(updatedResourceData);
     })
 
     test("should get a resource by id", async () => {
         const resource = {
-            id: "1",
+            id: 1,
             owner: "DataTypes.STRING",
             label: "DataTypes.STRING",
             protocol: "DataTypes.STRING",
@@ -63,7 +62,7 @@ describe('Resource Controller', () => {
         const foundResource = await ResourcesController.getResourceById("1")
 
         // @ts-ignore
-        expect(foundResource.dataValues).toStrictEqual(resource);
+        expect(foundResource).toStrictEqual(resource);
     })
 
     test("should delete a resource by id", async () => {
@@ -90,5 +89,36 @@ describe('Resource Controller', () => {
         const foundResource = await ResourcesController.getResourceById("1")
 
         expect(foundResource).toBeNull()
+    })
+
+    test("pagination", async() => {
+        await sequelize.transaction(async (t) => {
+            for (let i = 0; i < 20; i++) {
+                await Resource.create({
+                    id: i.toString(),
+                    owner: "DataTypes.STRING",
+                    label: "DataTypes.STRING",
+                    protocol: "DataTypes.STRING",
+                    origin: "DataTypes.STRING",
+                    path: "DataTypes.STRING",
+                    domain: "DataTypes.STRING",
+                    network: "DataTypes.STRING",
+                }, {transaction: t})
+            }
+        })
+
+        const firstPageResources = await ResourcesController.getResources({}, 1, 10)
+
+        expect(firstPageResources.length).toBe(10)
+        // @ts-ignore
+        expect(firstPageResources[0].id).toBe(0)
+
+        const secondPageResources = await ResourcesController.getResources({}, 2, 10)
+
+        expect(secondPageResources.length).toBe(10)
+        // @ts-ignore
+        expect(secondPageResources[0].id).toBe(10)
+        // @ts-ignore
+        expect(secondPageResources[9].id).toBe(19)
     })
 })

@@ -1,82 +1,75 @@
-import {DataTypes} from "sequelize";
-import {sequelize} from "../../database";
+import {
+    DataTypes,
+    Model,
+    InferAttributes,
+    InferCreationAttributes,
+    HasOneGetAssociationMixin,
+    HasOneCreateAssociationMixin,
+    ForeignKey,
+    BelongsToCreateAssociationMixin, BelongsToManyCreateAssociationMixin, BelongsToManyGetAssociationsMixin,
+} from 'sequelize';
+import {DECIMALS_DIGITS, sequelize} from "../../database";
+import {DealMetadata} from "./DealsMetadata";
+import {BandwidthLimit} from "../BandwidthLimit";
+import {NodeLocation} from "../NodeLocation";
+import {Resource} from "../Resource";
+import {Client} from "../Client";
+import {Provider} from "../Provider";
 
-export const Deal = sequelize.define("Deals",
-  {
-    id: {type: DataTypes.BIGINT, primaryKey: true},
-    offerId: DataTypes.BIGINT,
-    clientId: {
-        type: DataTypes.BIGINT,
-        references: {
-            model: 'Clients',
-            key: 'id'
-        }
-    },
-    providerId: {
-        type: DataTypes.BIGINT,
-        references: {
-            model: 'Providers',
-            key: 'id'
-        }
-    },
-    resourceId: {
-        type: DataTypes.BIGINT,
-        references: {
-            model: 'Resources',
-            key: 'id'
-        }
-    },
-    totalPayment: DataTypes.BIGINT,
-    blockedBalance: DataTypes.BIGINT,
-    pricePerSecond: DataTypes.BIGINT,
-    minDuration: DataTypes.BIGINT,
+export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<Deal>> {
+    declare id: string;
+    declare resourceId: ForeignKey<Resource['id']>;
+    declare client: ForeignKey<Client['account']>;
+    declare provider: ForeignKey<Provider['account']>;
+    declare totalPayment: number;
+    declare blockedBalance: number;
+    declare pricePerSecond: number;
+    declare minDealDuration: number;
+    declare billFullPeriods: boolean;
+    declare singlePeriodOnly: boolean;
+    declare createdAt: number;
+    declare acceptedAt: number;
+    declare billingStart: number;
+    declare active: boolean;
+    declare cancelled: boolean;
+    declare cancelledAt: number;
+    declare network: string;
+
+    declare getMetadata: HasOneGetAssociationMixin<DealMetadata>;
+    declare createMetadata: HasOneCreateAssociationMixin<DealMetadata>;
+
+    declare getBandwidthLimit: HasOneGetAssociationMixin<BandwidthLimit>
+    declare createBandwidthLimit: HasOneCreateAssociationMixin<BandwidthLimit>
+
+    declare getNodeLocations: BelongsToManyGetAssociationsMixin<NodeLocation>
+    declare createNodeLocation: BelongsToManyCreateAssociationMixin<NodeLocation>
+
+    declare setResource: BelongsToCreateAssociationMixin<Resource>
+
+    declare setClient: BelongsToCreateAssociationMixin<Client>
+
+    declare setProvider: BelongsToCreateAssociationMixin<Provider>
+}
+
+
+
+
+Deal.init({
+    id: {type: DataTypes.STRING, primaryKey: true},
+    totalPayment: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
+    blockedBalance: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
+    pricePerSecond: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
+    minDealDuration: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
     billFullPeriods: DataTypes.BOOLEAN,
     singlePeriodOnly: DataTypes.BOOLEAN,
-    createdAt: DataTypes.BIGINT,
-    acceptedAt: DataTypes.BIGINT,
-    billingStart: DataTypes.BIGINT,
+    createdAt: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
+    acceptedAt: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
+    billingStart: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
     active: DataTypes.BOOLEAN,
     cancelled: DataTypes.BOOLEAN,
-    cancelledAt: DataTypes.BIGINT,
-    metadataId: {
-        type: DataTypes.BIGINT,
-        references: {
-            model: 'DealsMetadata',
-            key: 'id'
-        }
-    },
+    cancelledAt: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
     network: DataTypes.STRING
-  },
-  {
-    modelName: 'Deal',
-    freezeTableName: true
-  }
-);
-
-/*export type FormattedDeal = {
-    id: number,
-    offerId: number,
-    client: string,
-    provider: string,
-    resourceId: number,
-    totalPayment: number,
-    blockedBalance: number,
-    pricePerSecond: number,
-    minDuration: number,
-    billFullPeriods: boolean,
-    singlePeriodOnly: boolean,
-    createdAt: number,
-    acceptedAt: number,
-    billingStart: number,
-    active: boolean,
-    cancelled: boolean,
-    cancelledAt: number,
-    metadata: string,
-}*/
-
-/*export type ExtendedDeal = FormattedDeal & {
-  clientId?: number,
-  providerId?: number,
-  resourceId?: number,
-  metadataId?: number,
-}*/
+}, {
+    sequelize,
+    timestamps: false
+})

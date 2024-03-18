@@ -1,7 +1,9 @@
-import {Dialect, Sequelize} from "sequelize";
+import {Dialect, Op, Sequelize} from "sequelize";
 require('dotenv').config()
 
 let sequelize: Sequelize;
+
+const DECIMALS_DIGITS = 50;
 
 if(process.env.NODE_ENV === 'test') {
     sequelize = new Sequelize('sqlite::memory', {logging: false})
@@ -16,4 +18,4 @@ else{
     });
 }
 
-export {sequelize}
+export {sequelize, Op, DECIMALS_DIGITS}

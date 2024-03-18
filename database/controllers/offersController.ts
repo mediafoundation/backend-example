@@ -1,49 +1,92 @@
 import {Offer} from "../models/offers/Offer";
-import {OffersMetadata, OffersMetadataType} from "../models/offers/OffersMetadata";
-import {OffersNodeLocations} from "../models/offers/OffersNodeLocations";
-import {OffersMetadataNodeLocations} from "../models/offers/OffersMetadataNodeLocations";
-import {OffersBandwidthLimit} from "../models/offers/OffersBandwidthLimit";
+import {WhereOptions} from "sequelize";
+import {Provider} from "../models/Provider";
+import {OfferFormatted, OfferMetadataSchema, OfferRawSchema, OfferTransformed} from "../models/types/offer";
+import {NodeLocation} from "../models/NodeLocation";
+import {BandwidthLimit} from "../models/BandwidthLimit";
+import {OfferMetadata} from "../models/offers/OffersMetadata";
 export class OffersController{
 
   static async upsertOffer(offer: any) {
 
-    // Ensure the metadata exists
-    // Parse the metadata from the deal
-    let rawMetadata = JSON.parse(offer.metadata);
-
-    // Ensure the bandwidth limit exists
-    const [bandwidthLimit] = await OffersBandwidthLimit.upsert(rawMetadata.bandwidthLimit);
-
-    rawMetadata.bandwidthLimitId = bandwidthLimit.get('id');
-
-    // Create or update the metadata
-    const [metadata] = await OffersMetadata.upsert(rawMetadata);
-
-    // Handle the node locations
-    for (const location of rawMetadata.nodeLocations) {
-      const [nodeLocation] = await OffersNodeLocations.findOrCreate({
-        where: { location },
-        defaults: { location }
-      });
-
-      const metadataId = await metadata.get('id');
-      const nodeId = await nodeLocation.get('id');
-
-      await OffersMetadataNodeLocations.findOrCreate({
-        where: { metadataId, nodeId },
-        defaults: { metadataId, nodeId }
-      });
-    }
-    offer.metadataId = metadata.get('id');
+    const provider = await Provider.findOrCreate({
+      where: {account: offer.provider},
+      defaults: {account: offer.provider}
+    })
 
     const [instance, created] = await Offer.upsert(offer);
-    return [instance, created];
+
+    await instance.setProvider(provider[0]);
+
+    await instance.createMetadata({offerId: instance.dataValues.id, ...offer.metadata});
+
+    await instance.createBandwidthLimit({offerId: instance.dataValues.id, ...offer.metadata.bandwidthLimit})
+
+    for (const nodeLocation of offer.metadata.nodeLocations) {
+      try {
+        await instance.createNodeLocation({location: nodeLocation}, {ignoreDuplicates: true})
+      } catch (e) {
+        console.log(e)
+      }
+    }
+
+    return {
+      offer: instance.dataValues,
+      created: created
+    };
 
   };
 
-  static async getOffers() {
+  static async getOffers(
+    offerFilter: WhereOptions<any> = {},
+    metadataFilter: WhereOptions<any> = {},
+    bandwidthLimitFilter: WhereOptions<any> = {},
+    nodeLocationFilter: WhereOptions<any> = {},
+    page = 1,
+    pageSize = 10): Promise<Array<any>> {
     try {
-      return await Offer.findAll({attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']}});
+      const offset = (page - 1) * pageSize
+
+      let offers = await Offer.findAll({
+        include: [
+          {
+            model: NodeLocation,
+            attributes: ['location'],
+            through: {
+              attributes: []
+            },
+            required: false,
+            where: nodeLocationFilter
+          },
+
+          {
+            model: OfferMetadata,
+            as: "Metadata",
+            where: metadataFilter
+          },
+
+          {
+            model: BandwidthLimit,
+            as: "BandwidthLimit",
+            where: bandwidthLimitFilter
+          }
+        ],
+        where: offerFilter,
+        offset: offset,
+        limit: pageSize
+      });
+      
+      console.log(offers.length, offset, pageSize)
+
+      const mappedOffers = offers.map((offer: Offer) => {
+        return offer.toJSON();
+      })
+
+      return mappedOffers.map((offer) => {
+        // @ts-ignore
+        offer.NodeLocations = offer.NodeLocations.map((location: any) => location.location)
+        return offer
+      });
     } catch (error) {
       throw error;
     }
@@ -51,39 +94,63 @@ export class OffersController{
 
   static async getOfferById(id: string) {
     try {
-      return await Offer.findByPk(id, {attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']}});
-    } catch (error) {
-      throw error;
-    }
-  };
+      const offer = await Offer.findByPk(id, {attributes: {exclude: ['createdAt', 'updatedAt', 'deletedAt']}});
 
-  static async deleteOfferById(id: number) {
-    try {
-      const deal = await Offer.findByPk(id);
-      if (!deal) {
+      if(!offer){
         return null;
       }
-      await deal.destroy();
-      return deal;
+
+      const metadata = await offer.getMetadata()
+
+      const bandwidthLimit = await offer.getBandwidthLimit()
+
+      const nodeLocations = await offer.getNodeLocations()
+
+      return ({
+        offer: offer.dataValues,
+        metadata: metadata.dataValues,
+        bandwidthLimit: bandwidthLimit.dataValues,
+        nodeLocations: nodeLocations.map((nodeLocation: NodeLocation) => nodeLocation.dataValues.location)
+      })
+
     } catch (error) {
       throw error;
     }
   };
 
-  static formatOffer(offer: any): any {
-    // Check if the input is an object
-    if (typeof offer !== 'object' || offer === null) {
+  static async deleteOfferById(id: string) {
+    try {
+      const offer = await Offer.findByPk(id);
+      if (!offer) {
+        return null;
+      }
+      await offer.destroy();
       return offer;
+    } catch (error) {
+      throw error;
     }
+  };
 
-    // Create a new object to hold the result
+  static formatOffer(offer: any): OfferFormatted {
+    OfferRawSchema.parse(offer);
+
+    let transformed = this.transformObj(offer)
+
+    transformed['metadata'] = JSON.parse(transformed.metadata)
+
+    OfferMetadataSchema.parse(transformed.metadata);
+
+    return transformed as unknown as OfferFormatted
+  }
+
+  private static transformObj(offer: any): OfferTransformed {
     let result: any = {};
 
     // Iterate over the properties of the object
     for (const key in offer) {
       // If the property is an object, merge its properties with the result
       if (typeof offer[key] === 'object' && offer[key] !== null) {
-        result = {...result, ...OffersController.formatOffer(offer[key])};
+        result = {...result, ...this.transformObj(offer[key])};
       } else if (typeof offer[key] === 'bigint') {
         // If the property is a bigint, parse it to a number
         result[key] = Number(offer[key]);
@@ -92,10 +159,7 @@ export class OffersController{
         result[key] = offer[key];
       }
     }
-    return result;
-  }
 
-  static parseOffer(offerMetadata: string){
-    OffersMetadataType.parse(JSON.parse(offerMetadata));
+    return result;
   }
 }

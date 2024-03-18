@@ -1,46 +1,25 @@
-import {DataTypes} from "sequelize";
+import {DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model} from "sequelize";
 import {sequelize} from "../../database";
-import {array, boolean, number, object, string, z} from "zod";
+import {Offer} from "./Offer";
 
-export const OffersMetadata = sequelize.define("OffersMetadata",
-    {
-        id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
-        offerId: {
-            type: DataTypes.BIGINT,
-            references: {
-                model: 'Offers',
-                key: 'id'
-            }
-        },
-        label: DataTypes.STRING,
-        bandwidthLimitId: {
-            type: DataTypes.BIGINT,
-            references: {
-                model: 'OffersBandwidthLimit',
-                key: 'id'
-            }
-        },
-        autoSsl: DataTypes.BOOLEAN,
-        burstSpeed: DataTypes.BIGINT,
-        apiEndpoint: DataTypes.STRING,
-        customCnames: DataTypes.STRING,
-    },
-    {
-        modelName: 'OffersMetadata',
-        freezeTableName: true
-    }
-);
+export class OfferMetadata extends Model<InferAttributes<OfferMetadata>, InferCreationAttributes<Offer>> {
+  declare id: string;
+  declare offerId: ForeignKey<Offer['id']>;
+  declare type: string;
+  declare label: string;
+  declare autoSsl: boolean;
+  declare burstSpeed: number;
+  declare apiEndpoint: string;
+}
 
-export const OffersMetadataType = z.object({
-    label: string(),
-    bandwidthLimit: object({
-        amount: number(),
-        period: string(),
-        unit: string()
-    }),
-    autoSsl: boolean(),
-    burstSpeed: number(),
-    nodeLocations: array(string()),
-    apiEndpoint: string(),
-    customCnames: boolean()
+OfferMetadata.init({
+  id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
+  type: DataTypes.STRING,
+  label: DataTypes.STRING,
+  autoSsl: DataTypes.BOOLEAN,
+  burstSpeed: DataTypes.INTEGER,
+  apiEndpoint: DataTypes.STRING,
+}, {
+  sequelize,
+  timestamps: false,
 })
