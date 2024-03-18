@@ -55,6 +55,7 @@ export class OffersController{
             through: {
               attributes: []
             },
+            required: false,
             where: nodeLocationFilter
           },
 
@@ -74,6 +75,8 @@ export class OffersController{
         offset: offset,
         limit: pageSize
       });
+      
+      console.log(offers.length, offset, pageSize)
 
       const mappedOffers = offers.map((offer: Offer) => {
         return offer.toJSON();

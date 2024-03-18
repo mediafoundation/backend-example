@@ -76,6 +76,7 @@ export class DealsController {
           through: {
             attributes: []
           },
+          required: true,
           where: nodeLocationFilter
         },
 

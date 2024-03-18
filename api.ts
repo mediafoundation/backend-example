@@ -42,9 +42,19 @@ app.get('/resources', async (req, res) => {
 });
 
 app.get('/offers', async (req, res) => {
-    let filter = JSON.parse(req.query.filter as string)
-    let parsedFilter = parseFilter(filter)
-    const offers = await OffersController.getOffers(parsedFilter);
+    const filters = JSON.parse(req.query.filters ? req.query.filters as string : "{}")
+    
+    const page = filters.page ? filters.page : 1
+    
+    const pageSize = filters.pageSize ? filters.pageSize : 10
+    
+    const offerFilter = parseFilter(filters.offerFilter ? filters.offerFilter : {})
+    const metadataFilter = parseFilter(filters.metadataFilter ? filters.metadataFilter : {})
+    const bandwidthFilter = parseFilter(filters.bandwidthFilter ? filters.bandwidthFilter : {})
+    const nodeLocationFilter = parseFilter(filters.nodeLocationFilter ? filters.nodeLocationFilter : {})
+    
+    const offers = await OffersController.getOffers(offerFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize);
+    
     res.json(offers);
 })
 
