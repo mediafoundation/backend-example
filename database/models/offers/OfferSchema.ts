@@ -16,6 +16,4 @@ export const offerSchema = z.object({
   customCnames: z.boolean(),
   burstSpeed: z.number(),
   bandwidthLimit: z.string(),
-});
-
-export type TypeOffer = z.infer<typeof offerSchema>
+})
