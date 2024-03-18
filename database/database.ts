@@ -1,21 +1,22 @@
-import {Dialect, Op, Sequelize} from "sequelize";
-require('dotenv').config()
+import {Dialect, Op, Sequelize} from "sequelize"
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+require("dotenv").config()
 
-let sequelize: Sequelize;
+let sequelize: Sequelize
 
-const DECIMALS_DIGITS = 50;
+const DECIMALS_DIGITS = 50
 
-if(process.env.NODE_ENV === 'test') {
-    sequelize = new Sequelize('sqlite::memory', {logging: false})
+if(process.env.NODE_ENV === "test") {
+  sequelize = new Sequelize("sqlite::memory", {logging: false})
 }
 
 else{
-    sequelize = new Sequelize(process.env.dbName!, process.env.dbUser!, process.env.dbPassword, {
-        host: process.env.dbHost,
-        dialect: process.env.dbDialect as Dialect,
-        port: parseInt(process.env.dbPort!),
-        logging: false
-    });
+  sequelize = new Sequelize(process.env.dbName!, process.env.dbUser!, process.env.dbPassword, {
+    host: process.env.dbHost,
+    dialect: process.env.dbDialect as Dialect,
+    port: parseInt(process.env.dbPort!),
+    logging: false
+  })
 }
 
 export {sequelize, Op, DECIMALS_DIGITS}
