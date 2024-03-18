@@ -23,11 +23,7 @@ export class OffersController{
     await instance.createBandwidthLimit({offerId: instance.dataValues.id, ...offer.metadata.bandwidthLimit})
 
     for (const nodeLocation of offer.metadata.nodeLocations) {
-      try {
-        await instance.createNodeLocation({location: nodeLocation}, {ignoreDuplicates: true})
-      } catch (e) {
-        console.log(e)
-      }
+      await instance.createNodeLocation({location: nodeLocation})
     }
 
     return {
@@ -55,7 +51,6 @@ export class OffersController{
           through: {
             attributes: []
           },
-          required: false,
           where: nodeLocationFilter
         },
 
@@ -75,8 +70,6 @@ export class OffersController{
       offset: offset,
       limit: pageSize
     })
-      
-    console.log(offers.length, offset, pageSize)
 
     const mappedOffers = offers.map((offer: Offer) => {
       return offer.toJSON()
