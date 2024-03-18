@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod"
 
 export const MetadataSchema = z.object({
   type: z.string(),
@@ -13,7 +13,7 @@ export const MetadataSchema = z.object({
   burstSpeed: z.number(),
   nodeLocations: z.array(z.string()),
   customCnames: z.boolean(),
-});
+})
 
 export type DealTransformed = {
   id: number;
@@ -101,4 +101,4 @@ export const DealRawSchema = z.object({
     cancelled: z.boolean(),
     cancelledAt: z.bigint(),
   }),
-});
+})

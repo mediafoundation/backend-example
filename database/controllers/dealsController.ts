@@ -1,61 +1,61 @@
-import {Deal} from "../models/deals/Deal";
-import {Resource} from "../models/Resource";
-import {Client} from "../models/Client";
+import {Deal} from "../models/deals/Deal"
+import {Resource} from "../models/Resource"
+import {Client} from "../models/Client"
 /**
  * import {DealsLocations} from "../models/deals/DealsLocations";
  * import {DealsResources} from "../models/associations/DealsResources";
  */
-import {WhereOptions} from "sequelize";
-import {DealFormatted, DealRawSchema, DealTransformed, MetadataSchema} from "../models/types/deal";
-import {DealMetadata} from "../models/deals/DealsMetadata";
-import {NodeLocation} from "../models/NodeLocation";
-import {BandwidthLimit} from "../models/BandwidthLimit";
-import {Provider} from "../models/Provider";
+import {WhereOptions} from "sequelize"
+import {DealFormatted, DealRawSchema, DealTransformed, MetadataSchema} from "../models/types/deal"
+import {DealMetadata} from "../models/deals/DealsMetadata"
+import {NodeLocation} from "../models/NodeLocation"
+import {BandwidthLimit} from "../models/BandwidthLimit"
+import {Provider} from "../models/Provider"
 
 export class DealsController {
   static async upsertDeal(deal: DealFormatted, network: string) {
     const resource = await Resource.findOne({
       where: {id: deal.resourceId}
-    });
+    })
 
     if (!resource) {
-      throw new Error('Resource not found for deal: ' + deal.id + ' with resource id: ' + deal.resourceId);
+      throw new Error("Resource not found for deal: " + deal.id + " with resource id: " + deal.resourceId)
     }
 
-    let client = await Client.findOrCreate({
+    const client = await Client.findOrCreate({
       where: {account: deal.client},
       defaults: {account: deal.client}
-    });
+    })
 
-    let provider = await Provider.findOrCreate({
+    const provider = await Provider.findOrCreate({
       where: {account: deal.provider},
       defaults: {account: deal.provider}
-    });
+    })
 
-    const [instance, created] = await Deal.upsert({...deal, network: network}, {returning: true});
+    const [instance, created] = await Deal.upsert({...deal, network: network}, {returning: true})
 
-    await instance.setResource(resource);
+    await instance.setResource(resource)
 
-    await instance.setClient(client[0]);
+    await instance.setClient(client[0])
 
     await instance.setProvider(provider[0])
 
-    await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata});
+    await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata})
 
     await instance.createBandwidthLimit({dealId: instance.dataValues.id, ...deal.metadata.bandwidthLimit})
 
     for (const nodeLocation of deal.metadata.nodeLocations) {
       await instance.createNodeLocation(
         {location: nodeLocation},
-        {ignoreDuplicates: true});
+        {ignoreDuplicates: true})
     }
 
 
     return {
       deal: instance.dataValues,
       created: created
-    };
-  };
+    }
+  }
 
   static async getDeals(
     dealFilter: WhereOptions<any> = {},
@@ -68,11 +68,11 @@ export class DealsController {
 
     const offset = (page - 1) * pageSize
 
-    let deals = await Deal.findAll({
+    const deals = await Deal.findAll({
       include: [
         {
           model: NodeLocation,
-          attributes: ['location'],
+          attributes: ["location"],
           through: {
             attributes: []
           },
@@ -95,85 +95,78 @@ export class DealsController {
       where: dealFilter,
       offset: offset,
       limit: pageSize
-    });
+    })
 
     const mappedDeals = deals.map((deal: Deal) => {
       return deal.toJSON()
     })
 
     return mappedDeals.map((deal) => {
-      // @ts-ignore
-      deal.NodeLocations = deal.NodeLocations.map((location: any) => location.location);
-      return deal;
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      deal.NodeLocations = deal.NodeLocations.map((location: any) => location.location)
+      return deal
     })
   }
 
   static async getDealById(id: string) {
-    try {
-      let deal = await Deal.findByPk(id);
-      if (!deal) {
-        return null
-      }
-
-      let metadata = await deal.getMetadata()
-      let bandwidthLimit = await deal.getBandwidthLimit()
-      let nodeLocations = await deal.getNodeLocations()
-
-      return {
-        deal: deal.dataValues,
-        metadata: metadata.dataValues,
-        bandwidthLimit: bandwidthLimit.dataValues,
-        nodeLocations: nodeLocations.map((location: NodeLocation) => location.dataValues.location)
-      }
-
-    } catch (error) {
-      throw error;
+    
+    const deal = await Deal.findByPk(id)
+    if (!deal) {
+      return null
     }
-  };
+
+    const metadata = await deal.getMetadata()
+    const bandwidthLimit = await deal.getBandwidthLimit()
+    const nodeLocations = await deal.getNodeLocations()
+
+    return {
+      deal: deal.dataValues,
+      metadata: metadata.dataValues,
+      bandwidthLimit: bandwidthLimit.dataValues,
+      nodeLocations: nodeLocations.map((location: NodeLocation) => location.dataValues.location)
+    }
+  }
 
   static async deleteDealById(id: number) {
-    try {
-      const deal = await Deal.findByPk(id);
-      if (!deal) {
-        return null;
-      }
-      await deal.destroy();
-      return deal;
-    } catch (error) {
-      throw error;
+    const deal = await Deal.findByPk(id)
+    if (!deal) {
+      return null
     }
-  };
+    await deal.destroy()
+    return deal
+  }
 
   static formatDeal(deal: any): DealFormatted {
 
     DealRawSchema.parse(deal)
 
-    let transformed = this.transformObj(deal);
+    const transformed = this.transformObj(deal)
 
-    transformed['metadata'] = JSON.parse(transformed.metadata)
+    transformed["metadata"] = JSON.parse(transformed.metadata)
 
     MetadataSchema.parse(transformed.metadata)
 
-    return transformed as unknown as DealFormatted;
+    return transformed as unknown as DealFormatted
   }
 
   private static transformObj(deal: any): DealTransformed {
-    let result: any = {};
+    let result: any = {}
 
     // Iterate over the properties of the object
     for (const key in deal) {
       // If the property is an object, merge its properties with the result
-      if (typeof deal[key] === 'object' && deal[key] !== null) {
-        result = {...result, ...this.transformObj(deal[key])};
-      } else if (typeof deal[key] === 'bigint') {
+      if (typeof deal[key] === "object" && deal[key] !== null) {
+        result = {...result, ...this.transformObj(deal[key])}
+      } else if (typeof deal[key] === "bigint") {
         // If the property is a bigint, parse it to a number
-        result[key] = Number(deal[key]);
+        result[key] = Number(deal[key])
       } else {
         // Otherwise, just copy the property to the result
-        result[key] = deal[key];
+        result[key] = deal[key]
       }
     }
 
-    return result;
+    return result
   }
 }

@@ -1,22 +1,22 @@
-import {sequelize} from "../database";
+import {sequelize} from "../database"
 import {
-    CreationOptional,
-    DataTypes,
-    InferAttributes,
-    InferCreationAttributes,
-    Model
-} from "sequelize";
+  CreationOptional,
+  DataTypes,
+  InferAttributes,
+  InferCreationAttributes,
+  Model
+} from "sequelize"
 
 export class NodeLocation extends Model<InferAttributes<NodeLocation>, InferCreationAttributes<NodeLocation>> {
-    declare id: CreationOptional<number>
-    declare location: string;
+  declare id: CreationOptional<number>
+  declare location: string
 }
 
 NodeLocation.init({
-    id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
-    location: {type: DataTypes.STRING, unique: true},
+  id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
+  location: {type: DataTypes.STRING, unique: true},
 }, {
-    sequelize,
-    timestamps: false,
-    freezeTableName: true
+  sequelize,
+  timestamps: false,
+  freezeTableName: true
 })

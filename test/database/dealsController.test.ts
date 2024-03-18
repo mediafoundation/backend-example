@@ -1,15 +1,15 @@
 import {DealsController} from "../../database/controllers/dealsController"
-import {ResourcesController} from "../../database/controllers/resourcesController";
-import {resetDB} from "../../database/utils";
-import {DealMetadata} from "../../database/models/deals/DealsMetadata";
-import {BandwidthLimit} from "../../database/models/BandwidthLimit";
-import {NodeLocation} from "../../database/models/NodeLocation";
+import {ResourcesController} from "../../database/controllers/resourcesController"
+import {resetDB} from "../../database/utils"
+import {DealMetadata} from "../../database/models/deals/DealsMetadata"
+import {BandwidthLimit} from "../../database/models/BandwidthLimit"
+import {NodeLocation} from "../../database/models/NodeLocation"
 
 const mockDeal = {
   id: 1n,
   offerId: 1n,
-  client: '0xB76c9A2fC1367f92cBB73b1ECE0c98Abb0c5097B',
-  provider: '0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31',
+  client: "0xB76c9A2fC1367f92cBB73b1ECE0c98Abb0c5097B",
+  provider: "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31",
   resourceId: 3n,
   totalPayment: 0n,
   blockedBalance: 446499999999553500n,
@@ -18,7 +18,7 @@ const mockDeal = {
     minDealDuration: 900n,
     billFullPeriods: false,
     singlePeriodOnly: false,
-    metadata: '{"type":"cdn","label":"Testing Backend","apiEndpoint":"http:localhost:5000/","bandwidthLimit":{"amount":1,"unit":"tb","period":"monthly"},"autoSsl":true,"burstSpeed":1000,"nodeLocations":["ABB", "CL", "BR"],"customCnames":true}'
+    metadata: "{\"type\":\"cdn\",\"label\":\"Testing Backend\",\"apiEndpoint\":\"http:localhost:5000/\",\"bandwidthLimit\":{\"amount\":1,\"unit\":\"tb\",\"period\":\"monthly\"},\"autoSsl\":true,\"burstSpeed\":1000,\"nodeLocations\":[\"ABB\", \"CL\", \"BR\"],\"customCnames\":true}"
   },
   status: {
     active: true,
@@ -32,25 +32,25 @@ const mockDeal = {
 
 const mockResource = {
   id: 3n,
-  owner: '0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31',
-  label: 'Testing Backend',
-  protocol: 'http',
-  origin: 'localhost',
-  path: '/var/www/html',
+  owner: "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31",
+  label: "Testing Backend",
+  protocol: "http",
+  origin: "localhost",
+  path: "/var/www/html",
 }
 
 beforeAll(async () => {
   await resetDB()
-});
+})
 
 /*afterAll(async () => {
   await Deal.drop();
   await Resource.drop();
 })*/
 
-describe('Deal Controller', () => {
+describe("Deal Controller", () => {
 
-  test('should create or update a deal', async () => {
+  test("should create or update a deal", async () => {
 
     await ResourcesController.upsertResource(mockResource)
 
@@ -59,14 +59,14 @@ describe('Deal Controller', () => {
     const result = await DealsController.upsertDeal(formattedDeal, "ganache")
 
     expect(result.deal).not.toBeNull()
-  });
+  })
 
   test("get deal", async () => {
-    const nullDeal = await DealsController.getDealById('2')
+    const nullDeal = await DealsController.getDealById("2")
 
     expect(nullDeal).toBeNull()
 
-    const deal = await DealsController.getDealById('1')
+    const deal = await DealsController.getDealById("1")
 
     console.log(deal)
 
@@ -166,9 +166,9 @@ describe('Deal Controller', () => {
     const deal = await DealsController.deleteDealById(1)
 
 
-    let bandwidthLimit = await BandwidthLimit.findAll()
-    let nodeLocations = await NodeLocation.findAll()
-    let metadata = await DealMetadata.findAll()
+    const bandwidthLimit = await BandwidthLimit.findAll()
+    const nodeLocations = await NodeLocation.findAll()
+    const metadata = await DealMetadata.findAll()
 
     expect(metadata.length).toBe(0)
     expect(bandwidthLimit.length).toBe(0)
@@ -176,4 +176,4 @@ describe('Deal Controller', () => {
     expect(deal!.id).toBe("1")
     expect(await deal!.getNodeLocations()).toStrictEqual([])
   })
-});
+})
