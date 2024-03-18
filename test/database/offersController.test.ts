@@ -46,7 +46,7 @@ describe("Offer Controller", () => {
     expect(offer!.nodeLocations).not.toBeNull()
     expect(offer!.bandwidthLimit).not.toBeNull()
 
-    expect(offer!.nodeLocations.length).toBe(3)
+    expect(offer!.nodeLocations.length).toBe(4)
     expect(offer!.nodeLocations[0]).toBe("NNN")
   })
 
@@ -103,6 +103,6 @@ describe("Offer Controller", () => {
     expect(offer!.id).toBe(7)
     expect(bandwidthLimit.length).toBe(0)
     expect(metadata.length).toBe(0)
-    expect(nodeLocations.length).toBe(3)
+    expect(nodeLocations.length).toBe(4)
   })
 })

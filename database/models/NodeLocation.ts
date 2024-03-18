@@ -14,7 +14,7 @@ export class NodeLocation extends Model<InferAttributes<NodeLocation>, InferCrea
 
 NodeLocation.init({
   id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
-  location: {type: DataTypes.STRING, unique: true},
+  location: {type: DataTypes.STRING},
 }, {
   sequelize,
   timestamps: false,

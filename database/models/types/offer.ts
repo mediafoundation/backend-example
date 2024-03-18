@@ -11,7 +11,7 @@ export const OfferMetadataSchema = z.object({
   }),
   autoSsl: z.boolean(),
   burstSpeed: z.number(),
-  nodeLocations: z.array(z.string()),
+  nodeLocations: z.array(z.string()).min(1),
   customCnames: z.boolean()
 })
 
