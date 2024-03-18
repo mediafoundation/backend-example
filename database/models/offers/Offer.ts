@@ -1,6 +1,7 @@
 import {
+  BelongsToManyCreateAssociationMixin, BelongsToManyGetAssociationsMixin,
   DataTypes,
-  ForeignKey, HasManyCreateAssociationMixin, HasManyGetAssociationsMixin, HasOneCreateAssociationMixin,
+  ForeignKey, HasOneCreateAssociationMixin,
   HasOneGetAssociationMixin,
   InferAttributes,
   InferCreationAttributes,
@@ -30,8 +31,8 @@ export class Offer extends Model<InferAttributes<Offer>, InferCreationAttributes
   declare getBandwidthLimit: HasOneGetAssociationMixin<BandwidthLimit>;
   declare createBandwidthLimit: HasOneCreateAssociationMixin<BandwidthLimit>;
 
-  declare getNodeLocations: HasManyGetAssociationsMixin<NodeLocation>
-  declare createNodeLocation: HasManyCreateAssociationMixin<NodeLocation>
+  declare getNodeLocations: BelongsToManyGetAssociationsMixin<NodeLocation>
+  declare createNodeLocation: BelongsToManyCreateAssociationMixin<NodeLocation>
 
   declare setProvider: HasOneCreateAssociationMixin<Provider>;
 }
@@ -45,7 +46,7 @@ Offer.init({
   minDealDuration: DataTypes.INTEGER,
   billFullPeriods: DataTypes.BOOLEAN,
   singlePeriodOnly: DataTypes.BOOLEAN,
-  network: DataTypes.STRING
+  network: DataTypes.STRING,
 }, {
   sequelize,
   modelName: 'Offer',

@@ -61,6 +61,7 @@ const createRelationsBetweenTables = async () => {
         through: 'DealNodeLocation',
         foreignKey: 'dealId',
         otherKey: 'nodeLocationId',
+        timestamps: false
     });
 
     Offer.hasOne(BandwidthLimit, {
@@ -86,6 +87,7 @@ const createRelationsBetweenTables = async () => {
         through: 'OfferNodeLocation',
         foreignKey: 'offerId',
         otherKey: 'nodeLocationId',
+        timestamps: false
     });
 
 }

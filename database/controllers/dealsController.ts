@@ -46,8 +46,8 @@ export class DealsController {
 
     for (const nodeLocation of deal.metadata.nodeLocations) {
       await instance.createNodeLocation(
-        {itemId: instance.dataValues.id, location: nodeLocation},
-        {returning: true});
+        {location: nodeLocation},
+        {ignoreDuplicates: true});
     }
 
 

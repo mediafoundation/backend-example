@@ -15,7 +15,7 @@ const mockOffer = {
     minDealDuration: 2592000n,
     billFullPeriods: false,
     singlePeriodOnly: false,
-    metadata: '{"autoSsl":true,"customCnames":true,"nodeLocations":["NNN","SRR","EEE"],"burstSpeed":2000,"apiEndpoint":"http://api.media.network/","bandwidthLimit":{"period":"monthly","unit":"tb","amount":0},"label":"Pro","type":"cdn"}'
+    metadata: '{"autoSsl":true,"customCnames":true,"nodeLocations":["NNN","SRR","EEE", "NNN"],"burstSpeed":2000,"apiEndpoint":"http://api.media.network/","bandwidthLimit":{"period":"monthly","unit":"tb","amount":0},"label":"Pro","type":"cdn"}'
   }
 }
 

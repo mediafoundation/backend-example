@@ -2,23 +2,19 @@ import {sequelize} from "../database";
 import {
     CreationOptional,
     DataTypes,
-    ForeignKey,
     InferAttributes,
     InferCreationAttributes,
     Model
 } from "sequelize";
-import {Deal} from "./deals/Deal";
-import {Offer} from "./offers/Offer";
 
 export class NodeLocation extends Model<InferAttributes<NodeLocation>, InferCreationAttributes<NodeLocation>> {
     declare id: CreationOptional<number>
-    declare itemId: ForeignKey<Deal['id'] | Offer['id']>
     declare location: string;
 }
 
 NodeLocation.init({
     id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
-    location: DataTypes.STRING,
+    location: {type: DataTypes.STRING, unique: true},
 }, {
     sequelize,
     timestamps: false,

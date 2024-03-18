@@ -6,9 +6,7 @@ import {
     HasOneGetAssociationMixin,
     HasOneCreateAssociationMixin,
     ForeignKey,
-    HasManyGetAssociationsMixin,
-    HasManyCreateAssociationMixin,
-    BelongsToCreateAssociationMixin,
+    BelongsToCreateAssociationMixin, BelongsToManyCreateAssociationMixin, BelongsToManyGetAssociationsMixin,
 } from 'sequelize';
 import {DECIMALS_DIGITS, sequelize} from "../../database";
 import {DealMetadata} from "./DealsMetadata";
@@ -43,8 +41,8 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
     declare getBandwidthLimit: HasOneGetAssociationMixin<BandwidthLimit>
     declare createBandwidthLimit: HasOneCreateAssociationMixin<BandwidthLimit>
 
-    declare getNodeLocations: HasManyGetAssociationsMixin<NodeLocation>
-    declare createNodeLocation: HasManyCreateAssociationMixin<NodeLocation>
+    declare getNodeLocations: BelongsToManyGetAssociationsMixin<NodeLocation>
+    declare createNodeLocation: BelongsToManyCreateAssociationMixin<NodeLocation>
 
     declare setResource: BelongsToCreateAssociationMixin<Resource>
 

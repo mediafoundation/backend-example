@@ -23,7 +23,11 @@ export class OffersController{
     await instance.createBandwidthLimit({offerId: instance.dataValues.id, ...offer.metadata.bandwidthLimit})
 
     for (const nodeLocation of offer.metadata.nodeLocations) {
-      await instance.createNodeLocation({itemId: instance.dataValues.id, location: nodeLocation}, {returning: true});
+      try {
+        await instance.createNodeLocation({location: nodeLocation}, {ignoreDuplicates: true})
+      } catch (e) {
+        console.log(e)
+      }
     }
 
     return {
