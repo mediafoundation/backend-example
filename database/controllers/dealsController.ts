@@ -94,16 +94,16 @@ export class DealsController {
       limit: pageSize
     })
 
-    const mappedDeals = deals.map((deal: Deal) => {
+    const mappedDeals = deals.map((deal: any) => {
       return deal.toJSON()
     })
-
-    return mappedDeals.map((deal) => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      deal.NodeLocations = deal.NodeLocations.map((location: any) => location.location)
-      return deal
-    })
+    
+    for (let i = 0; i < deals.length; i++) {
+      mappedDeals[i].NodeLocations = await deals[i].getNodeLocations({attributes: ["location"]})
+      mappedDeals[i].NodeLocations = mappedDeals[i].NodeLocations.map((location: any) => location.location)
+    }
+    
+    return mappedDeals
   }
 
   static async getDealById(id: string) {

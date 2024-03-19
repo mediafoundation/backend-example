@@ -64,8 +64,6 @@ describe("Offer Controller", () => {
     expect(offers.length).toBe(0)
 
     offers = await OffersController.getOffers({}, {}, {}, nodeLocationFilter)
-    
-    console.log(offers)
 
     expect(offers.length).toBe(0)
   })

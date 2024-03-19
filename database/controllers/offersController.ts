@@ -57,7 +57,7 @@ export class OffersController{
         {
           model: OfferMetadata,
           as: "Metadata",
-          where: metadataFilter
+          where: metadataFilter,
         },
 
         {
@@ -70,17 +70,17 @@ export class OffersController{
       offset: offset,
       limit: pageSize
     })
-
-    const mappedOffers = offers.map((offer: Offer) => {
+    
+    const mappedOffers = offers.map((offer: any) => {
       return offer.toJSON()
     })
-
-    return mappedOffers.map((offer) => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      offer.NodeLocations = offer.NodeLocations.map((location: any) => location.location)
-      return offer
-    })
+    
+    for (let i = 0; i < offers.length; i++) {
+      mappedOffers[i].NodeLocations = await offers[i].getNodeLocations({attributes: ["location"]})
+      mappedOffers[i].NodeLocations = mappedOffers[i].NodeLocations.map((location: any) => location.location)
+    }
+    
+    return mappedOffers
   }
 
   static async getOfferById(id: string) {
