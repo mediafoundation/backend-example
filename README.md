@@ -27,11 +27,13 @@ dbDialect=DB_DIALECT
 ```bash
 npm run init
 ```
+This command retrieves all data from the blockchain and stores it into the configured database.
 
 ### Execute the api (npm run init must be executed before this command)
 ```bash
 npm run startApi
 ```
+After running this command, you will see a message indicating that the API server has started successfully.
 
 ## Using the api
 ### Deals
@@ -46,16 +48,16 @@ curl -X GET http://localhost:5000/deals/1
 ```
 #### Get deals with filtered by metadata, for more information about filters see [api filters documentation](#filters)
 ```bash
-curl -X GET http://localhost:5000/deals?filter{"metadataFilter": {"burstSpeed": {"gt": 100}}}
+curl-G -i 'http://localhost:5000/deals' --data-urlencode 'filter={"metadataFilter": {"burstSpeed": {"gt": 100}}}'
 ```
 #### Get deals with filtered by nodeLocation and pagination
 ```bash
-curl -X GET http://localhost:5000/deals?filter{"nodeLocationFilter": {"location": {"eq": "BR"}}}&page=1&limit=10
+curl -G -i 'http://localhost:5000/deals' --data-urlencode 'filter={"nodeLocationFilter": {"location": {"eq": "BR"}}}&page=1&limit=10'
 ```
 
 # Filters
 ### Schema and usages
-#### In this example, there are four filters that can be used with deals and offers:
+#### There are four filters that can be used with deals and offers:
 - metadataFilter
 - nodeLocationFilter
 - bandwidthFilter
@@ -89,6 +91,6 @@ curl -X GET http://localhost:5000/deals?filter{"nodeLocationFilter": {"location"
 }
 ```
 ```bash
-curl -X GET http://localhost:5000/offers?filter{"metadataFilter": {"burstSpeed": {"gt": 100}}, "nodeLocationFilter": {"location": {"eq": "BR"}}, "bandwidthFilter": {"amount": {"gt": 100}}, "offerFilter": {"maximumDeals": {"eq": 2000}}}
+curl -G -i 'http://localhost:5000/offers?' --data-urlencode 'filters={"metadataFilter": {"burstSpeed": {"gt": 100}}, "nodeLocationFilter": {"location": {"eq": "BR"}}, "bandwidthFilter": {"amount": {"eq": 1}}, "offerFilter": {"maximumDeals": {"gt": 100}}}'
 ```
 #### Take into account that the filters are optional and can be used together or separately.
