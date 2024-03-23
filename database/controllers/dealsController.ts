@@ -1,10 +1,6 @@
 import {Deal} from "../models/deals/Deal"
 import {Resource} from "../models/Resource"
 import {Client} from "../models/Client"
-/**
- * import {DealsLocations} from "../models/deals/DealsLocations";
- * import {DealsResources} from "../models/associations/DealsResources";
- */
 import {WhereOptions} from "sequelize"
 import {DealFormatted, DealRawSchema, DealTransformed, MetadataSchema} from "../models/types/deal"
 import {DealMetadata} from "../models/deals/DealsMetadata"
@@ -12,42 +8,62 @@ import {NodeLocation} from "../models/NodeLocation"
 import {BandwidthLimit} from "../models/BandwidthLimit"
 import {Provider} from "../models/Provider"
 
+/**
+ * DealsController class
+ */
 export class DealsController {
+
+  /**
+   * Upsert a deal
+   * @param deal - The deal to be upserted
+   * @param network - The network of the deal
+   * @returns Promise<{deal: InferAttributes<Deal, {omit: never}>, created: boolean | null}>
+   */
   static async upsertDeal(deal: DealFormatted, network: string) {
+    // Find the resource for the deal
     const resource = await Resource.findOne({
       where: {id: deal.resourceId}
     })
 
+    // If the resource is not found, throw an error
     if (!resource) {
       throw new Error("Resource not found for deal: " + deal.id + " with resource id: " + deal.resourceId)
     }
 
+    // Find or create a client
     const client = await Client.findOrCreate({
       where: {account: deal.client},
       defaults: {account: deal.client}
     })
 
+    // Find or create a provider
     const provider = await Provider.findOrCreate({
       where: {account: deal.provider},
       defaults: {account: deal.provider}
     })
 
+    // Upsert the deal
     const [instance, created] = await Deal.upsert({...deal, network: network}, {returning: true})
 
+    // Set the resource for the deal
     await instance.setResource(resource)
 
+    // Set the client for the deal
     await instance.setClient(client[0])
 
+    // Set the provider for the deal
     await instance.setProvider(provider[0])
 
+    // Create metadata for the deal
     await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata})
 
+    // Create bandwidth limit for the deal
     await instance.createBandwidthLimit({dealId: instance.dataValues.id, ...deal.metadata.bandwidthLimit})
 
+    // Create node locations for the deal
     for (const nodeLocation of deal.metadata.nodeLocations) {
       await instance.createNodeLocation({location: nodeLocation})
     }
-
 
     return {
       deal: instance.dataValues,
@@ -55,6 +71,16 @@ export class DealsController {
     }
   }
 
+  /**
+   * Get deals
+   * @param dealFilter - Filter for the deals
+   * @param metadataFilter - Filter for the metadata
+   * @param bandwidthFilter - Filter for the bandwidth limit
+   * @param nodeLocationFilter - Filter for the node locations
+   * @param page - Page number
+   * @param pageSize - Page size
+   * @returns Promise<Array<any>>
+   */
   static async getDeals(
     dealFilter: WhereOptions<any> = {},
     metadataFilter: WhereOptions<any> = {},
@@ -64,8 +90,10 @@ export class DealsController {
     pageSize = 10
   ): Promise<Array<any>> {
 
+    // Calculate the offset
     const offset = (page - 1) * pageSize
 
+    // Find all deals with the given filters
     const deals = await Deal.findAll({
       include: [
         {
@@ -94,27 +122,40 @@ export class DealsController {
       limit: pageSize
     })
 
+    // Map the deals to JSON
     const mappedDeals = deals.map((deal: any) => {
       return deal.toJSON()
     })
-    
+
+    // Get the node locations for each deal
     for (let i = 0; i < deals.length; i++) {
       mappedDeals[i].NodeLocations = await deals[i].getNodeLocations({attributes: ["location"]})
       mappedDeals[i].NodeLocations = mappedDeals[i].NodeLocations.map((location: any) => location.location)
     }
-    
+
     return mappedDeals
   }
 
+  /**
+   * Get deal by id
+   * @param id - The id of the deal
+   * @returns Promise<{deal: InferAttributes<Deal, {omit: never}>,metadata: InferAttributes<DealMetadata, {omit: never}>,bandwidthLimit: InferAttributes<BandwidthLimit, {omit: never}>,nodeLocations: Array<string>}>
+   */
   static async getDealById(id: string) {
-    
+
+    // Find the deal by id
     const deal = await Deal.findByPk(id)
     if (!deal) {
       return null
     }
 
+    // Get the metadata for the deal
     const metadata = await deal.getMetadata()
+
+    // Get the bandwidth limit for the deal
     const bandwidthLimit = await deal.getBandwidthLimit()
+
+    // Get the node locations for the deal
     const nodeLocations = await deal.getNodeLocations()
 
     return {
@@ -125,28 +166,50 @@ export class DealsController {
     }
   }
 
+  /**
+   * Delete deal by id
+   * @param id - The id of the deal
+   * @returns Promise<Deal | null>
+   */
   static async deleteDealById(id: number) {
+
+    // Find the deal by id
     const deal = await Deal.findByPk(id)
     if (!deal) {
       return null
     }
+    // Delete the deal
     await deal.destroy()
     return deal
   }
 
+  /**
+   * Format deal
+   * @param deal - The deal to be formatted
+   * @returns DealFormatted
+   */
   static formatDeal(deal: any): DealFormatted {
 
+    // Parse the raw schema of the deal
     DealRawSchema.parse(deal)
 
+    // Transform the deal
     const transformed = this.transformObj(deal)
 
+    // Parse the metadata of the deal
     transformed["metadata"] = JSON.parse(transformed.metadata)
 
+    // Parse the metadata schema of the deal
     MetadataSchema.parse(transformed.metadata)
 
     return transformed as unknown as DealFormatted
   }
 
+  /**
+   * Transform object
+   * @param deal - The deal to be transformed
+   * @returns DealTransformed
+   */
   private static transformObj(deal: any): DealTransformed {
     let result: any = {}
 
