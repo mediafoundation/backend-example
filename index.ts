@@ -19,12 +19,12 @@ const init = async (chain: any) => {
   const resources = await resourcesInstance.getAllResourcesPaginating({address: process.env.userAddress, start: 0, end: 10})
 
   const deals = await marketplaceViewer.getAllDealsPaginating({
-    marketplaceId: 1,
+    marketplaceId: process.env.MARKETPLACE_ID,
     address: process.env.userAddress,
     isProvider: true
   })
 
-  const offers = await marketplaceViewer.getAllOffersPaginating({marketplaceId: 1, start: 0, steps: 10})
+  const offers = await marketplaceViewer.getAllOffersPaginating({marketplaceId: process.env.MARKETPLACE_ID, start: 0, steps: 10})
 
   if(deals.length !== 0 && resources.length !== 0) {
     /*let resourcesWithoutDeal = resourcesNotMatchingDeal(resources.map((resource: any) => resource.id), deals.map((deal: any) => deal.resourceId))
