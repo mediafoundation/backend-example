@@ -52,10 +52,10 @@ export class DealsController {
     await instance.setProvider(provider[0])
 
     // Create metadata for the deal
-    await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata})
+    const metadata = await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata})
 
     // Create bandwidth limit for the deal
-    await instance.createBandwidthLimit({dealId: instance.dataValues.id, ...deal.metadata.bandwidthLimit})
+    await metadata.createBandwidthLimit({dealMetadataId: metadata.dataValues.id, ...deal.metadata.bandwidthLimit})
 
     // Create node locations for the deal
     for (const nodeLocation of deal.metadata.nodeLocations) {
@@ -103,15 +103,16 @@ export class DealsController {
         },
 
         {
-          model: BandwidthLimit,
-          as: "BandwidthLimit",
-          where: bandwidthFilter
-        },
-
-        {
           model: DealMetadata,
           as: "Metadata",
-          where: metadataFilter
+          where: metadataFilter,
+          include: [
+            {
+              model: BandwidthLimit,
+              as: "BandwidthLimit",
+              where: bandwidthFilter
+            },
+          ]
         }
       ],
       where: dealFilter,
@@ -150,7 +151,7 @@ export class DealsController {
     const metadata = await deal.getMetadata()
 
     // Get the bandwidth limit for the deal
-    const bandwidthLimit = await deal.getBandwidthLimit()
+    const bandwidthLimit = await metadata.getBandwidthLimit()
 
     // Get the node locations for the deal
     const nodeLocations = await deal.getNodeLocations()

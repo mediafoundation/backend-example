@@ -1,7 +1,16 @@
-import {CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model} from "sequelize"
+import {
+  CreationOptional,
+  DataTypes,
+  ForeignKey, HasOneCreateAssociationMixin,
+  HasOneGetAssociationMixin,
+  InferAttributes,
+  InferCreationAttributes,
+  Model
+} from "sequelize"
 import {sequelize} from "../../database"
 import {array, boolean, number, object, string, z} from "zod"
 import {Deal} from "./Deal"
+import {BandwidthLimit} from "../BandwidthLimit"
 
 export class DealMetadata extends Model<
   InferAttributes<DealMetadata>,
@@ -15,6 +24,9 @@ export class DealMetadata extends Model<
   declare burstSpeed: number
   declare apiEndpoint: string
   declare customCnames: boolean
+  
+  declare getBandwidthLimit: HasOneGetAssociationMixin<BandwidthLimit>
+  declare createBandwidthLimit: HasOneCreateAssociationMixin<BandwidthLimit>
 }
 
 DealMetadata.init({

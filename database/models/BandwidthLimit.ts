@@ -1,12 +1,12 @@
 import {sequelize} from "../database"
 import {CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model} from "sequelize"
-import {Deal} from "./deals/Deal"
-import {Offer} from "./offers/Offer"
+import {DealMetadata} from "./deals/DealsMetadata"
+import {OfferMetadata} from "./offers/OffersMetadata"
 
 export class BandwidthLimit extends Model<InferAttributes<BandwidthLimit>, InferCreationAttributes<BandwidthLimit>> {
   declare id: CreationOptional<number>
-  declare dealId: CreationOptional<ForeignKey<Deal["id"]>>
-  declare offerId: CreationOptional<ForeignKey<Offer["id"]>>
+  declare dealMetadataId: CreationOptional<ForeignKey<DealMetadata["id"]>>
+  declare offerId: CreationOptional<ForeignKey<OfferMetadata["id"]>>
   declare amount: number
   declare period: string
   declare unit: string

@@ -45,11 +45,11 @@ const createRelationsBetweenTables = async () => {
     foreignKey: "dealId"
   })
 
-  Deal.hasOne(BandwidthLimit, {
+  DealMetadata.hasOne(BandwidthLimit, {
     onDelete: "CASCADE",
     as: "BandwidthLimit",
     sourceKey: "id",
-    foreignKey: "dealId"
+    foreignKey: "metadataId"
   })
 
   Deal.belongsToMany(NodeLocation, {
