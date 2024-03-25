@@ -25,11 +25,6 @@ export class DealsController {
       where: {id: deal.resourceId}
     })
 
-    // If the resource is not found, throw an error
-    if (!resource) {
-      throw new Error("Resource not found for deal: " + deal.id + " with resource id: " + deal.resourceId)
-    }
-
     // Find or create a client
     const client = await Client.findOrCreate({
       where: {account: deal.client},
@@ -45,8 +40,10 @@ export class DealsController {
     // Upsert the deal
     const [instance, created] = await Deal.upsert({...deal, network: network}, {returning: true})
 
-    // Set the resource for the deal
-    await instance.setResource(resource)
+    // If resource is not null, set the resource for the deal
+    if (resource) {
+      await instance.setResource(resource)
+    }
 
     // Set the client for the deal
     await instance.setClient(client[0])

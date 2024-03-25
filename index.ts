@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
-import {Sdk, MarketplaceViewer, Resources, Encryption, validChains} from "media-sdk"
+import {Sdk, MarketplaceViewer, Resources, validChains} from "media-sdk"
 import {DealsController} from "./database/controllers/dealsController"
 import {ResourcesController} from "./database/controllers/resourcesController"
 import {resetDB} from "./database/utils"
@@ -11,14 +11,14 @@ import {OffersController} from "./database/controllers/offersController"
 require("dotenv").config()
 
 const init = async (chain: any) => {
-  const sdkInstance = new Sdk({privateKey: process.env.PRIVATE_KEY!, chain: chain})
+  const sdkInstance = new Sdk({chain: chain})
 
   const marketplaceViewer: MarketplaceViewer = new MarketplaceViewer(sdkInstance)
   const resourcesInstance: Resources = new Resources(sdkInstance)
 
   const resources = await resourcesInstance.getAllResourcesPaginating({address: process.env.userAddress, start: 0, end: 10})
 
-  let deals = await marketplaceViewer.getAllDealsPaginating({
+  const deals = await marketplaceViewer.getAllDealsPaginating({
     marketplaceId: 1,
     address: process.env.userAddress,
     isProvider: true
@@ -30,23 +30,9 @@ const init = async (chain: any) => {
     /*let resourcesWithoutDeal = resourcesNotMatchingDeal(resources.map((resource: any) => resource.id), deals.map((deal: any) => deal.resourceId))
         resources = resources.filter((resource: any) => !resourcesWithoutDeal.includes(resource.id))*/
     for (const resource of resources) {
-      const attr = JSON.parse(resource.encryptedData)
-      const decryptedSharedKey = await Encryption.ethSigDecrypt(
-        resource.encryptedSharedKey,
-        process.env.PRIVATE_KEY
-      )
-
-      const decrypted = await Encryption.decrypt(
-        decryptedSharedKey,
-        attr.iv,
-        attr.tag,
-        attr.encryptedData
-      )
-
-      const data = JSON.parse(decrypted)
-
       try{
-        await ResourcesController.upsertResource({id: resource.id, owner: resource.owner, ...data})
+        console.log(resource)
+        await ResourcesController.upsertResource(resource)
       }catch (e) {
         console.log("Error for resource", resource.id, e)
       }
@@ -55,8 +41,9 @@ const init = async (chain: any) => {
   }
 
   if(deals.length !== 0) {
-    deals = deals.filter((deal: any) => deal.status.active == true)
+    //deals = deals.filter((deal: any) => deal.status.active == true)
     for (const deal of deals) {
+      console.log(deal)
       try{
         const formattedDeal = DealsController.formatDeal(deal)
 

@@ -6,7 +6,10 @@ import {
   HasOneGetAssociationMixin,
   HasOneCreateAssociationMixin,
   ForeignKey,
-  BelongsToCreateAssociationMixin, BelongsToManyCreateAssociationMixin, BelongsToManyGetAssociationsMixin,
+  BelongsToCreateAssociationMixin,
+  BelongsToManyCreateAssociationMixin,
+  BelongsToManyGetAssociationsMixin,
+  CreationOptional,
 } from "sequelize"
 import {DECIMALS_DIGITS, sequelize} from "../../database"
 import {DealMetadata} from "./DealsMetadata"
@@ -18,7 +21,7 @@ import {Provider} from "../Provider"
 
 export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<Deal>> {
   declare id: string
-  declare resourceId: ForeignKey<Resource["id"]>
+  declare resourceId: CreationOptional<ForeignKey<Resource["id"]>>
   declare client: ForeignKey<Client["account"]>
   declare provider: ForeignKey<Provider["account"]>
   declare totalPayment: number
