@@ -8,22 +8,16 @@ import {sequelize} from "../database"
 export class Resource extends Model<InferAttributes<Resource>, InferCreationAttributes<Resource>> {
   declare id: string
   declare owner: string
-  declare label: string
-  declare protocol: string
-  declare origin: string
-  declare path: string
-  declare domain: string
+  declare encryptedData: string
+  declare encryptedSharedKey: string
   declare network: string
 }
 
 Resource.init({
   id: {type: DataTypes.BIGINT, primaryKey: true},
   owner: DataTypes.STRING,
-  label: DataTypes.STRING,
-  protocol: DataTypes.STRING,
-  origin: DataTypes.STRING,
-  path: DataTypes.STRING,
-  domain: DataTypes.STRING,
+  encryptedData: DataTypes.STRING(500),
+  encryptedSharedKey: DataTypes.STRING(500),
   network: DataTypes.STRING
 }, {
   sequelize,
