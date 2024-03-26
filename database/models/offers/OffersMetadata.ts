@@ -1,4 +1,5 @@
 import {
+  CreationOptional,
   DataTypes,
   ForeignKey, HasOneCreateAssociationMixin,
   HasOneGetAssociationMixin,
@@ -10,8 +11,8 @@ import {sequelize} from "../../database"
 import {Offer} from "./Offer"
 import {BandwidthLimit} from "../BandwidthLimit"
 
-export class OfferMetadata extends Model<InferAttributes<OfferMetadata>, InferCreationAttributes<Offer>> {
-  declare id: string
+export class OfferMetadata extends Model<InferAttributes<OfferMetadata>, InferCreationAttributes<OfferMetadata>> {
+  declare id: CreationOptional<number>
   declare offerId: ForeignKey<Offer["id"]>
   declare type: string
   declare label: string

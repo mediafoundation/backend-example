@@ -7,6 +7,7 @@ import {DealMetadata} from "../models/deals/DealsMetadata"
 import {NodeLocation} from "../models/NodeLocation"
 import {BandwidthLimit} from "../models/BandwidthLimit"
 import {Provider} from "../models/Provider"
+import {Chain} from "../models/Chain"
 
 /**
  * DealsController class
@@ -16,10 +17,10 @@ export class DealsController {
   /**
    * Upsert a deal
    * @param deal - The deal to be upserted
-   * @param network - The network of the deal
+   * @param chainId - The network of the deal
    * @returns Promise<{deal: InferAttributes<Deal, {omit: never}>, created: boolean | null}>
    */
-  static async upsertDeal(deal: DealFormatted, network: string) {
+  static async upsertDeal(deal: DealFormatted, chainId: number) {
     // Find the resource for the deal
     const resource = await Resource.findOne({
       where: {id: deal.resourceId}
@@ -36,9 +37,17 @@ export class DealsController {
       where: {account: deal.provider},
       defaults: {account: deal.provider}
     })
+    
+    const chain = await Chain.findOne({
+      where: {chainId: chainId},
+    })
+    
+    if(!chain) {
+      throw new Error("Chain does not exists")
+    }
 
     // Upsert the deal
-    const [instance, created] = await Deal.upsert({...deal, network: network}, {returning: true})
+    const [instance, created] = await Deal.upsert({...deal, chainId: chainId}, {returning: true})
 
     // If resource is not null, set the resource for the deal
     if (resource) {
@@ -50,6 +59,9 @@ export class DealsController {
 
     // Set the provider for the deal
     await instance.setProvider(provider[0])
+    
+    // Set the chain for the deal
+    await instance.setChain(chain)
 
     // Create metadata for the deal
     const metadata = await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata})
@@ -79,6 +91,7 @@ export class DealsController {
    * @returns Promise<Array<any>>
    */
   static async getDeals(
+    chainId: number = 1,
     dealFilter: WhereOptions<any> = {},
     metadataFilter: WhereOptions<any> = {},
     bandwidthFilter: WhereOptions<any> = {},
@@ -93,6 +106,12 @@ export class DealsController {
     // Find all deals with the given filters
     const deals = await Deal.findAll({
       include: [
+        {
+          model: Chain,
+          where: {
+            chainId: chainId
+          }
+        },
         {
           model: NodeLocation,
           attributes: ["location"],
@@ -136,13 +155,19 @@ export class DealsController {
 
   /**
    * Get deal by id
-   * @param id - The id of the deal
+   * @param dealId - The id of the deal
+   * @param chainId - The id of the chain where the deal is
    * @returns Promise<{deal: InferAttributes<Deal, {omit: never}>,metadata: InferAttributes<DealMetadata, {omit: never}>,bandwidthLimit: InferAttributes<BandwidthLimit, {omit: never}>,nodeLocations: Array<string>}>
    */
-  static async getDealById(id: string) {
+  static async getDealByIdAndChain(dealId: number, chainId: number) {
 
     // Find the deal by id
-    const deal = await Deal.findByPk(id)
+    const deal = await Deal.findOne({
+      where: {
+        dealId: dealId,
+        chainId: chainId
+      }
+    })
     if (!deal) {
       return null
     }
@@ -213,6 +238,11 @@ export class DealsController {
 
     // Iterate over the properties of the object
     for (const key in deal) {
+      // If the key is "id", transform it to "dealId"
+      if(key === "id") {
+        result["dealId"] = Number(deal["id"])
+        delete deal["id"]
+      }
       // If the property is an object, merge its properties with the result
       if (typeof deal[key] === "object" && deal[key] !== null) {
         result = {...result, ...this.transformObj(deal[key])}

@@ -1,5 +1,5 @@
 import {
-  BelongsToManyCreateAssociationMixin, BelongsToManyGetAssociationsMixin,
+  BelongsToManyCreateAssociationMixin, BelongsToManyGetAssociationsMixin, CreationOptional,
   DataTypes,
   ForeignKey, HasOneCreateAssociationMixin,
   HasOneGetAssociationMixin,
@@ -11,10 +11,13 @@ import {sequelize} from "../../database"
 import {Provider} from "../Provider"
 import {OfferMetadata} from "./OffersMetadata"
 import {NodeLocation} from "../NodeLocation"
+import {Chain} from "../Chain"
 
 export class Offer extends Model<InferAttributes<Offer>, InferCreationAttributes<Offer>> {
-  declare id: string
-  declare providerId: ForeignKey<Provider>
+  declare id: CreationOptional<number>
+  declare offerId: number
+  declare provider: ForeignKey<Provider["account"]>
+  declare chainId: ForeignKey<Chain["chainId"]>
   declare publicKey: string
   declare maximumDeals: number
   declare autoAccept: boolean
@@ -22,7 +25,6 @@ export class Offer extends Model<InferAttributes<Offer>, InferCreationAttributes
   declare minDealDuration: number
   declare billFullPeriods: boolean
   declare singlePeriodOnly: boolean
-  declare network: string
 
   declare getMetadata: HasOneGetAssociationMixin<OfferMetadata>
   declare createMetadata: HasOneCreateAssociationMixin<OfferMetadata>
@@ -34,7 +36,8 @@ export class Offer extends Model<InferAttributes<Offer>, InferCreationAttributes
 }
 
 Offer.init({
-  id: {type: DataTypes.BIGINT, primaryKey: true},
+  id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
+  offerId: DataTypes.BIGINT,
   publicKey: DataTypes.STRING,
   maximumDeals: DataTypes.BIGINT,
   autoAccept: DataTypes.BOOLEAN,
@@ -42,7 +45,6 @@ Offer.init({
   minDealDuration: DataTypes.INTEGER,
   billFullPeriods: DataTypes.BOOLEAN,
   singlePeriodOnly: DataTypes.BOOLEAN,
-  network: DataTypes.STRING,
 }, {
   sequelize,
   modelName: "Offer",

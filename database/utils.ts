@@ -8,6 +8,7 @@ import {Provider} from "./models/Provider"
 import {DealMetadata} from "./models/deals/DealsMetadata"
 import {Offer} from "./models/offers/Offer"
 import {OfferMetadata} from "./models/offers/OffersMetadata"
+import {Chain} from "./models/Chain"
 
 const resetDB = async () => {
 
@@ -36,6 +37,11 @@ const createRelationsBetweenTables = async () => {
   Deal.belongsTo(Provider, {
     foreignKey: "provider",
     as: "Provider"
+  })
+  
+  Deal.belongsTo(Chain, {
+    foreignKey: "chainId",
+    as: "Chain"
   })
 
   Deal.hasOne(DealMetadata, {
@@ -76,6 +82,11 @@ const createRelationsBetweenTables = async () => {
   Offer.belongsTo(Provider, {
     foreignKey: "providerId",
     as: "Provider"
+  })
+  
+  Offer.belongsTo(Chain, {
+    foreignKey: "chainId",
+    as: "Chain"
   })
 
   Offer.belongsToMany(NodeLocation, {
