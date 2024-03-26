@@ -82,6 +82,7 @@ export class DealsController {
 
   /**
    * Get deals
+   * @param chainId - The chain id for the deal
    * @param dealFilter - Filter for the deals
    * @param metadataFilter - Filter for the metadata
    * @param bandwidthFilter - Filter for the bandwidth limit
@@ -110,7 +111,8 @@ export class DealsController {
           model: Chain,
           where: {
             chainId: chainId
-          }
+          },
+          as: "Chain"
         },
         {
           model: NodeLocation,
@@ -241,7 +243,7 @@ export class DealsController {
       // If the key is "id", transform it to "dealId"
       if(key === "id") {
         result["dealId"] = Number(deal["id"])
-        delete deal["id"]
+        delete result["id"]
       }
       // If the property is an object, merge its properties with the result
       if (typeof deal[key] === "object" && deal[key] !== null) {
