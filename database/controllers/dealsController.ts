@@ -59,9 +59,7 @@ export class DealsController {
     if(!instance) {
       instance = await Deal.create({chainId: chainId, ...deal})
       created = true
-    }
-    
-    else{
+    } else{
       await Deal.update({...deal}, {where: {chainId: chainId, dealId: deal.dealId}, returning: true})
     }
 
