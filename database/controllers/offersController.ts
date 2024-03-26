@@ -5,6 +5,7 @@ import {OfferFormatted, OfferMetadataSchema, OfferRawSchema, OfferTransformed} f
 import {NodeLocation} from "../models/NodeLocation"
 import {BandwidthLimit} from "../models/BandwidthLimit"
 import {OfferMetadata} from "../models/offers/OffersMetadata"
+import {Chain} from "../models/Chain"
 
 /**
  * OffersController class
@@ -14,9 +15,10 @@ export class OffersController{
   /**
    * Upsert an offer
    * @param offer - The offer to be upserted
+   * @param chainId - The id of the chain where the offer is
    * @returns Promise<{offer: InferAttributes<Offer, {omit: never}>, created: boolean | null}>
    */
-  static async upsertOffer(offer: any) {
+  static async upsertOffer(offer: OfferFormatted, chainId: number) {
     // Find or create a provider
     const provider = await Provider.findOrCreate({
       where: {account: offer.provider},
@@ -24,7 +26,7 @@ export class OffersController{
     })
     
     // Upsert the offer
-    const [instance, created] = await Offer.upsert(offer)
+    const [instance, created] = await Offer.upsert({chainId: chainId, ...offer})
     
     // Set the provider for the offer
     await instance.setProvider(provider[0])
@@ -57,6 +59,7 @@ export class OffersController{
    * @returns Promise<Array<any>>
    */
   static async getOffers(
+    chainId: number = 1,
     offerFilter: WhereOptions<any> = {},
     metadataFilter: WhereOptions<any> = {},
     bandwidthLimitFilter: WhereOptions<any> = {},
@@ -70,6 +73,13 @@ export class OffersController{
     // Find all offers with the given filters
     const offers = await Offer.findAll({
       include: [
+        {
+          model: Chain,
+          as: "Chain",
+          where: {
+            chainId: chainId
+          }
+        },
         {
           model: NodeLocation,
           attributes: ["location"],
@@ -116,10 +126,15 @@ export class OffersController{
    * @param id - The id of the offer
    * @returns Promise<{offer: InferAttributes<Offer, {omit: never}>,metadata: InferAttributes<OfferMetadata, {omit: never}>,bandwidthLimit: InferAttributes<BandwidthLimit, {omit: never}>,nodeLocations: Array<string>}>
    */
-  static async getOfferById(id: string) {
+  static async getOfferByIdAndChain(id: number, chainId: number) {
     
     // Find the offer by id
-    const offer = await Offer.findByPk(id, {attributes: {exclude: ["createdAt", "updatedAt", "deletedAt"]}})
+    const offer = await Offer.findOne({
+      where: {
+        offerId: id,
+        chainId: chainId
+      }
+    })
     
     if(!offer){
       return null
@@ -147,10 +162,15 @@ export class OffersController{
    * @param id - The id of the offer
    * @returns Promise<Offer | null>
    */
-  static async deleteOfferById(id: string) {
+  static async deleteOfferById(id: number, chainId: number) {
     
     // Find the offer by id
-    const offer = await Offer.findByPk(id)
+    const offer = await Offer.findOne({
+      where: {
+        chainId: chainId,
+        offerId: id
+      }
+    })
     if (!offer) {
       return null
     }
@@ -190,6 +210,11 @@ export class OffersController{
     
     // Iterate over the properties of the object
     for (const key in offer) {
+      // If the key is "id", transform it to "offerId"
+      if(key === "id") {
+        result["offerId"] = Number(offer["id"])
+        delete offer["id"]
+      }
       // If the property is an object, merge its properties with the result
       if (typeof offer[key] === "object" && offer[key] !== null) {
         result = {...result, ...this.transformObj(offer[key])}

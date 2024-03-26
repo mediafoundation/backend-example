@@ -3,6 +3,7 @@ import {resetDB} from "../../database/utils"
 import {BandwidthLimit} from "../../database/models/BandwidthLimit"
 import {OfferMetadata} from "../../database/models/offers/OffersMetadata"
 import {NodeLocation} from "../../database/models/NodeLocation"
+import {Chain} from "../../database/models/Chain"
 
 const mockOffer = {
   id: 7n,
@@ -23,24 +24,31 @@ describe("Offer Controller", () => {
 
   beforeAll(async () => {
     await resetDB()
+    
+    await Chain.create({
+      chainId: 1,
+      name: "Ganache"
+    })
   })
 
   test("should create or update an offer", async () => {
     const formattedOffer = OffersController.formatOffer(mockOffer)
 
-    const result = await OffersController.upsertOffer(formattedOffer)
+    const result = await OffersController.upsertOffer(formattedOffer, 1)
+    
+    console.log(result)
 
     expect(result.offer).not.toBeNull()
   })
 
   test("get offer", async () => {
-    const nullDeal = await OffersController.getOfferById("2")
+    const nullDeal = await OffersController.getOfferByIdAndChain(2, 1)
 
     expect(nullDeal).toBeNull()
 
-    const offer = await OffersController.getOfferById("7")
+    const offer = await OffersController.getOfferByIdAndChain(7, 1)
 
-    expect(offer!.offer.id).toBe(7)
+    expect(offer!.offer.offerId).toBe(7)
 
     expect(offer!.metadata).not.toBeNull()
     expect(offer!.nodeLocations).not.toBeNull()
@@ -55,15 +63,15 @@ describe("Offer Controller", () => {
     const nodeLocationFilter = {"location": "ABBC"}
     const bandwidthLimitFilter = {"amount": 1, "unit": "tb", "period": "daily"}
 
-    let offers = await OffersController.getOffers({}, metadataFilter, {}, {})
+    let offers = await OffersController.getOffers(1, {}, metadataFilter, {}, {})
 
     expect(offers.length).toBe(0)
 
-    offers = await OffersController.getOffers({}, {}, bandwidthLimitFilter, {})
+    offers = await OffersController.getOffers(1, {}, {}, bandwidthLimitFilter, {})
 
     expect(offers.length).toBe(0)
 
-    offers = await OffersController.getOffers({}, {}, {}, nodeLocationFilter)
+    offers = await OffersController.getOffers(1, {}, {}, {}, nodeLocationFilter)
 
     expect(offers.length).toBe(0)
   })
@@ -73,32 +81,32 @@ describe("Offer Controller", () => {
     const nodeLocationFilter = {"location": "NNN"}
     const bandwidthLimitFilter = {"amount": 0, "unit": "tb", "period": "monthly"}
 
-    let offers = await OffersController.getOffers({}, metadataFilter, {}, {})
+    let offers = await OffersController.getOffers(1, {}, metadataFilter, {}, {})
 
     expect(offers.length).toBe(1)
 
-    offers = await OffersController.getOffers({}, {}, bandwidthLimitFilter, {})
+    offers = await OffersController.getOffers(1, {}, {}, bandwidthLimitFilter, {})
 
     expect(offers.length).toBe(1)
 
-    offers = await OffersController.getOffers({}, {}, {}, nodeLocationFilter)
+    offers = await OffersController.getOffers(1, {}, {}, {}, nodeLocationFilter)
 
     expect(offers.length).toBe(1)
   })
 
   test("delete offer", async () => {
-    const nullOffer = await OffersController.deleteOfferById("1")
+    const nullOffer = await OffersController.deleteOfferById(1, 1)
 
     expect(nullOffer).toBeNull()
 
-    const offer = await OffersController.deleteOfferById("7")
+    const offer = await OffersController.deleteOfferById(7, 1)
 
     const bandwidthLimit = await BandwidthLimit.findAll()
     const metadata = await OfferMetadata.findAll()
     const nodeLocations = await NodeLocation.findAll()
 
     expect(offer).not.toBeNull()
-    expect(offer!.id).toBe(7)
+    expect(offer!.offerId).toBe(7)
     expect(bandwidthLimit.length).toBe(0)
     expect(metadata.length).toBe(0)
     expect(nodeLocations.length).toBe(4)

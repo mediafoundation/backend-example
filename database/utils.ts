@@ -83,6 +83,11 @@ const createRelationsBetweenTables = async () => {
     foreignKey: "providerId",
     as: "Provider"
   })
+  
+  Offer.belongsTo(Chain, {
+    foreignKey: "chainId",
+    as: "Chain"
+  })
 
   Offer.belongsToMany(NodeLocation, {
     through: "OfferNodeLocation",

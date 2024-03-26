@@ -91,6 +91,7 @@ export class DealsController {
    * @returns Promise<Array<any>>
    */
   static async getDeals(
+    chainId: number = 1,
     dealFilter: WhereOptions<any> = {},
     metadataFilter: WhereOptions<any> = {},
     bandwidthFilter: WhereOptions<any> = {},
@@ -105,6 +106,12 @@ export class DealsController {
     // Find all deals with the given filters
     const deals = await Deal.findAll({
       include: [
+        {
+          model: Chain,
+          where: {
+            chainId: chainId
+          }
+        },
         {
           model: NodeLocation,
           attributes: ["location"],
@@ -233,7 +240,8 @@ export class DealsController {
     for (const key in deal) {
       // If the key is "id", transform it to "dealId"
       if(key === "id") {
-        result["dealId"] = deal["id"]
+        result["dealId"] = Number(deal["id"])
+        delete deal["id"]
       }
       // If the property is an object, merge its properties with the result
       if (typeof deal[key] === "object" && deal[key] !== null) {

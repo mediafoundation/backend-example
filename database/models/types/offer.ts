@@ -29,7 +29,7 @@ export type OfferTransformed = {
 }
 
 export type OfferFormatted = {
-  id: number;
+  offerId: number;
   provider: string;
   publicKey: string;
   maximumDeals: number;
