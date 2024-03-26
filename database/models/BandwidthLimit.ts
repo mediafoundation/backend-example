@@ -6,7 +6,7 @@ import {OfferMetadata} from "./offers/OffersMetadata"
 export class BandwidthLimit extends Model<InferAttributes<BandwidthLimit>, InferCreationAttributes<BandwidthLimit>> {
   declare id: CreationOptional<number>
   declare dealMetadataId: CreationOptional<ForeignKey<DealMetadata["id"]>>
-  declare offerId: CreationOptional<ForeignKey<OfferMetadata["id"]>>
+  declare offerMetadataId: CreationOptional<ForeignKey<OfferMetadata["id"]>>
   declare amount: number
   declare period: string
   declare unit: string

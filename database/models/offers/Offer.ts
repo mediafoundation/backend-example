@@ -28,9 +28,6 @@ export class Offer extends Model<InferAttributes<Offer>, InferCreationAttributes
   declare getMetadata: HasOneGetAssociationMixin<OfferMetadata>
   declare createMetadata: HasOneCreateAssociationMixin<OfferMetadata>
 
-  declare getBandwidthLimit: HasOneGetAssociationMixin<BandwidthLimit>
-  declare createBandwidthLimit: HasOneCreateAssociationMixin<BandwidthLimit>
-
   declare getNodeLocations: BelongsToManyGetAssociationsMixin<NodeLocation>
   declare createNodeLocation: BelongsToManyCreateAssociationMixin<NodeLocation>
 

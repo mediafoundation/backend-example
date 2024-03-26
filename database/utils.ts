@@ -59,7 +59,7 @@ const createRelationsBetweenTables = async () => {
     timestamps: false
   })
 
-  Offer.hasOne(BandwidthLimit, {
+  OfferMetadata.hasOne(BandwidthLimit, {
     onDelete: "CASCADE",
     as: "BandwidthLimit",
     sourceKey: "id",
