@@ -42,7 +42,6 @@ export type DealTransformed = {
 
 export type DealFormatted = {
   dealId: number;
-  offerId: number;
   client: string;
   provider: string;
   resourceId: string;
