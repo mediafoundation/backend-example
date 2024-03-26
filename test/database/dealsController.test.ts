@@ -5,6 +5,7 @@ import {DealMetadata} from "../../database/models/deals/DealsMetadata"
 import {BandwidthLimit} from "../../database/models/BandwidthLimit"
 import {NodeLocation} from "../../database/models/NodeLocation"
 import {Chain} from "../../database/models/Chain"
+import {Deal} from "../../database/models/deals/Deal"
 
 const mockDeal = {
   id: 1n,
@@ -42,16 +43,14 @@ const mockResource = {
 
 beforeAll(async () => {
   await resetDB()
-  await Chain.create({
-    chainId: 1,
-    name: "Ganache"
-  })
+  
+  for (let i = 0; i < 5; i++) {
+    await Chain.create({
+      chainId: i,
+      name: `Chain name for ${i}`
+    })
+  }
 })
-
-/*afterAll(async () => {
-  await Deal.drop();
-  await Resource.drop();
-})*/
 
 describe("Deal Controller", () => {
 
@@ -72,8 +71,6 @@ describe("Deal Controller", () => {
     expect(nullDeal).toBeNull()
 
     const deal = await DealsController.getDealByIdAndChain(1, 1)
-
-    console.log(deal)
 
     expect(deal!.deal.id).toBe(1)
 
@@ -104,23 +101,23 @@ describe("Deal Controller", () => {
       location: "ABBC"
     }
 
-    let deal = await DealsController.getDeals(dealFilter, {}, {}, {}, 1, 10)
+    let deal = await DealsController.getDeals(1, dealFilter, {}, {}, {}, 1, 10)
 
     expect(deal.length).toBe(0)
 
-    deal = await DealsController.getDeals({}, metadataFilter, {}, {}, 1, 10)
+    deal = await DealsController.getDeals(1, {}, metadataFilter, {}, {}, 1, 10)
 
     expect(deal.length).toBe(0)
 
-    deal = await DealsController.getDeals({}, {}, bandwidthFilter, {}, 1, 10)
+    deal = await DealsController.getDeals(1, {}, {}, bandwidthFilter, {}, 1, 10)
 
     expect(deal.length).toBe(0)
 
-    deal = await DealsController.getDeals({}, {}, {}, nodeLocationFilter, 1, 10)
+    deal = await DealsController.getDeals(1, {}, {}, {}, nodeLocationFilter, 1, 10)
 
     expect(deal.length).toBe(0)
 
-    deal = await DealsController.getDeals({}, {}, {}, {}, 1, 10)
+    deal = await DealsController.getDeals(1, {}, {}, {}, {}, 1, 10)
 
     expect(deal.length).toBe(1)
   })
@@ -144,31 +141,29 @@ describe("Deal Controller", () => {
       location: "ABB"
     }
 
-    let deal = await DealsController.getDeals(dealFilter, {}, {}, {}, 1, 10)
+    let deal = await DealsController.getDeals(1, dealFilter, {}, {}, {}, 1, 10)
 
     expect(deal.length).toBe(1)
 
-    deal = await DealsController.getDeals({}, metadataFilter, {}, {}, 1, 10)
+    deal = await DealsController.getDeals(1, {}, metadataFilter, {}, {}, 1, 10)
 
     expect(deal.length).toBe(1)
 
-    deal = await DealsController.getDeals({}, {}, bandwidthFilter, {}, 1, 10)
+    deal = await DealsController.getDeals(1, {}, {}, bandwidthFilter, {}, 1, 10)
 
     expect(deal.length).toBe(1)
 
-    deal = await DealsController.getDeals({}, {}, {}, nodeLocationFilter, 1, 10)
-
-    console.log(deal)
+    deal = await DealsController.getDeals(1, {}, {}, {}, nodeLocationFilter, 1, 10)
 
     expect(deal.length).toBe(1)
   })
 
   test("delete deal", async () => {
-    const nullDeal = await DealsController.deleteDealById(2)
+    const nullDeal = await DealsController.deleteDealById(2, 1)
 
     expect(nullDeal).toBeNull()
 
-    const deal = await DealsController.deleteDealById(1)
+    const deal = await DealsController.deleteDealById(1, 1)
 
 
     const bandwidthLimit = await BandwidthLimit.findAll()
@@ -180,5 +175,34 @@ describe("Deal Controller", () => {
     expect(nodeLocations.length).toBe(3)
     expect(deal!.id).toBe(1)
     expect(await deal!.getNodeLocations()).toStrictEqual([])
+  })
+  
+  test("same deal id but on different networks should not be updated", async () => {
+    const firstResult = await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 1)
+    expect(firstResult.deal.chainId).toBe(1)
+    
+    let deals = await Deal.findAll()
+    expect(deals.length).toBe(1)
+    const secondResult = await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 2)
+    expect(secondResult.deal.chainId).toBe(2)
+    
+    deals = await Deal.findAll()
+    expect(deals.length).toBe(2)
+  })
+  
+  test("Update first deal on chain 1", async () => {
+    mockDeal["provider"] = "Some new provider"
+    const updatedDeal = await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 1)
+    
+    expect(updatedDeal.deal.provider).toBe("Some new provider")
+    expect((await Deal.findAll()).length).toBe(2)
+    expect((await DealsController.getDealByIdAndChain(1, 2))?.deal.provider).toBe("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31")
+  })
+  
+  test("Delete deal on second chain", async() => {
+    const result = await DealsController.deleteDealById(1, 2)
+    
+    expect((await Deal.findAll()).length).toBe(1)
+    expect(result?.dealId).not.toBeNull()
   })
 })

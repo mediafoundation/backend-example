@@ -4,6 +4,7 @@ import {BandwidthLimit} from "../../database/models/BandwidthLimit"
 import {OfferMetadata} from "../../database/models/offers/OffersMetadata"
 import {NodeLocation} from "../../database/models/NodeLocation"
 import {Chain} from "../../database/models/Chain"
+import {Offer} from "../../database/models/offers/Offer"
 
 const mockOffer = {
   id: 7n,
@@ -25,10 +26,12 @@ describe("Offer Controller", () => {
   beforeAll(async () => {
     await resetDB()
     
-    await Chain.create({
-      chainId: 1,
-      name: "Ganache"
-    })
+    for (let i = 0; i < 5; i++) {
+      await Chain.create({
+        chainId: i,
+        name: `Chain name for ${i}`
+      })
+    }
   })
 
   test("should create or update an offer", async () => {
@@ -110,5 +113,37 @@ describe("Offer Controller", () => {
     expect(bandwidthLimit.length).toBe(0)
     expect(metadata.length).toBe(0)
     expect(nodeLocations.length).toBe(4)
+  })
+  
+  test("same deal id but on different networks should not be updated", async () => {
+    const firstResult = await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 1)
+    expect(firstResult.offer.chainId).toBe(1)
+    
+    let offers = await Offer.findAll()
+    expect(offers.length).toBe(1)
+    const secondResult = await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 2)
+    expect(secondResult.offer.chainId).toBe(2)
+    
+    offers = await Offer.findAll()
+    expect(offers.length).toBe(2)
+  })
+  
+  test("Update first deal on chain 1", async () => {
+    mockOffer["provider"] = "Some new provider"
+    const formattedOffer = OffersController.formatOffer(mockOffer)
+    console.log("Formatted offer", formattedOffer)
+    const updatedOffer = await OffersController.upsertOffer(formattedOffer, 1)
+    
+    console.log("Updated offer", updatedOffer)
+    expect(updatedOffer.offer.provider).toBe("Some new provider")
+    expect((await Offer.findAll()).length).toBe(2)
+    expect((await OffersController.getOfferByIdAndChain(7, 2))?.offer.provider).toBe("0xCf9d14f5ae5EfA571276958695f35f96860dB267")
+  })
+  
+  test("Delete deal on second chain", async() => {
+    const result = await OffersController.deleteOfferById(7, 2)
+    
+    expect((await Offer.findAll()).length).toBe(1)
+    expect(result?.offerId).not.toBeNull()
   })
 })

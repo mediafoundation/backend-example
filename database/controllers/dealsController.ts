@@ -21,6 +21,7 @@ export class DealsController {
    * @returns Promise<{deal: InferAttributes<Deal, {omit: never}>, created: boolean | null}>
    */
   static async upsertDeal(deal: DealFormatted, chainId: number) {
+    let created = false
     // Find the resource for the deal
     const resource = await Resource.findOne({
       where: {id: deal.resourceId}
@@ -47,7 +48,20 @@ export class DealsController {
     }
 
     // Upsert the deal
-    const [instance, created] = await Deal.upsert({...deal, chainId: chainId}, {returning: true})
+    //const [instance, created] = await Deal.upsert({...deal, chainId: chainId}, {returning: true})
+    let instance = await Deal.findOne({
+      where: {
+        dealId: deal.dealId,
+        chainId: chainId
+      }
+    })
+    
+    if(!instance) {
+      instance = await Deal.create({chainId: chainId, ...deal})
+      created = true
+    } else{
+      await Deal.update({...deal}, {where: {chainId: chainId, dealId: deal.dealId}, returning: true})
+    }
 
     // If resource is not null, set the resource for the deal
     if (resource) {
@@ -82,6 +96,7 @@ export class DealsController {
 
   /**
    * Get deals
+   * @param chainId - The chain id for the deal
    * @param dealFilter - Filter for the deals
    * @param metadataFilter - Filter for the metadata
    * @param bandwidthFilter - Filter for the bandwidth limit
@@ -110,7 +125,8 @@ export class DealsController {
           model: Chain,
           where: {
             chainId: chainId
-          }
+          },
+          as: "Chain"
         },
         {
           model: NodeLocation,
@@ -192,12 +208,18 @@ export class DealsController {
   /**
    * Delete deal by id
    * @param id - The id of the deal
+   * @param chainId
    * @returns Promise<Deal | null>
    */
-  static async deleteDealById(id: number) {
+  static async deleteDealById(id: number, chainId: number) {
 
     // Find the deal by id
-    const deal = await Deal.findByPk(id)
+    const deal = await Deal.findOne({
+      where: {
+        dealId: id,
+        chainId: chainId
+      }
+    })
     if (!deal) {
       return null
     }
@@ -241,7 +263,6 @@ export class DealsController {
       // If the key is "id", transform it to "dealId"
       if(key === "id") {
         result["dealId"] = Number(deal["id"])
-        delete deal["id"]
       }
       // If the property is an object, merge its properties with the result
       if (typeof deal[key] === "object" && deal[key] !== null) {
@@ -254,7 +275,8 @@ export class DealsController {
         result[key] = deal[key]
       }
     }
-
+    
+    delete result["id"]
     return result
   }
 }

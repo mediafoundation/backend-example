@@ -19,14 +19,29 @@ export class OffersController{
    * @returns Promise<{offer: InferAttributes<Offer, {omit: never}>, created: boolean | null}>
    */
   static async upsertOffer(offer: OfferFormatted, chainId: number) {
+    let created = false
+    
     // Find or create a provider
     const provider = await Provider.findOrCreate({
       where: {account: offer.provider},
       defaults: {account: offer.provider}
     })
-    
     // Upsert the offer
-    const [instance, created] = await Offer.upsert({chainId: chainId, ...offer})
+    
+    //const [instance, created] = await Offer.upsert({chainId: chainId, ...offer})
+    
+    let instance = await Offer.findOne({
+      where: {
+        offerId: offer.offerId,
+        chainId: chainId
+      }
+    })
+    if (!instance) {
+      instance = await Offer.create({chainId: chainId, ...offer})
+      created = true
+    } else {
+      await Offer.update({...offer}, {where: {chainId: chainId, offerId: offer.offerId}, returning: true})
+    }
     
     // Set the provider for the offer
     await instance.setProvider(provider[0])
@@ -50,6 +65,7 @@ export class OffersController{
   
   /**
    * Get offers
+   * @param chainId
    * @param offerFilter - Filter for the offers
    * @param metadataFilter - Filter for the metadata
    * @param bandwidthLimitFilter - Filter for the bandwidth limit
@@ -124,6 +140,7 @@ export class OffersController{
   /**
    * Get offer by id
    * @param id - The id of the offer
+   * @param chainId
    * @returns Promise<{offer: InferAttributes<Offer, {omit: never}>,metadata: InferAttributes<OfferMetadata, {omit: never}>,bandwidthLimit: InferAttributes<BandwidthLimit, {omit: never}>,nodeLocations: Array<string>}>
    */
   static async getOfferByIdAndChain(id: number, chainId: number) {
@@ -160,6 +177,7 @@ export class OffersController{
   /**
    * Delete offer by id
    * @param id - The id of the offer
+   * @param chainId
    * @returns Promise<Offer | null>
    */
   static async deleteOfferById(id: number, chainId: number) {
@@ -213,7 +231,6 @@ export class OffersController{
       // If the key is "id", transform it to "offerId"
       if(key === "id") {
         result["offerId"] = Number(offer["id"])
-        delete offer["id"]
       }
       // If the property is an object, merge its properties with the result
       if (typeof offer[key] === "object" && offer[key] !== null) {
@@ -227,6 +244,8 @@ export class OffersController{
       }
     }
     
+    
+    delete result["id"]
     return result
   }
 }
