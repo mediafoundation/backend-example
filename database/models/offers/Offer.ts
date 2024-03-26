@@ -10,7 +10,6 @@ import {
 import {sequelize} from "../../database"
 import {Provider} from "../Provider"
 import {OfferMetadata} from "./OffersMetadata"
-import {BandwidthLimit} from "../BandwidthLimit"
 import {NodeLocation} from "../NodeLocation"
 
 export class Offer extends Model<InferAttributes<Offer>, InferCreationAttributes<Offer>> {
