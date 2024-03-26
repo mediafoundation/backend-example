@@ -65,6 +65,7 @@ export class OffersController{
   
   /**
    * Get offers
+   * @param chainId
    * @param offerFilter - Filter for the offers
    * @param metadataFilter - Filter for the metadata
    * @param bandwidthLimitFilter - Filter for the bandwidth limit
@@ -139,6 +140,7 @@ export class OffersController{
   /**
    * Get offer by id
    * @param id - The id of the offer
+   * @param chainId
    * @returns Promise<{offer: InferAttributes<Offer, {omit: never}>,metadata: InferAttributes<OfferMetadata, {omit: never}>,bandwidthLimit: InferAttributes<BandwidthLimit, {omit: never}>,nodeLocations: Array<string>}>
    */
   static async getOfferByIdAndChain(id: number, chainId: number) {
@@ -175,6 +177,7 @@ export class OffersController{
   /**
    * Delete offer by id
    * @param id - The id of the offer
+   * @param chainId
    * @returns Promise<Offer | null>
    */
   static async deleteOfferById(id: number, chainId: number) {
