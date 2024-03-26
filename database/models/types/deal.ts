@@ -16,7 +16,7 @@ export const MetadataSchema = z.object({
 })
 
 export type DealTransformed = {
-  id: number;
+  dealId: number;
   offerId: bigint;
   client: string;
   provider: string;
@@ -41,7 +41,7 @@ export type DealTransformed = {
 };
 
 export type DealFormatted = {
-  id: string;
+  dealId: number;
   offerId: number;
   client: string;
   provider: string;

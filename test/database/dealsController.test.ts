@@ -4,6 +4,7 @@ import {resetDB} from "../../database/utils"
 import {DealMetadata} from "../../database/models/deals/DealsMetadata"
 import {BandwidthLimit} from "../../database/models/BandwidthLimit"
 import {NodeLocation} from "../../database/models/NodeLocation"
+import {Chain} from "../../database/models/Chain"
 
 const mockDeal = {
   id: 1n,
@@ -41,6 +42,10 @@ const mockResource = {
 
 beforeAll(async () => {
   await resetDB()
+  await Chain.create({
+    chainId: 1,
+    name: "Ganache"
+  })
 })
 
 /*afterAll(async () => {
@@ -56,21 +61,21 @@ describe("Deal Controller", () => {
 
     const formattedDeal = DealsController.formatDeal(mockDeal)
 
-    const result = await DealsController.upsertDeal(formattedDeal, "ganache")
+    const result = await DealsController.upsertDeal(formattedDeal, 1)
 
     expect(result.deal).not.toBeNull()
   })
 
   test("get deal", async () => {
-    const nullDeal = await DealsController.getDealById("2")
+    const nullDeal = await DealsController.getDealByIdAndChain(2, 1)
 
     expect(nullDeal).toBeNull()
 
-    const deal = await DealsController.getDealById("1")
+    const deal = await DealsController.getDealByIdAndChain(1, 1)
 
     console.log(deal)
 
-    expect(deal!.deal.id).toBe("1")
+    expect(deal!.deal.id).toBe(1)
 
     expect(deal!.metadata).not.toBeNull()
     expect(deal!.nodeLocations).not.toBeNull()
@@ -173,7 +178,7 @@ describe("Deal Controller", () => {
     expect(metadata.length).toBe(0)
     expect(bandwidthLimit.length).toBe(0)
     expect(nodeLocations.length).toBe(3)
-    expect(deal!.id).toBe("1")
+    expect(deal!.id).toBe(1)
     expect(await deal!.getNodeLocations()).toStrictEqual([])
   })
 })

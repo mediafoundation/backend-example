@@ -17,10 +17,13 @@ import {NodeLocation} from "../NodeLocation"
 import {Resource} from "../Resource"
 import {Client} from "../Client"
 import {Provider} from "../Provider"
+import {Chain} from "../Chain"
 
 export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<Deal>> {
-  declare id: string
+  declare id: CreationOptional<number>
+  declare dealId: number
   declare resourceId: CreationOptional<ForeignKey<Resource["id"]>>
+  declare chainId: ForeignKey<Chain["chainId"]>
   declare client: ForeignKey<Client["account"]>
   declare provider: ForeignKey<Provider["account"]>
   declare totalPayment: number
@@ -35,7 +38,6 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
   declare active: boolean
   declare cancelled: boolean
   declare cancelledAt: number
-  declare network: string
 
   declare getMetadata: HasOneGetAssociationMixin<DealMetadata>
   declare createMetadata: HasOneCreateAssociationMixin<DealMetadata>
@@ -44,17 +46,17 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
   declare createNodeLocation: BelongsToManyCreateAssociationMixin<NodeLocation>
 
   declare setResource: BelongsToCreateAssociationMixin<Resource>
+  
+  declare setChain: BelongsToCreateAssociationMixin<Chain>
 
   declare setClient: BelongsToCreateAssociationMixin<Client>
 
   declare setProvider: BelongsToCreateAssociationMixin<Provider>
 }
 
-
-
-
 Deal.init({
-  id: {type: DataTypes.STRING, primaryKey: true},
+  id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
+  dealId: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
   totalPayment: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
   blockedBalance: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
   pricePerSecond: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
@@ -66,8 +68,7 @@ Deal.init({
   billingStart: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
   active: DataTypes.BOOLEAN,
   cancelled: DataTypes.BOOLEAN,
-  cancelledAt: DataTypes.DECIMAL(DECIMALS_DIGITS, 0),
-  network: DataTypes.STRING
+  cancelledAt: DataTypes.DECIMAL(DECIMALS_DIGITS, 0)
 }, {
   sequelize,
   timestamps: false
