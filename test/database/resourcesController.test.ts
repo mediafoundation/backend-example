@@ -15,11 +15,8 @@ describe("Resource Controller", () => {
     const resource = {
       id: "1",
       owner: "DataTypes.STRING",
-      label: "DataTypes.STRING",
-      protocol: "DataTypes.STRING",
-      origin: "DataTypes.STRING",
-      path: "DataTypes.STRING",
-      domain: "DataTypes.STRING",
+      encryptedData: "Some data encrypted",
+      encryptedSharedKey: "Some shared Key",
       network: "DataTypes.STRING",
     }
 
@@ -32,11 +29,8 @@ describe("Resource Controller", () => {
     const updatedResourceData = {
       id: "1",
       owner: "DataTypes.STRING",
-      label: "DataTypes.STRING",
-      protocol: "My Protocol",
-      origin: "DataTypes.STRING",
-      path: "DataTypes.STRING",
-      domain: "DataTypes.STRING",
+      encryptedData: "Some data encrypted updated",
+      encryptedSharedKey: "Some shared Key",
       network: "DataTypes.STRING",
     }
 
@@ -49,11 +43,8 @@ describe("Resource Controller", () => {
     const resource = {
       id: 1,
       owner: "DataTypes.STRING",
-      label: "DataTypes.STRING",
-      protocol: "DataTypes.STRING",
-      origin: "DataTypes.STRING",
-      path: "DataTypes.STRING",
-      domain: "DataTypes.STRING",
+      encryptedData: "Some data encrypted",
+      encryptedSharedKey: "Some shared Key",
       network: "DataTypes.STRING",
     }
 
@@ -68,11 +59,8 @@ describe("Resource Controller", () => {
     const resource = {
       id: "1",
       owner: "DataTypes.STRING",
-      label: "DataTypes.STRING",
-      protocol: "DataTypes.STRING",
-      origin: "DataTypes.STRING",
-      path: "DataTypes.STRING",
-      domain: "DataTypes.STRING",
+      encryptedData: "Some data encrypted",
+      encryptedSharedKey: "Some shared Key",
       network: "DataTypes.STRING",
     }
 
@@ -96,11 +84,8 @@ describe("Resource Controller", () => {
         await Resource.create({
           id: i.toString(),
           owner: "DataTypes.STRING",
-          label: "DataTypes.STRING",
-          protocol: "DataTypes.STRING",
-          origin: "DataTypes.STRING",
-          path: "DataTypes.STRING",
-          domain: "DataTypes.STRING",
+          encryptedData: "Some data encrypted",
+          encryptedSharedKey: "Some shared Key",
           network: "DataTypes.STRING",
         }, {transaction: t})
       }
