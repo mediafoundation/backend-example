@@ -1,6 +1,14 @@
-import {DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model} from "sequelize"
+import {
+  DataTypes,
+  ForeignKey, HasOneCreateAssociationMixin,
+  HasOneGetAssociationMixin,
+  InferAttributes,
+  InferCreationAttributes,
+  Model
+} from "sequelize"
 import {sequelize} from "../../database"
 import {Offer} from "./Offer"
+import {BandwidthLimit} from "../BandwidthLimit"
 
 export class OfferMetadata extends Model<InferAttributes<OfferMetadata>, InferCreationAttributes<Offer>> {
   declare id: string
@@ -10,6 +18,9 @@ export class OfferMetadata extends Model<InferAttributes<OfferMetadata>, InferCr
   declare autoSsl: boolean
   declare burstSpeed: number
   declare apiEndpoint: string
+  
+  declare getBandwidthLimit: HasOneGetAssociationMixin<BandwidthLimit>
+  declare createBandwidthLimit: HasOneCreateAssociationMixin<BandwidthLimit>
 }
 
 OfferMetadata.init({

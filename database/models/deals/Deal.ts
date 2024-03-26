@@ -13,7 +13,6 @@ import {
 } from "sequelize"
 import {DECIMALS_DIGITS, sequelize} from "../../database"
 import {DealMetadata} from "./DealsMetadata"
-import {BandwidthLimit} from "../BandwidthLimit"
 import {NodeLocation} from "../NodeLocation"
 import {Resource} from "../Resource"
 import {Client} from "../Client"
@@ -40,9 +39,6 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
 
   declare getMetadata: HasOneGetAssociationMixin<DealMetadata>
   declare createMetadata: HasOneCreateAssociationMixin<DealMetadata>
-
-  declare getBandwidthLimit: HasOneGetAssociationMixin<BandwidthLimit>
-  declare createBandwidthLimit: HasOneCreateAssociationMixin<BandwidthLimit>
 
   declare getNodeLocations: BelongsToManyGetAssociationsMixin<NodeLocation>
   declare createNodeLocation: BelongsToManyCreateAssociationMixin<NodeLocation>

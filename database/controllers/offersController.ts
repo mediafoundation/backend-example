@@ -30,10 +30,10 @@ export class OffersController{
     await instance.setProvider(provider[0])
     
     // Create metadata for the offer
-    await instance.createMetadata({offerId: instance.dataValues.id, ...offer.metadata})
+    const metadata = await instance.createMetadata({offerId: instance.dataValues.id, ...offer.metadata})
     
     // Create bandwidth limit for the offer
-    await instance.createBandwidthLimit({offerId: instance.dataValues.id, ...offer.metadata.bandwidthLimit})
+    await metadata.createBandwidthLimit({offerMetadataId: instance.dataValues.id, ...offer.metadata.bandwidthLimit})
     
     // Create node locations for the offer
     for (const nodeLocation of offer.metadata.nodeLocations) {
@@ -83,13 +83,14 @@ export class OffersController{
           model: OfferMetadata,
           as: "Metadata",
           where: metadataFilter,
+          include: [
+            {
+              model: BandwidthLimit,
+              as: "BandwidthLimit",
+              where: bandwidthLimitFilter
+            }
+          ]
         },
-        
-        {
-          model: BandwidthLimit,
-          as: "BandwidthLimit",
-          where: bandwidthLimitFilter
-        }
       ],
       where: offerFilter,
       offset: offset,
@@ -128,7 +129,7 @@ export class OffersController{
     const metadata = await offer.getMetadata()
     
     // Get the bandwidth limit for the offer
-    const bandwidthLimit = await offer.getBandwidthLimit()
+    const bandwidthLimit = await metadata.getBandwidthLimit()
     
     // Get the node locations for the offer
     const nodeLocations = await offer.getNodeLocations()

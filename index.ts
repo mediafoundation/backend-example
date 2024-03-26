@@ -25,6 +25,20 @@ const init = async (chain: any) => {
   })
 
   const offers = await marketplaceViewer.getAllOffersPaginating({marketplaceId: process.env.MARKETPLACE_ID, start: 0, steps: 10})
+  
+  for (const offer of offers) {
+    try{
+      await OffersController.upsertOffer(OffersController.formatOffer(offer))
+    } catch (e: any) {
+      if (e instanceof z.ZodError) {
+        console.log("Offer Id: ", offer.id)
+        console.log(e)
+      } else {
+        console.log("Offer Id: ", offer.id)
+        console.error("Unknown error", e.message, "With offer", offer)
+      }
+    }
+  }
 
   if(deals.length !== 0 && resources.length !== 0) {
     /*let resourcesWithoutDeal = resourcesNotMatchingDeal(resources.map((resource: any) => resource.id), deals.map((deal: any) => deal.resourceId))
@@ -57,24 +71,6 @@ const init = async (chain: any) => {
           console.log("Deal Id: ", deal.id)
           console.error("Unknown error", e.message, "With deal", deal)
         }
-      }
-    }
-  }
-
-
-
-
-
-  for (const offer of offers) {
-    try{
-      await OffersController.upsertOffer(OffersController.formatOffer(offer))
-    } catch (e: any) {
-      if (e instanceof z.ZodError) {
-        console.log("Offer Id: ", offer.id)
-        console.log(e)
-      } else {
-        console.log("Offer Id: ", offer.id)
-        console.error("Unknown error", e.message, "With offer", offer)
       }
     }
   }
