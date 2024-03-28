@@ -1,12 +1,9 @@
 import {Deal} from "../models/deals/Deal"
-import {Resource} from "../models/Resource"
-import {Client} from "../models/Client"
 import {WhereOptions} from "sequelize"
 import {DealFormatted, DealRawSchema, DealTransformed, MetadataSchema} from "../models/types/deal"
 import {DealMetadata} from "../models/deals/DealsMetadata"
 import {NodeLocation} from "../models/NodeLocation"
 import {BandwidthLimit} from "../models/BandwidthLimit"
-import {Provider} from "../models/Provider"
 import {Chain} from "../models/Chain"
 import {ResourcesController} from "./resourcesController"
 
