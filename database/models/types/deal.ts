@@ -44,7 +44,7 @@ export type DealFormatted = {
   dealId: number;
   client: string;
   provider: string;
-  resourceId: string;
+  resourceId: number;
   totalPayment: number;
   blockedBalance: number;
 

@@ -23,6 +23,11 @@ const createRelationsBetweenTables = async () => {
     as: "Deals",
     foreignKey: "resourceId"
   })
+  
+  Resource.belongsTo(Chain, {
+    as: "Chain",
+    foreignKey: "chainId"
+  })
 
   Deal.belongsTo(Resource, {
     foreignKey: "resourceId",

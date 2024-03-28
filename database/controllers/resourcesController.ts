@@ -1,5 +1,6 @@
 import {Resource} from "../models/Resource"
 import {WhereOptions} from "sequelize"
+import {FormattedResource} from "../models/types/resource"
 
 /**
  * ResourcesController class
@@ -9,19 +10,32 @@ export class ResourcesController {
   /**
    * Upsert a resource
    * @param resource - The resource to be upserted
+   * @param chainId
    * @returns Promise<{instance: InferAttributes<Resource, {omit: never}>, created: boolean, originalResource: InferAttributes<Resource, {omit: never}> | null}>
    */
-  static upsertResource = async (resource: any) => {
+  static upsertResource = async (resource: FormattedResource, chainId: number) => {
     // Find the original resource
-    const originalResource = await Resource.findByPk(resource.id)
+    let created = false
     
     // Upsert the resource
-    const [instance, created] = await Resource.upsert(resource)
+    let instance = await Resource.findOne({
+      where: {
+        resourceId: resource.resourceId,
+        chainId: chainId
+      }
+    })
+    
+    if(instance) {
+      await instance.update(resource)
+    } else {
+      console.log(resource)
+      instance = await Resource.create({...resource, chainId: chainId})
+      created = true
+    }
     
     return {
       instance: instance.dataValues,
-      created: created,
-      originalResource: originalResource ? originalResource.dataValues : null
+      created: created
     }
   }
   
@@ -49,12 +63,19 @@ export class ResourcesController {
   
   /**
    * Get resource by id
-   * @param id - The id of the resource
+   * @param resourceId - The id of the resource
+   * @param chainId
    * @returns Promise<Resource | null>
    */
-  static getResourceById = async (id: string) => {
+  static getResourceByIdAndChain = async (resourceId: number, chainId: number) => {
     // Find the resource by id
-    return await Resource.findByPk(id, {attributes: {exclude: ["createdAt", "updatedAt", "deletedAt"]}, raw: true})
+    return await Resource.findOne({
+      where: {
+        resourceId: resourceId,
+        chainId: chainId
+      },
+      raw: true
+    })
   }
   
   /**
@@ -73,5 +94,20 @@ export class ResourcesController {
     // Delete the resource
     await resource.destroy()
     return resource
+  }
+  
+  static formatResource = (resource: any): FormattedResource => {
+    const result: any = {}
+    
+    for (const key in resource) {
+      if(key === "id"){
+        result["resourceId"] = Number(resource[key])
+      }
+      else {
+        result[key] = resource[key]
+      }
+    }
+    
+    return result
   }
 }
