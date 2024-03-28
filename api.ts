@@ -47,8 +47,8 @@ app.get("/deals", async (req, res) => {
  * GET /deals/:id
  * Retrieves a deal by its id.
  */
-app.get("/deals/:id", async (req, res) => {
-  const deal = await DealsController.getDealByIdAndChain(req.params.id)
+app.get("/deals/:id/chainId/:chainId", async (req, res) => {
+  const deal = await DealsController.getDealByIdAndChain(Number(req.params.id), Number(req.params.chainId))
   res.json(deal)
 })
 
