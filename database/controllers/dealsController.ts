@@ -1,13 +1,11 @@
 import {Deal} from "../models/deals/Deal"
-import {Resource} from "../models/Resource"
-import {Client} from "../models/Client"
 import {WhereOptions} from "sequelize"
 import {DealFormatted, DealRawSchema, DealTransformed, MetadataSchema} from "../models/types/deal"
 import {DealMetadata} from "../models/deals/DealsMetadata"
 import {NodeLocation} from "../models/NodeLocation"
 import {BandwidthLimit} from "../models/BandwidthLimit"
-import {Provider} from "../models/Provider"
 import {Chain} from "../models/Chain"
+import {ResourcesController} from "./resourcesController"
 
 /**
  * DealsController class
@@ -23,21 +21,13 @@ export class DealsController {
   static async upsertDeal(deal: DealFormatted, chainId: number) {
     let created = false
     // Find the resource for the deal
-    const resource = await Resource.findOne({
-      where: {id: deal.resourceId}
-    })
-
-    // Find or create a client
-    const client = await Client.findOrCreate({
-      where: {account: deal.client},
-      defaults: {account: deal.client}
-    })
-
-    // Find or create a provider
-    const provider = await Provider.findOrCreate({
-      where: {account: deal.provider},
-      defaults: {account: deal.provider}
-    })
+    const resource = await ResourcesController.getResourceByIdAndChain(deal.resourceId, chainId)
+    
+    if(resource) {
+      deal["resourceId"] = resource?.id
+    } else {
+      throw new Error("Resource does not exists")
+    }
     
     const chain = await Chain.findOne({
       where: {chainId: chainId},
@@ -57,15 +47,15 @@ export class DealsController {
     })
     
     if(!instance) {
-      instance = await Deal.create({chainId: chainId, ...deal})
+      instance = await Deal.create({...deal, chainId: chainId})
       created = true
     } else{
-      await Deal.update({...deal}, {where: {chainId: chainId, dealId: deal.dealId}, returning: true})
+      instance.update({...deal})
     }
 
-    // If resource is not null, set the resource for the deal
+    /* // If resource is not null, set the resource for the deal
     if (resource) {
-      await instance.setResource(resource)
+      await instance.setResource(resource, {isNewRecord: false})
     }
 
     // Set the client for the deal
@@ -75,7 +65,7 @@ export class DealsController {
     await instance.setProvider(provider[0])
     
     // Set the chain for the deal
-    await instance.setChain(chain)
+    await instance.setChain(chain)*/
 
     // Create metadata for the deal
     const metadata = await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata})
@@ -181,8 +171,17 @@ export class DealsController {
     const deal = await Deal.findOne({
       where: {
         dealId: dealId,
-        chainId: chainId
-      }
+      },
+      
+      include: [
+        {
+          model: Chain,
+          as: "Chain",
+          where: {
+            chainId: chainId
+          }
+        }
+      ]
     })
     if (!deal) {
       return null
@@ -217,8 +216,17 @@ export class DealsController {
     const deal = await Deal.findOne({
       where: {
         dealId: id,
-        chainId: chainId
-      }
+      },
+      
+      include: [
+        {
+          model: Chain,
+          as: "Chain",
+          where: {
+            chainId: chainId
+          }
+        }
+      ]
     })
     if (!deal) {
       return null

@@ -9,7 +9,7 @@ import {
   BelongsToCreateAssociationMixin,
   BelongsToManyCreateAssociationMixin,
   BelongsToManyGetAssociationsMixin,
-  CreationOptional,
+  CreationOptional, BelongsToGetAssociationMixin,
 } from "sequelize"
 import {DECIMALS_DIGITS, sequelize} from "../../database"
 import {DealMetadata} from "./DealsMetadata"
@@ -22,7 +22,7 @@ import {Chain} from "../Chain"
 export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<Deal>> {
   declare id: CreationOptional<number>
   declare dealId: number
-  declare resourceId: CreationOptional<ForeignKey<Resource["id"]>>
+  declare resourceId: ForeignKey<Resource["id"]>
   declare chainId: ForeignKey<Chain["chainId"]>
   declare client: ForeignKey<Client["account"]>
   declare provider: ForeignKey<Provider["account"]>
@@ -48,6 +48,7 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
   declare setResource: BelongsToCreateAssociationMixin<Resource>
   
   declare setChain: BelongsToCreateAssociationMixin<Chain>
+  declare getChain: BelongsToGetAssociationMixin<Chain>
 
   declare setClient: BelongsToCreateAssociationMixin<Client>
 

@@ -19,9 +19,19 @@ const resetDB = async () => {
 
 const createRelationsBetweenTables = async () => {
   
-  Resource.hasMany(Deal, {
+  /*Resource.hasMany(Deal, {
     as: "Deals",
     foreignKey: "resourceId"
+  })*/
+  
+  Resource.belongsTo(Chain, {
+    as: "Chain",
+    foreignKey: "chainId"
+  })
+  
+  Deal.belongsTo(Chain, {
+    foreignKey: "chainId",
+    as: "Chain"
   })
 
   Deal.belongsTo(Resource, {
@@ -29,20 +39,9 @@ const createRelationsBetweenTables = async () => {
     as: "Resource"
   })
 
-  Deal.belongsTo(Client, {
-    foreignKey: "client",
-    as: "Client"
-  })
+  Deal.belongsTo(Client)
 
-  Deal.belongsTo(Provider, {
-    foreignKey: "provider",
-    as: "Provider"
-  })
-  
-  Deal.belongsTo(Chain, {
-    foreignKey: "chainId",
-    as: "Chain"
-  })
+  Deal.belongsTo(Provider)
 
   Deal.hasOne(DealMetadata, {
     onDelete: "CASCADE",

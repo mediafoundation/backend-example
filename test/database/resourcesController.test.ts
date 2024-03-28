@@ -1,79 +1,79 @@
 import {Resource} from "../../database/models/Resource"
 import {ResourcesController} from "../../database/controllers/resourcesController"
 import {sequelize} from "../../database/database"
+import {resetDB} from "../../database/utils"
+import {Chain} from "../../database/models/Chain"
 
 beforeAll(async () => {
-  await Resource.sync({force: true})
-})
-
-afterAll(async () => {
-  await Resource.drop()
+  await resetDB()
+  await Chain.create({
+    chainId: 1,
+    name: "Ganache"
+  })
 })
 
 describe("Resource Controller", () => {
   test("should create or update a resource", async () => {
     const resource = {
-      id: "1",
+      id: 1n,
       owner: "DataTypes.STRING",
-      encryptedData: "Some data encrypted",
+      encryptedData: "{\"encryptedData\": \"Some data encrypted\", \"tag\": \"some tag\", \"iv\": \"some iv\"}",
       encryptedSharedKey: "Some shared Key",
-      network: "DataTypes.STRING",
     }
 
-    const newResource = await ResourcesController.upsertResource(resource)
+    const newResource = await ResourcesController.upsertResource(ResourcesController.formatResource(resource), 1)
 
-    expect(newResource.instance).toStrictEqual(resource)
+    expect(newResource.instance.owner).toStrictEqual(resource.owner)
+    expect(newResource.created).toBe(true)
 
     // update resource and check if it was updated
 
     const updatedResourceData = {
-      id: "1",
+      resourceId: 1,
       owner: "DataTypes.STRING",
-      encryptedData: "Some data encrypted updated",
-      encryptedSharedKey: "Some shared Key",
-      network: "DataTypes.STRING",
+      encryptedData: "{\"encryptedData\": \"Some data encrypted updated\", \"tag\": \"some tag\", \"iv\": \"some iv\"}",
+      encryptedSharedKey: "Some shared Key"
     }
 
-    const updatedResource = await ResourcesController.upsertResource(updatedResourceData)
+    const updatedResource = await ResourcesController.upsertResource(updatedResourceData, 1)
 
-    expect(updatedResource.instance).toStrictEqual(updatedResourceData)
+    expect(updatedResource.instance.encryptedData).toStrictEqual(updatedResourceData.encryptedData)
+    expect(updatedResource.created).toBe(false)
   })
 
   test("should get a resource by id", async () => {
     const resource = {
       id: 1,
       owner: "DataTypes.STRING",
-      encryptedData: "Some data encrypted",
-      encryptedSharedKey: "Some shared Key",
-      network: "DataTypes.STRING",
+      encryptedData: "{\"encryptedData\": \"Some data encrypted\", \"tag\": \"some tag\", \"iv\": \"some iv\"}",
+      encryptedSharedKey: "Some shared Key"
     }
 
-    await ResourcesController.upsertResource(resource)
+    await ResourcesController.upsertResource(ResourcesController.formatResource(resource), 1)
 
-    const foundResource = await ResourcesController.getResourceById("1")
+    const foundResource = await ResourcesController.getResourceByIdAndChain(1, 1)
     
-    expect(foundResource).toStrictEqual(resource)
+    expect(foundResource?.encryptedSharedKey).toStrictEqual(resource.encryptedSharedKey)
   })
 
   test("should delete a resource by id", async () => {
     const resource = {
-      id: "1",
+      id: 1,
       owner: "DataTypes.STRING",
-      encryptedData: "Some data encrypted",
+      encryptedData: "{\"encryptedData\": \"Some data encrypted\", \"tag\": \"some tag\", \"iv\": \"some iv\"}",
       encryptedSharedKey: "Some shared Key",
-      network: "DataTypes.STRING",
     }
 
-    await ResourcesController.upsertResource(resource)
+    await ResourcesController.upsertResource(ResourcesController.formatResource(resource), 1)
 
     await ResourcesController.deleteResourceById("1")
 
-    const deletedResource = await ResourcesController.getResourceById("1")
+    const deletedResource = await ResourcesController.getResourceByIdAndChain(1, 1)
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     expect(deletedResource).toBeNull()
 
-    const foundResource = await ResourcesController.getResourceById("1")
+    const foundResource = await ResourcesController.getResourceByIdAndChain(1, 1)
 
     expect(foundResource).toBeNull()
   })
@@ -82,11 +82,11 @@ describe("Resource Controller", () => {
     await sequelize.transaction(async (t) => {
       for (let i = 0; i < 20; i++) {
         await Resource.create({
-          id: i.toString(),
+          resourceId: i,
           owner: "DataTypes.STRING",
           encryptedData: "Some data encrypted",
           encryptedSharedKey: "Some shared Key",
-          network: "DataTypes.STRING",
+          chainId: 1
         }, {transaction: t})
       }
     })
@@ -95,14 +95,14 @@ describe("Resource Controller", () => {
 
     expect(firstPageResources.length).toBe(10)
     
-    expect(firstPageResources[0].id).toBe(0)
+    expect(firstPageResources[0].resourceId).toBe(0)
 
     const secondPageResources = await ResourcesController.getResources({}, 2, 10)
 
     expect(secondPageResources.length).toBe(10)
     
-    expect(secondPageResources[0].id).toBe(10)
+    expect(secondPageResources[0].resourceId).toBe(10)
     
-    expect(secondPageResources[9].id).toBe(19)
+    expect(secondPageResources[9].resourceId).toBe(19)
   })
 })
