@@ -1,6 +1,6 @@
 import {Resource} from "../models/Resource"
 import {WhereOptions} from "sequelize"
-import {FormattedResource} from "../models/types/resource"
+import {EncryptedResourceData, FormattedResource} from "../models/types/resource"
 
 /**
  * ResourcesController class
@@ -28,7 +28,6 @@ export class ResourcesController {
     if(instance) {
       await instance.update(resource)
     } else {
-      console.log(resource)
       instance = await Resource.create({...resource, chainId: chainId})
       created = true
     }
@@ -97,6 +96,12 @@ export class ResourcesController {
   }
   
   static formatResource = (resource: any): FormattedResource => {
+    EncryptedResourceData.parse(JSON.parse(resource.encryptedData))
+    
+    return this.transformObj(resource)
+  }
+  
+  private static transformObj = (resource: any): FormattedResource => {
     const result: any = {}
     
     for (const key in resource) {

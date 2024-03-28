@@ -17,7 +17,7 @@ describe("Resource Controller", () => {
     const resource = {
       id: 1n,
       owner: "DataTypes.STRING",
-      encryptedData: "Some data encrypted",
+      encryptedData: "{\"encryptedData\": \"Some data encrypted\", \"tag\": \"some tag\", \"iv\": \"some iv\"}",
       encryptedSharedKey: "Some shared Key",
     }
 
@@ -31,7 +31,7 @@ describe("Resource Controller", () => {
     const updatedResourceData = {
       resourceId: 1,
       owner: "DataTypes.STRING",
-      encryptedData: "Some data encrypted updated",
+      encryptedData: "{\"encryptedData\": \"Some data encrypted updated\", \"tag\": \"some tag\", \"iv\": \"some iv\"}",
       encryptedSharedKey: "Some shared Key"
     }
 
@@ -45,7 +45,7 @@ describe("Resource Controller", () => {
     const resource = {
       id: 1,
       owner: "DataTypes.STRING",
-      encryptedData: "Some data encrypted",
+      encryptedData: "{\"encryptedData\": \"Some data encrypted\", \"tag\": \"some tag\", \"iv\": \"some iv\"}",
       encryptedSharedKey: "Some shared Key"
     }
 
@@ -60,7 +60,7 @@ describe("Resource Controller", () => {
     const resource = {
       id: 1,
       owner: "DataTypes.STRING",
-      encryptedData: "Some data encrypted",
+      encryptedData: "{\"encryptedData\": \"Some data encrypted\", \"tag\": \"some tag\", \"iv\": \"some iv\"}",
       encryptedSharedKey: "Some shared Key",
     }
 
