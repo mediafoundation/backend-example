@@ -22,7 +22,7 @@ import {Chain} from "../Chain"
 export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<Deal>> {
   declare id: CreationOptional<number>
   declare dealId: number
-  declare resourceId: ForeignKey<Resource["id"]>
+  declare resourceId: ForeignKey<Resource["id"]> | null
   declare chainId: ForeignKey<Chain["chainId"]>
   declare client: ForeignKey<Client["account"]>
   declare provider: ForeignKey<Provider["account"]>

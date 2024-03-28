@@ -206,4 +206,36 @@ describe("Deal Controller", () => {
     expect((await Deal.findAll()).length).toBe(1)
     expect(result?.dealId).not.toBeNull()
   })
+  
+  test("Absent resource gives null value", async () => {
+    const noValidResourceDeal = {
+      id: 100n,
+      offerId: 1n,
+      client: "0xB76c9A2fC1367f92cBB73b1ECE0c98Abb0c5097B",
+      provider: "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31",
+      resourceId: 0n,
+      totalPayment: 0n,
+      blockedBalance: 446499999999553500n,
+      terms: {
+        pricePerSecond: 111111111111n,
+        minDealDuration: 900n,
+        billFullPeriods: false,
+        singlePeriodOnly: false,
+        metadata: "{\"type\":\"cdn\",\"label\":\"Testing Backend\",\"apiEndpoint\":\"http:localhost:5000/\",\"bandwidthLimit\":{\"amount\":1,\"unit\":\"tb\",\"period\":\"monthly\"},\"autoSsl\":true,\"burstSpeed\":1000,\"nodeLocations\":[\"ABB\", \"CL\", \"BR\"],\"customCnames\":true}"
+      },
+      status: {
+        active: true,
+        createdAt: 1710153976n,
+        acceptedAt: 1710153976n,
+        billingStart: 1710153976n,
+        cancelled: false,
+        cancelledAt: 0n
+      }
+    }
+    
+    const deal = await DealsController.upsertDeal(DealsController.formatDeal(noValidResourceDeal), 1)
+    
+    expect(deal.created).toBe(true)
+    expect(deal.deal.resourceId).toBeNull()
+  })
 })

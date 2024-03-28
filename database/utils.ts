@@ -36,7 +36,8 @@ const createRelationsBetweenTables = async () => {
 
   Deal.belongsTo(Resource, {
     foreignKey: "resourceId",
-    as: "Resource"
+    as: "Resource",
+    onDelete: "SET NULL"
   })
 
   Deal.belongsTo(Client)
