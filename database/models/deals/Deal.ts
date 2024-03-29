@@ -6,10 +6,9 @@ import {
   HasOneGetAssociationMixin,
   HasOneCreateAssociationMixin,
   ForeignKey,
-  BelongsToCreateAssociationMixin,
   BelongsToManyCreateAssociationMixin,
   BelongsToManyGetAssociationsMixin,
-  CreationOptional, BelongsToGetAssociationMixin,
+  CreationOptional,
 } from "sequelize"
 import {DECIMALS_DIGITS, sequelize} from "../../database"
 import {DealMetadata} from "./DealsMetadata"
@@ -44,15 +43,6 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
 
   declare getNodeLocations: BelongsToManyGetAssociationsMixin<NodeLocation>
   declare createNodeLocation: BelongsToManyCreateAssociationMixin<NodeLocation>
-
-  declare setResource: BelongsToCreateAssociationMixin<Resource>
-  
-  declare setChain: BelongsToCreateAssociationMixin<Chain>
-  declare getChain: BelongsToGetAssociationMixin<Chain>
-
-  declare setClient: BelongsToCreateAssociationMixin<Client>
-
-  declare setProvider: BelongsToCreateAssociationMixin<Provider>
 }
 
 Deal.init({
