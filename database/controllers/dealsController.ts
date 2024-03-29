@@ -21,13 +21,9 @@ export class DealsController {
   static async upsertDeal(deal: DealFormatted, chainId: number) {
     let created = false
     // Find the resource for the deal
-    const resource = await ResourcesController.getResourceByIdAndChain(deal.resourceId, chainId)
+    const resource = await ResourcesController.getResourceByIdAndChain(deal.resourceId ? deal.resourceId : 0, chainId)
     
-    if(resource) {
-      deal["resourceId"] = resource?.id
-    } else {
-      throw new Error("Resource does not exists")
-    }
+    deal["resourceId"] = resource?.id ? resource.id : null
     
     const chain = await Chain.findOne({
       where: {chainId: chainId},
@@ -50,22 +46,8 @@ export class DealsController {
       instance = await Deal.create({...deal, chainId: chainId})
       created = true
     } else{
-      instance.update({...deal})
+      await instance.update({...deal})
     }
-
-    /* // If resource is not null, set the resource for the deal
-    if (resource) {
-      await instance.setResource(resource, {isNewRecord: false})
-    }
-
-    // Set the client for the deal
-    await instance.setClient(client[0])
-
-    // Set the provider for the deal
-    await instance.setProvider(provider[0])
-    
-    // Set the chain for the deal
-    await instance.setChain(chain)*/
 
     // Create metadata for the deal
     const metadata = await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata})

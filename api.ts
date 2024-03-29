@@ -77,7 +77,7 @@ app.get("/offers", async (req, res) => {
   const bandwidthFilter = parseFilter(filters.bandwidthFilter ? filters.bandwidthFilter : {})
   const nodeLocationFilter = parseFilter(filters.nodeLocationFilter ? filters.nodeLocationFilter : {})
     
-  const offers = await OffersController.getOffers(offerFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize)
+  const offers = await OffersController.getOffers(Number(filters.marketplaceId), offerFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize)
   
   res.json(offers)
 })
