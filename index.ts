@@ -28,8 +28,6 @@ const init = async (chain: any) => {
     steps: 10
   })
   
-  console.log("Offers", offers)
-  
   for (const offer of offers) {
     try {
       const offerFormatted = OffersController.formatOffer(offer)
@@ -72,7 +70,7 @@ const init = async (chain: any) => {
     for (const deal of deals) {
       try {
         const formattedDeal = DealsController.formatDeal(deal)
-        await DealsController.upsertDeal(formattedDeal, chain.network)
+        await DealsController.upsertDeal(formattedDeal, chain.id)
         
       } catch (e: any) {
         if (e instanceof z.ZodError) {
