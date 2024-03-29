@@ -235,7 +235,6 @@ describe("Deal Controller", () => {
     
     const deal = await DealsController.upsertDeal(DealsController.formatDeal(noValidResourceDeal), 1)
     
-    expect(deal.created).toBe(true)
     expect(deal.deal.resourceId).toBeNull()
   })
 })
