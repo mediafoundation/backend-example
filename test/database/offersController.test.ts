@@ -134,7 +134,6 @@ describe("Offer Controller", () => {
     console.log("Formatted offer", formattedOffer)
     const updatedOffer = await OffersController.upsertOffer(formattedOffer, 1)
     
-    console.log("Updated offer", updatedOffer)
     expect(updatedOffer.offer.provider).toBe("Some new provider")
     expect((await Offer.findAll()).length).toBe(2)
     expect((await OffersController.getOfferByIdAndChain(7, 2))?.offer.provider).toBe("0xCf9d14f5ae5EfA571276958695f35f96860dB267")
