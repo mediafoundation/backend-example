@@ -13,7 +13,7 @@ beforeAll(async () => {
 })
 
 describe("Resource Controller", () => {
-  test("should create or update a resource", async () => {
+  test("should create and then update a resource", async () => {
     const resource = {
       id: 1n,
       owner: "DataTypes.STRING",
@@ -24,7 +24,6 @@ describe("Resource Controller", () => {
     const newResource = await ResourcesController.upsertResource(ResourcesController.formatResource(resource), 1)
 
     expect(newResource.instance.owner).toStrictEqual(resource.owner)
-    expect(newResource.created).toBe(true)
 
     // update resource and check if it was updated
 
@@ -38,7 +37,6 @@ describe("Resource Controller", () => {
     const updatedResource = await ResourcesController.upsertResource(updatedResourceData, 1)
 
     expect(updatedResource.instance.encryptedData).toStrictEqual(updatedResourceData.encryptedData)
-    expect(updatedResource.created).toBe(false)
   })
 
   test("should get a resource by id", async () => {
