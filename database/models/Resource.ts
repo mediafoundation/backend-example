@@ -20,8 +20,8 @@ Resource.init({
   id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
   resourceId: DataTypes.BIGINT,
   owner: DataTypes.STRING,
-  encryptedData: DataTypes.STRING(500),
-  encryptedSharedKey: DataTypes.STRING(500),
+  encryptedData: DataTypes.STRING(900),
+  encryptedSharedKey: DataTypes.STRING(900),
 }, {
   sequelize,
   timestamps: false,
