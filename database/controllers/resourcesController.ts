@@ -14,23 +14,15 @@ export class ResourcesController {
    * @returns Promise<{instance: InferAttributes<Resource, {omit: never}>, created: boolean, originalResource: InferAttributes<Resource, {omit: never}> | null}>
    */
   static upsertResource = async (resource: FormattedResource, chainId: number) => {
-    // Find the original resource
-    let created = false
-    
     // Upsert the resource
-    let instance = await Resource.findOne({
+    const resourceFromDb = await Resource.findOne({
       where: {
         resourceId: resource.resourceId,
         chainId: chainId
       }
     })
     
-    if(instance) {
-      await instance.update(resource)
-    } else {
-      instance = await Resource.create({...resource, chainId: chainId})
-      created = true
-    }
+    const [instance, created] = await Resource.upsert({...resource, chainId: chainId, id: resourceFromDb?.id})
     
     return {
       instance: instance.dataValues,

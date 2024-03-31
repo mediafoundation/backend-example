@@ -19,7 +19,6 @@ export class DealsController {
    * @returns Promise<{deal: InferAttributes<Deal, {omit: never}>, created: boolean | null}>
    */
   static async upsertDeal(deal: DealFormatted, chainId: number) {
-    let created = false
     // Find the resource for the deal
     const resource = await ResourcesController.getResourceByIdAndChain(deal.resourceId ? deal.resourceId : 0, chainId)
     
@@ -35,19 +34,14 @@ export class DealsController {
 
     // Upsert the deal
     //const [instance, created] = await Deal.upsert({...deal, chainId: chainId}, {returning: true})
-    let instance = await Deal.findOne({
+    const dealFromDb = await Deal.findOne({
       where: {
         dealId: deal.dealId,
         chainId: chainId
       }
     })
     
-    if(!instance) {
-      instance = await Deal.create({...deal, chainId: chainId})
-      created = true
-    } else{
-      await instance.update({...deal})
-    }
+    const [instance, created] = await Deal.upsert({...deal, chainId: chainId, id: dealFromDb?.id})
 
     // Create metadata for the deal
     const metadata = await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata})

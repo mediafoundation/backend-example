@@ -31,8 +31,6 @@ export class Offer extends Model<InferAttributes<Offer>, InferCreationAttributes
 
   declare getNodeLocations: BelongsToManyGetAssociationsMixin<NodeLocation>
   declare createNodeLocation: BelongsToManyCreateAssociationMixin<NodeLocation>
-
-  declare setProvider: HasOneCreateAssociationMixin<Provider>
 }
 
 Offer.init({

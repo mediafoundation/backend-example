@@ -19,32 +19,27 @@ export class OffersController{
    * @returns Promise<{offer: InferAttributes<Offer, {omit: never}>, created: boolean | null}>
    */
   static async upsertOffer(offer: OfferFormatted, chainId: number) {
-    let created = false
-    
     // Find or create a provider
-    const provider = await Provider.findOrCreate({
+    await Provider.findOrCreate({
       where: {account: offer.provider},
       defaults: {account: offer.provider}
     })
+    
     // Upsert the offer
-    
-    //const [instance, created] = await Offer.upsert({chainId: chainId, ...offer})
-    
-    let instance = await Offer.findOne({
+    const offerFromDb = await Offer.findOne({
       where: {
         offerId: offer.offerId,
         chainId: chainId
       }
     })
-    if (!instance) {
+    /*if (!instance) {
       instance = await Offer.create({chainId: chainId, ...offer})
       created = true
     } else {
-      await Offer.update({...offer}, {where: {chainId: chainId, offerId: offer.offerId}, returning: true})
-    }
+      await Offer.update({...offer}, {where: {chainId: chainId, offerId: offer.offerId}})
+    }*/
     
-    // Set the provider for the offer
-    await instance.setProvider(provider[0])
+    const [instance, created] = await Offer.upsert({...offer, id: offerFromDb?.id, chainId: chainId})
     
     // Create metadata for the offer
     const metadata = await instance.createMetadata({offerId: instance.dataValues.id, ...offer.metadata})
