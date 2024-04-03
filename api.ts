@@ -54,12 +54,19 @@ app.get("/deals", async (req, res) => {
   const metadataFilter = parseFilter(filters.metadataFilter ? filters.metadataFilter : {})
   const bandwidthFilter = parseFilter(filters.bandwidthFilter ? filters.bandwidthFilter : {})
   const nodeLocationFilter = parseFilter(filters.nodeLocationFilter ? filters.nodeLocationFilter : {})
-
-  // Get deals from DealsController
-  const deals = await DealsController.getDeals(Number(chainId), dealFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize)
   
-  // Send response
-  res.json(deals)
+  try{
+    // Get deals from DealsController
+    const deals = await DealsController.getDeals(Number(chainId), dealFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize)
+    
+    // Send response
+    res.json(deals)
+  } catch (e) {
+    console.log("Something went wrong")
+    console.log({error: e})
+    
+    res.status(500).json({error: "Something went wrong"})
+  }
 })
 
 /**
