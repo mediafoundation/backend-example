@@ -89,13 +89,13 @@ describe("Resource Controller", () => {
       }
     })
 
-    const firstPageResources = await ResourcesController.getResources({}, 1, 10)
+    const firstPageResources = await ResourcesController.getResources(1, {}, 1, 10)
 
     expect(firstPageResources.length).toBe(10)
     
     expect(firstPageResources[0].resourceId).toBe(0)
 
-    const secondPageResources = await ResourcesController.getResources({}, 2, 10)
+    const secondPageResources = await ResourcesController.getResources(1, {}, 2, 10)
 
     expect(secondPageResources.length).toBe(10)
     
