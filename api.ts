@@ -8,10 +8,24 @@ import {parseFilter} from "./utils/filter"
 import {createRelationsBetweenTables} from "./database/utils"
 
 // Initialize express app
-const app = express()
+export const app = express()
 
 // Middleware
 app.use(bodyParser.json()) // for parsing application/json
+/**
+ * GET /resources
+ * Retrieves all resources.
+ */
+app.get("/resources", async (req, res) => {
+  try{
+    const resources = await ResourcesController.getResources()
+    res.json(resources)
+  } catch (e) {
+    console.log("Error:", e)
+    res.status(500).json({error: "Something went wrong"})
+  }
+})
+
 app.use(cors()) // for enabling CORS
 
 // Routes
@@ -21,6 +35,11 @@ app.use(cors()) // for enabling CORS
  * Retrieves deals based on provided filters, page number and page size.
  */
 app.get("/deals", async (req, res) => {
+  const chainId = req.query.chainId
+  
+  if(!chainId) {
+    return res.status(400).json({error: "Chain id is required"})
+  }
 
   // Parse filters from query parameters
   const filters = JSON.parse(req.query.filters ? req.query.filters as string : "{}")
@@ -37,7 +56,7 @@ app.get("/deals", async (req, res) => {
   const nodeLocationFilter = parseFilter(filters.nodeLocationFilter ? filters.nodeLocationFilter : {})
 
   // Get deals from DealsController
-  const deals = await DealsController.getDeals(dealFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize)
+  const deals = await DealsController.getDeals(Number(chainId), dealFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize)
   
   // Send response
   res.json(deals)
@@ -50,15 +69,6 @@ app.get("/deals", async (req, res) => {
 app.get("/deals/:id/chainId/:chainId", async (req, res) => {
   const deal = await DealsController.getDealByIdAndChain(Number(req.params.id), Number(req.params.chainId))
   res.json(deal)
-})
-
-/**
- * GET /resources
- * Retrieves all resources.
- */
-app.get("/resources", async (req, res) => {
-  const resources = await ResourcesController.getResources()
-  res.json(resources)
 })
 
 /**
@@ -84,7 +94,7 @@ app.get("/offers", async (req, res) => {
 
 // Start the server
 const port = 5000
-app.listen(port, () => console.log(`Server is running on port ${port}`))
+export const server = app.listen(port, () => console.log(`Server is running on port ${port}`))
 
 // Create relations between tables
 createRelationsBetweenTables()
