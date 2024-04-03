@@ -17,8 +17,13 @@ app.use(bodyParser.json()) // for parsing application/json
  * Retrieves all resources.
  */
 app.get("/resources", async (req, res) => {
+  const chainId = req.query.chainId
+  
+  if(!chainId) {
+    return res.status(400).json({error: "Chain id is required"})
+  }
   try{
-    const resources = await ResourcesController.getResources()
+    const resources = await ResourcesController.getResources(Number(chainId))
     res.json(resources)
   } catch (e) {
     console.log("Error:", e)
@@ -83,20 +88,31 @@ app.get("/deals/:id/chainId/:chainId", async (req, res) => {
  * Retrieves offers based on provided filters, page number and page size.
  */
 app.get("/offers", async (req, res) => {
+  const chainId = req.query.chainId
+  
+  if(!chainId) {
+    return res.status(400).json({error: "Chain id is required"})
+  }
+  
   const filters = JSON.parse(req.query.filters ? req.query.filters as string : "{}")
     
   const page = filters.page ? filters.page : 1
     
   const pageSize = filters.pageSize ? filters.pageSize : 10
-    
+  
   const offerFilter = parseFilter(filters.offerFilter ? filters.offerFilter : {})
   const metadataFilter = parseFilter(filters.metadataFilter ? filters.metadataFilter : {})
   const bandwidthFilter = parseFilter(filters.bandwidthFilter ? filters.bandwidthFilter : {})
   const nodeLocationFilter = parseFilter(filters.nodeLocationFilter ? filters.nodeLocationFilter : {})
-    
-  const offers = await OffersController.getOffers(Number(filters.marketplaceId), offerFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize)
   
-  res.json(offers)
+  try {
+    const offers = await OffersController.getOffers(Number(chainId), offerFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize)
+    
+    res.json(offers)
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({error: "Some went wrong"})
+  }
 })
 
 // Start the server
