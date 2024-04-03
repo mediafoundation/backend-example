@@ -2,6 +2,7 @@ import {ResourcesController} from "../database/controllers/resourcesController"
 import request from "supertest"
 import {app, server} from "../api"
 import {DealsController} from "../database/controllers/dealsController"
+import {OffersController} from "../database/controllers/offersController"
 
 jest.mock("../database/controllers/resourcesController", () => ({
   ResourcesController: {
@@ -14,6 +15,12 @@ jest.mock("../database/controllers/dealsController", () => ({
     getDeals: jest.fn()
   }
 }))
+
+jest.mock("../database/controllers/offersController", () => ({
+  OffersController: {
+    getOffers: jest.fn()
+  }
+}))
 afterAll((done) => {
   server.close(done)
 })
@@ -23,19 +30,33 @@ describe("Test api", () => {
     jest.clearAllMocks()
   })
   
+  test("Should receive status code 400 if no chainId provided", async () => {
+    let response = await request(app).get("/resources")
+    expect(response.status).toEqual(400)
+    expect(response.body).toEqual({error: "Chain id is required"})
+    
+    response = await request(app).get("/offers")
+    expect(response.status).toEqual(400)
+    expect(response.body).toEqual({error: "Chain id is required"})
+    
+    response = await request(app).get("/deals")
+    expect(response.status).toEqual(400)
+    expect(response.body).toEqual({error: "Chain id is required"})
+  })
+  
   test("Get resources should respondCorrectly", async () => {
     (ResourcesController.getResources as jest.Mock).mockResolvedValue(["Test for Resource data"])
-    const response = await request(app).get("/resources")
+    const response = await request(app).get("/resources").query({chainId: 1})
     expect(response.status).toBe(200)
     expect(response.body).toEqual(["Test for Resource data"])
-    expect(ResourcesController.getResources).toHaveBeenCalledWith()
+    expect(ResourcesController.getResources).toHaveBeenCalledWith(1)
   })
   
   test("Should respond with error if exception occurred", async () => {
     const consoleSpy = jest.spyOn(console, "log");
     (ResourcesController.getResources as jest.Mock).mockRejectedValue(new Error("Something went wrong"))
     
-    const response = await request(app).get("/resources")
+    const response = await request(app).get("/resources").query({chainId: 1})
     
     expect(response.status).toBe(500)
     expect(consoleSpy).toHaveBeenCalled()
@@ -62,5 +83,34 @@ describe("Test api", () => {
     expect(response.status).toBe(200)
     expect(response.body).toEqual(["Test for Deal data"])
     expect(DealsController.getDeals).toHaveBeenCalledWith(1, {}, {}, {}, {location: "US"}, 1, 10)
+  })
+  
+  test("Get deals should respond with error if exception occurred", async () => {
+    
+    (DealsController.getDeals as jest.Mock).mockRejectedValue(new Error("Something went wrong"))
+    const consoleSpy = jest.spyOn(console, "log")
+    const response = await request(app).get("/deals").query({chainId: 1})
+    
+    expect(response.status).toBe(500)
+    expect(consoleSpy).toHaveBeenCalled()
+  })
+  
+  test("Get offers should respond correctly", async () => {
+    (OffersController.getOffers as jest.Mock).mockResolvedValue(["Test for Offer data"])
+    
+    const response = await request(app).get("/offers").query({chainId: 1})
+    expect(response.status).toBe(200)
+    expect(response.body).toEqual(["Test for Offer data"])
+    expect(OffersController.getOffers).toHaveBeenCalledWith(1, {}, {}, {}, {}, 1, 10)
+  })
+  
+  test("Get offers should respond with error if exception occurred", async () => {
+    (OffersController.getOffers as jest.Mock).mockRejectedValue(new Error("Something went wrong"))
+    
+    const consoleSpy = jest.spyOn(console, "log")
+    
+    const response = await request(app).get("/offers").query({chainId: 1})
+    expect(response.status).toEqual(500)
+    expect(consoleSpy).toHaveBeenCalled()
   })
 })
