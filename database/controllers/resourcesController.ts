@@ -1,6 +1,7 @@
 import {Resource} from "../models/Resource"
 import {WhereOptions} from "sequelize"
 import {EncryptedResourceData, FormattedResource} from "../models/types/resource"
+import {Chain} from "../models/Chain"
 
 /**
  * ResourcesController class
@@ -32,12 +33,13 @@ export class ResourcesController {
   
   /**
    * Get resources
+   * @param chainId
    * @param filter - Filter for the resources
    * @param page - Page number
    * @param pageSize - Page size
    * @returns Promise<Array<any>>
    */
-  static getResources = async (filter: WhereOptions<any> = {}, page = 1, pageSize = 10) => {
+  static getResources = async (chainId: number, filter: WhereOptions<any> = {}, page = 1, pageSize = 10) => {
     
     // Calculate the offset
     const offset = (page - 1) * pageSize
@@ -46,6 +48,15 @@ export class ResourcesController {
     return await Resource.findAll({
       attributes: {exclude: ["createdAt", "updatedAt", "deletedAt"]},
       where: filter,
+      include: [
+        {
+          model: Chain,
+          where: {
+            chainId: chainId
+          },
+          as: "Chain"
+        },
+      ],
       offset: offset,
       limit: pageSize,
       raw: true

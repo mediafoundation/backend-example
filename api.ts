@@ -8,10 +8,29 @@ import {parseFilter} from "./utils/filter"
 import {createRelationsBetweenTables} from "./database/utils"
 
 // Initialize express app
-const app = express()
+export const app = express()
 
 // Middleware
 app.use(bodyParser.json()) // for parsing application/json
+/**
+ * GET /resources
+ * Retrieves all resources.
+ */
+app.get("/resources", async (req, res) => {
+  const chainId = req.query.chainId
+  
+  if(!chainId) {
+    return res.status(400).json({error: "Chain id is required"})
+  }
+  try{
+    const resources = await ResourcesController.getResources(Number(chainId))
+    res.json(resources)
+  } catch (e) {
+    console.log("Error:", e)
+    res.status(500).json({error: "Something went wrong"})
+  }
+})
+
 app.use(cors()) // for enabling CORS
 
 // Routes
@@ -21,6 +40,11 @@ app.use(cors()) // for enabling CORS
  * Retrieves deals based on provided filters, page number and page size.
  */
 app.get("/deals", async (req, res) => {
+  const chainId = req.query.chainId
+  
+  if(!chainId) {
+    return res.status(400).json({error: "Chain id is required"})
+  }
 
   // Parse filters from query parameters
   const filters = JSON.parse(req.query.filters ? req.query.filters as string : "{}")
@@ -35,12 +59,19 @@ app.get("/deals", async (req, res) => {
   const metadataFilter = parseFilter(filters.metadataFilter ? filters.metadataFilter : {})
   const bandwidthFilter = parseFilter(filters.bandwidthFilter ? filters.bandwidthFilter : {})
   const nodeLocationFilter = parseFilter(filters.nodeLocationFilter ? filters.nodeLocationFilter : {})
-
-  // Get deals from DealsController
-  const deals = await DealsController.getDeals(dealFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize)
   
-  // Send response
-  res.json(deals)
+  try{
+    // Get deals from DealsController
+    const deals = await DealsController.getDeals(Number(chainId), dealFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize)
+    
+    // Send response
+    res.json(deals)
+  } catch (e) {
+    console.log("Something went wrong")
+    console.log({error: e})
+    
+    res.status(500).json({error: "Something went wrong"})
+  }
 })
 
 /**
@@ -53,38 +84,40 @@ app.get("/deals/:id/chainId/:chainId", async (req, res) => {
 })
 
 /**
- * GET /resources
- * Retrieves all resources.
- */
-app.get("/resources", async (req, res) => {
-  const resources = await ResourcesController.getResources()
-  res.json(resources)
-})
-
-/**
  * GET /offers
  * Retrieves offers based on provided filters, page number and page size.
  */
 app.get("/offers", async (req, res) => {
+  const chainId = req.query.chainId
+  
+  if(!chainId) {
+    return res.status(400).json({error: "Chain id is required"})
+  }
+  
   const filters = JSON.parse(req.query.filters ? req.query.filters as string : "{}")
     
   const page = filters.page ? filters.page : 1
     
   const pageSize = filters.pageSize ? filters.pageSize : 10
-    
+  
   const offerFilter = parseFilter(filters.offerFilter ? filters.offerFilter : {})
   const metadataFilter = parseFilter(filters.metadataFilter ? filters.metadataFilter : {})
   const bandwidthFilter = parseFilter(filters.bandwidthFilter ? filters.bandwidthFilter : {})
   const nodeLocationFilter = parseFilter(filters.nodeLocationFilter ? filters.nodeLocationFilter : {})
-    
-  const offers = await OffersController.getOffers(Number(filters.marketplaceId), offerFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize)
   
-  res.json(offers)
+  try {
+    const offers = await OffersController.getOffers(Number(chainId), offerFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize)
+    
+    res.json(offers)
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({error: "Some went wrong"})
+  }
 })
 
 // Start the server
 const port = 5000
-app.listen(port, () => console.log(`Server is running on port ${port}`))
+export const server = app.listen(port, () => console.log(`Server is running on port ${port}`))
 
 // Create relations between tables
 createRelationsBetweenTables()
