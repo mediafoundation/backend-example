@@ -41,9 +41,9 @@ function manageIncomingFilterRequest(req:  any) {
   const filters = JSON.parse(req.query.filters ? req.query.filters as string : "{}")
   
   // Get page number and size from filters
-  const page = filters.page ? filters.page : 1
+  const page = req.query.page ? Number(req.query.page) : 1
   
-  const pageSize = filters.pageSize ? filters.pageSize : 10
+  const pageSize = req.query.pageSize ? Number(req.query.pageSize) : 10
   
   // Parse individual filters
   const genericFilter = parseFilter(filters.genericFilter ? filters.genericFilter : {})
