@@ -40,9 +40,13 @@ const createRelationsBetweenTables = async () => {
     onDelete: "SET NULL"
   })
 
-  Deal.belongsTo(Client)
+  Deal.belongsTo(Client, {
+    foreignKey: "client"
+  })
 
-  Deal.belongsTo(Provider)
+  Deal.belongsTo(Provider, {
+    foreignKey: "provider"
+  })
 
   Deal.hasOne(DealMetadata, {
     onDelete: "CASCADE",
@@ -55,7 +59,7 @@ const createRelationsBetweenTables = async () => {
     onDelete: "CASCADE",
     as: "BandwidthLimit",
     sourceKey: "id",
-    foreignKey: "metadataId"
+    foreignKey: "dealMetadataId"
   })
 
   Deal.belongsToMany(NodeLocation, {
@@ -69,7 +73,7 @@ const createRelationsBetweenTables = async () => {
     onDelete: "CASCADE",
     as: "BandwidthLimit",
     sourceKey: "id",
-    foreignKey: "offerId"
+    foreignKey: "offerMetadataId"
   })
 
   Offer.hasOne(OfferMetadata, {
