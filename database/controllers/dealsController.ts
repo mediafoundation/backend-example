@@ -6,6 +6,8 @@ import {NodeLocation} from "../models/NodeLocation"
 import {BandwidthLimit} from "../models/BandwidthLimit"
 import {Chain} from "../models/Chain"
 import {ResourcesController} from "./resourcesController"
+import {Client} from "../models/Client"
+import {Provider} from "../models/Provider"
 
 /**
  * DealsController class
@@ -31,9 +33,24 @@ export class DealsController {
     if(!chain) {
       throw new Error("Chain does not exists")
     }
+    
+    // Upsert the client
+    await Client.findOrCreate({
+      where: {
+        account: deal.client
+      },
+      defaults: {account: deal.client}
+    })
+    
+    // Upsert the provider
+    await Provider.findOrCreate({
+      where: {
+        account: deal.provider
+      },
+      defaults: {account: deal.provider}
+    })
 
     // Upsert the deal
-    //const [instance, created] = await Deal.upsert({...deal, chainId: chainId}, {returning: true})
     const dealFromDb = await Deal.findOne({
       where: {
         dealId: deal.dealId,
