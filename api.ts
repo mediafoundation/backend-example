@@ -33,7 +33,33 @@ app.get("/resources", async (req, res) => {
 
 app.use(cors()) // for enabling CORS
 
-// Routes
+/**
+ * Manage incoming request
+ */
+function manageIncomingFilterRequest(req:  any) {
+  // Parse filters from query parameters
+  const filters = JSON.parse(req.query.filters ? req.query.filters as string : "{}")
+  
+  // Get page number and size from filters
+  const page = filters.page ? filters.page : 1
+  
+  const pageSize = filters.pageSize ? filters.pageSize : 10
+  
+  // Parse individual filters
+  const genericFilter = parseFilter(filters.genericFilter ? filters.genericFilter : {})
+  const metadataFilter = parseFilter(filters.metadataFilter ? filters.metadataFilter : {})
+  const bandwidthFilter = parseFilter(filters.bandwidthFilter ? filters.bandwidthFilter : {})
+  const nodeLocationFilter = parseFilter(filters.nodeLocationFilter ? filters.nodeLocationFilter : {})
+  
+  return {
+    page,
+    pageSize,
+    genericFilter,
+    metadataFilter,
+    bandwidthFilter,
+    nodeLocationFilter
+  }
+}
 
 /**
  * GET /deals
@@ -46,23 +72,11 @@ app.get("/deals", async (req, res) => {
     return res.status(400).json({error: "Chain id is required"})
   }
 
-  // Parse filters from query parameters
-  const filters = JSON.parse(req.query.filters ? req.query.filters as string : "{}")
-
-  // Get page number and size from filters
-  const page = filters.page ? filters.page : 1
-
-  const pageSize = filters.pageSize ? filters.pageSize : 10
-
-  // Parse individual filters
-  const dealFilter = parseFilter(filters.dealFilter ? filters.dealFilter : {})
-  const metadataFilter = parseFilter(filters.metadataFilter ? filters.metadataFilter : {})
-  const bandwidthFilter = parseFilter(filters.bandwidthFilter ? filters.bandwidthFilter : {})
-  const nodeLocationFilter = parseFilter(filters.nodeLocationFilter ? filters.nodeLocationFilter : {})
+  const managedFilters = manageIncomingFilterRequest(req)
   
   try{
     // Get deals from DealsController
-    const deals = await DealsController.getDeals(Number(chainId), dealFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize)
+    const deals = await DealsController.getDeals(Number(chainId), managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
     
     // Send response
     res.json(deals)
@@ -94,19 +108,10 @@ app.get("/offers", async (req, res) => {
     return res.status(400).json({error: "Chain id is required"})
   }
   
-  const filters = JSON.parse(req.query.filters ? req.query.filters as string : "{}")
-    
-  const page = filters.page ? filters.page : 1
-    
-  const pageSize = filters.pageSize ? filters.pageSize : 10
-  
-  const offerFilter = parseFilter(filters.offerFilter ? filters.offerFilter : {})
-  const metadataFilter = parseFilter(filters.metadataFilter ? filters.metadataFilter : {})
-  const bandwidthFilter = parseFilter(filters.bandwidthFilter ? filters.bandwidthFilter : {})
-  const nodeLocationFilter = parseFilter(filters.nodeLocationFilter ? filters.nodeLocationFilter : {})
+  const managedFilters = manageIncomingFilterRequest(req)
   
   try {
-    const offers = await OffersController.getOffers(Number(chainId), offerFilter, metadataFilter, bandwidthFilter, nodeLocationFilter, page, pageSize)
+    const offers = await OffersController.getOffers(Number(chainId), managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
     
     res.json(offers)
   } catch (e) {
