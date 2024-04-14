@@ -53,15 +53,31 @@ function manageIncomingFilterRequest(req:  any) {
 app.get("/resources", async (req, res) => {
   const chainId = req.query.chainId
   
-  if(!chainId) {
-    return res.status(400).json({error: "Chain id is required"})
+  if(chainId) {
+    try{
+      const resources = await ResourcesController.getResources(Number(chainId))
+      res.json(resources)
+    } catch (e) {
+      console.log("Error:", e)
+      res.status(500).json({error: "Something went wrong"})
+    }
   }
-  try{
-    const resources = await ResourcesController.getResources(Number(chainId))
-    res.json(resources)
-  } catch (e) {
-    console.log("Error:", e)
-    res.status(500).json({error: "Something went wrong"})
+  
+  // Loop for all validChains
+  else {
+    const resources = []
+    const validChainKeys = Object.keys(validChains)
+    try {
+      for (const chain of validChainKeys) {
+        const resourcesFromDb = await ResourcesController.getResources(Number(chain))
+        resources.push(...resourcesFromDb)
+      }
+      
+      res.json(resources)
+    } catch (e) {
+      console.log("Error:", e)
+      res.status(500).json({error: "Something went wrong"})
+    }
   }
 })
 
