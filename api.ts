@@ -110,7 +110,7 @@ app.get("/deals", async (req, res) => {
 })
 
 /**
- * GET /deals/:id
+ * GET /deals/:id/chainId/:chainId
  * Retrieves a deal by its id.
  */
 app.get("/deals/:id/chainId/:chainId", async (req, res) => {
@@ -125,19 +125,36 @@ app.get("/deals/:id/chainId/:chainId", async (req, res) => {
 app.get("/offers", async (req, res) => {
   const chainId = req.query.chainId
   
-  if(!chainId) {
-    return res.status(400).json({error: "Chain id is required"})
-  }
-  
   const managedFilters = manageIncomingFilterRequest(req)
   
-  try {
-    const offers = await OffersController.getOffers(Number(chainId), managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
+  if(chainId) {
     
-    res.json(offers)
-  } catch (e) {
-    console.log(e)
-    res.status(500).json({error: "Some went wrong"})
+    try {
+      const offers = await OffersController.getOffers(Number(chainId), managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
+      res.json(offers)
+    } catch (e) {
+      console.log(e)
+      res.status(500).json({error: "Some went wrong"})
+    }
+  }
+  
+  // If no chainId provided, loop among all validChains
+  else {
+    const offers = []
+    const validChainKeys = Object.keys(validChains)
+    try {
+      for (const chain of validChainKeys) {
+        const dealsFromDb = await OffersController.getOffers(Number(chain), managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
+        offers.push(...dealsFromDb)
+      }
+      
+      res.json(offers)
+    } catch (e) {
+      console.log("Something went wrong")
+      console.log({error: e})
+      
+      res.status(500).json({error: "Something went wrong"})
+    }
   }
 })
 
