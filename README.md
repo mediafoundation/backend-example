@@ -36,34 +36,37 @@ npm run startApi
 After running this command, you will see a message indicating that the API server has started successfully.
 
 ## Using the api
+
+⚠️ On every request performed to the api, a **chainId** field must be provided
+
 ### Deals
 
 #### Get all deals
 ```bash
-curl -X GET http://localhost:5000/deals
+curl -G -i http://localhost:5000/deals --data-urlencode 'chainId=11155111'
 ```
 #### Get deal by id
 ```bash
-curl -X GET http://localhost:5000/deals/1
+curl -G -i http://localhost:5000/deals/1/chainId/11155111 --data-urlencode 'chainId=11155111'
 ```
 #### Get deals with filtered by metadata, for more information about filters see [api filters documentation](#filters)
 ```bash
-curl-G -i 'http://localhost:5000/deals' --data-urlencode 'filter={"metadataFilter": {"burstSpeed": {"gt": 100}}}'
+curl -G -i 'http://localhost:5000/deals' --data-urlencode 'chainId=11155111' --data-urlencode 'filter={"metadataFilter": {"burstSpeed": {"gt": 100}}}'
 ```
 #### Get deals with filtered by nodeLocation and pagination
 ```bash
-curl -G -i 'http://localhost:5000/deals' --data-urlencode 'filter={"nodeLocationFilter": {"location": {"eq": "BR"}}}&page=1&limit=10'
+curl -G -i 'http://localhost:5000/deals' --data-urlencode 'chainId=11155111' --data-urlencode 'filter={"nodeLocationFilter": {"location": {"eq": "BR"}}}' --data-urlencode 'pageSize=10'
 ```
 
 # Filters
 ### Schema and usages
-#### There are four filters that can be used with deals and offers:
+#### There are four filters that can be used with deals and offers, for more information see models documentation:
 - metadataFilter
 - nodeLocationFilter
 - bandwidthFilter
-- offer or deal filter
+- genericFilter
 #### They are meant to be used following the filter schema from sequelize, for more information about the filter schema see [sequelize documentation](https://sequelize.org/master/manual/model-querying-basics.html#operators)
-#### Also, every field from which the filter is going to be applied must be a field from the deal or offer model, and its associated tables. All they are defined in the models' folder.
+#### Also, every field from which the filter is going to be applied must be a field from the deal or offer model, and its associated tables. They are all defined in the models' folder.
 
 #### The following example shows how to order the filters in the query:
 ```json
@@ -83,7 +86,7 @@ curl -G -i 'http://localhost:5000/deals' --data-urlencode 'filter={"nodeLocation
       "gt": 100
     }
   },
-  "offerFilter": {
+  "genericFilter": {
     "maximumDeals": {
       "eq": 2000
     }
@@ -91,6 +94,13 @@ curl -G -i 'http://localhost:5000/deals' --data-urlencode 'filter={"nodeLocation
 }
 ```
 ```bash
-curl -G -i 'http://localhost:5000/offers?' --data-urlencode 'filters={"metadataFilter": {"burstSpeed": {"gt": 100}}, "nodeLocationFilter": {"location": {"eq": "BR"}}, "bandwidthFilter": {"amount": {"eq": 1}}, "offerFilter": {"maximumDeals": {"gt": 100}}}'
+curl -G -i 'http://localhost:5000/offers?' --data-urlencode 'chainId=11155111' --data-urlencode 'filters={"metadataFilter": {"burstSpeed": {"gt": 100}}, "nodeLocationFilter": {"location": {"eq": "BR"}}, "bandwidthFilter": {"amount": {"eq": 1}}, "genericFilter": {"maximumDeals": {"gt": 100}}}'
 ```
 #### Take into account that the filters are optional and can be used together or separately.
+
+## Pagination
+Pagination can be performed by passing page and pageSize params on the request. It can be used alongside the filters
+
+```bash
+curl -G -i 'http://localhost:5000/offers?' --data-urlencode 'chainId=11155111' --data-urlencode 'page=1' --data-urlencode 'pageSize=10'
+```
