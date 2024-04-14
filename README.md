@@ -37,17 +37,15 @@ After running this command, you will see a message indicating that the API serve
 
 ## Using the api
 
-⚠️ On every request performed to the api, a **chainId** field must be provided
-
 ### Deals
 
 #### Get all deals
 ```bash
-curl -G -i http://localhost:5000/deals --data-urlencode 'chainId=11155111'
+curl -G -i http://localhost:5000/deals
 ```
-#### Get deal by id
+#### Get deal by id and chainId
 ```bash
-curl -G -i http://localhost:5000/deals/1/chainId/11155111 --data-urlencode 'chainId=11155111'
+curl -G -i http://localhost:5000/deals/1/chainId/11155111
 ```
 #### Get deals with filtered by metadata, for more information about filters see [api filters documentation](#filters)
 ```bash
@@ -60,7 +58,7 @@ curl -G -i 'http://localhost:5000/deals' --data-urlencode 'chainId=11155111' --d
 
 # Filters
 ### Schema and usages
-#### There are four filters that can be used with deals and offers, for more information see models documentation:
+#### There are four filters that can be used with deals and offers, for more information see [models documentation](database/models/MODELS.md):
 - metadataFilter
 - nodeLocationFilter
 - bandwidthFilter
