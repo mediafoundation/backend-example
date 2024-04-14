@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+import {validChains} from "media-sdk"
 import express from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
@@ -68,23 +71,41 @@ function manageIncomingFilterRequest(req:  any) {
 app.get("/deals", async (req, res) => {
   const chainId = req.query.chainId
   
-  if(!chainId) {
-    return res.status(400).json({error: "Chain id is required"})
-  }
-
   const managedFilters = manageIncomingFilterRequest(req)
   
-  try{
-    // Get deals from DealsController
-    const deals = await DealsController.getDeals(Number(chainId), managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
+  if(chainId) {
+    try{
+      // Get deals from DealsController
+      const deals = await DealsController.getDeals(Number(chainId), managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
+      
+      // Send response
+      res.json(deals)
+    } catch (e) {
+      console.log("Something went wrong")
+      console.log({error: e})
+      
+      res.status(500).json({error: "Something went wrong"})
+    }
     
-    // Send response
-    res.json(deals)
-  } catch (e) {
-    console.log("Something went wrong")
-    console.log({error: e})
-    
-    res.status(500).json({error: "Something went wrong"})
+  }
+  
+  // Loop for all valid chains if no chainId provided
+  else{
+    const deals = []
+    const validChainKeys = Object.keys(validChains)
+    try {
+      for (const chain of validChainKeys) {
+        const dealsFromDb = await DealsController.getDeals(Number(chain), managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
+        deals.push(...dealsFromDb)
+      }
+      
+      res.json(deals)
+    } catch (e) {
+      console.log("Something went wrong")
+      console.log({error: e})
+      
+      res.status(500).json({error: "Something went wrong"})
+    }
   }
 })
 
