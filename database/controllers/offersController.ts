@@ -70,26 +70,27 @@ export class OffersController{
    * @returns Promise<Array<any>>
    */
   static async getOffers(
-    chainId: number = 1,
+    chainId: number | undefined = undefined,
     offerFilter: WhereOptions<any> = {},
     metadataFilter: WhereOptions<any> = {},
     bandwidthLimitFilter: WhereOptions<any> = {},
     nodeLocationFilter: WhereOptions<any> = {},
-    page = 1,
-    pageSize = 10): Promise<Array<any>> {
+    page: number | undefined = undefined,
+    pageSize: number | undefined= undefined): Promise<Array<any>> {
     
     // Calculate the offset
-    const offset = (page - 1) * pageSize
+    const offset = page && pageSize ? (page - 1) * pageSize : undefined
     
     // Find all offers with the given filters
     const offers = await Offer.findAll({
       include: [
         {
           model: Chain,
+          required: !!chainId,
           as: "Chain",
           attributes: [],
           where: {
-            chainId: chainId
+            chainId: chainId ? chainId : null
           }
         },
         {
