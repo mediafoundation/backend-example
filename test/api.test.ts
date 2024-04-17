@@ -64,7 +64,7 @@ describe("Test api", () => {
     
     expect(response.status).toBe(200)
     expect(response.body).toEqual(["Test for Deal data"])
-    expect(DealsController.getDeals).toHaveBeenCalledWith(1, {}, {}, {}, {}, 1, 10)
+    expect(DealsController.getDeals).toHaveBeenCalledWith(1, {}, {}, {}, {}, undefined, undefined)
     
     const filter = JSON.stringify({
       nodeLocationFilter: {
@@ -76,7 +76,7 @@ describe("Test api", () => {
     response = await request(app).get("/deals").query({filters: filter, chainId: 1})
     expect(response.status).toBe(200)
     expect(response.body).toEqual(["Test for Deal data"])
-    expect(DealsController.getDeals).toHaveBeenCalledWith(1, {}, {}, {}, {location: "US"}, 1, 10)
+    expect(DealsController.getDeals).toHaveBeenCalledWith(1, {}, {}, {}, {location: "US"}, undefined, undefined)
   })
   
   test("Get deals should respond with error if exception occurred", async () => {
@@ -95,7 +95,7 @@ describe("Test api", () => {
     const response = await request(app).get("/offers").query({chainId: 1})
     expect(response.status).toBe(200)
     expect(response.body).toEqual(["Test for Offer data"])
-    expect(OffersController.getOffers).toHaveBeenCalledWith(1, {}, {}, {}, {}, 1, 10)
+    expect(OffersController.getOffers).toHaveBeenCalledWith(1, {}, {}, {}, {}, undefined, undefined)
   })
   
   test("Get offers should respond with error if exception occurred", async () => {

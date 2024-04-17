@@ -21,14 +21,14 @@ app.use(cors()) // for enabling CORS
 /**
  * Manage incoming request
  */
-function manageIncomingFilterRequest(req:  any) {
+function manageIncomingFilterRequest(req: any) {
   
   // Parse filters from query parameters
   const filters = JSON.parse(req.query.filters ? req.query.filters as string : "{}")
   // Get page number and size from filters
   
-  const page = req.query.page ? Number(req.query.page) : 1
-  const pageSize = req.query.pageSize ? Number(req.query.pageSize) : 10
+  const page = req.query.page ? Number(req.query.page) : undefined
+  const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
   
   // Parse individual filters
   
@@ -87,43 +87,19 @@ app.get("/resources", async (req, res) => {
  * Retrieves deals based on provided filters, page number and page size.
  */
 app.get("/deals", async (req, res) => {
-  const chainId = req.query.chainId
+  const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
   
   const managedFilters = manageIncomingFilterRequest(req)
-  
-  if(chainId) {
-    try{
-      // Get deals from DealsController
-      const deals = await DealsController.getDeals(Number(chainId), managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
-      
-      // Send response
-      res.json(deals)
-    } catch (e) {
-      console.log("Something went wrong")
-      console.log({error: e})
-      
-      res.status(500).json({error: "Something went wrong"})
-    }
-    
-  }
-  
-  // Loop for all valid chains if no chainId provided
-  else{
-    const deals = []
-    const validChainKeys = Object.keys(validChains)
-    try {
-      for (const chain of validChainKeys) {
-        const dealsFromDb = await DealsController.getDeals(Number(chain), managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
-        deals.push(...dealsFromDb)
-      }
-      
-      res.json(deals)
-    } catch (e) {
-      console.log("Something went wrong")
-      console.log({error: e})
-      
-      res.status(500).json({error: "Something went wrong"})
-    }
+
+  try{
+    // Get deals from DealsController
+    const deals = await DealsController.getDeals(chainId, managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
+
+    // Send response
+    res.json(deals)
+  } catch (e) {
+    console.log({error: e})
+    res.status(500).json({error: "Something went wrong"})
   }
 })
 
@@ -141,38 +117,15 @@ app.get("/deals/:id/chainId/:chainId", async (req, res) => {
  * Retrieves offers based on provided filters, page number and page size.
  */
 app.get("/offers", async (req, res) => {
-  const chainId = req.query.chainId
+  const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
   
   const managedFilters = manageIncomingFilterRequest(req)
-  
-  if(chainId) {
-    
-    try {
-      const offers = await OffersController.getOffers(Number(chainId), managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
-      res.json(offers)
-    } catch (e) {
-      console.log(e)
-      res.status(500).json({error: "Some went wrong"})
-    }
-  }
-  
-  // If no chainId provided, loop among all validChains
-  else {
-    const offers = []
-    const validChainKeys = Object.keys(validChains)
-    try {
-      for (const chain of validChainKeys) {
-        const dealsFromDb = await OffersController.getOffers(Number(chain), managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
-        offers.push(...dealsFromDb)
-      }
-      
-      res.json(offers)
-    } catch (e) {
-      console.log("Something went wrong")
-      console.log({error: e})
-      
-      res.status(500).json({error: "Something went wrong"})
-    }
+  try {
+    const offers = await OffersController.getOffers(chainId, managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
+    res.json(offers)
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({error: "Some went wrong"})
   }
 })
 
