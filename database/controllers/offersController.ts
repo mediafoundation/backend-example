@@ -87,6 +87,7 @@ export class OffersController{
         {
           model: Chain,
           as: "Chain",
+          attributes: [],
           where: {
             chainId: chainId
           }
@@ -104,11 +105,17 @@ export class OffersController{
           model: OfferMetadata,
           as: "Metadata",
           where: metadataFilter,
+          attributes: {
+            exclude: ["id", "offerId"]
+          },
           include: [
             {
               model: BandwidthLimit,
               as: "BandwidthLimit",
-              where: bandwidthLimitFilter
+              where: bandwidthLimitFilter,
+              attributes: {
+                exclude: ["dealMetadataId", "offerMetadataId", "id"]
+              }
             }
           ]
         },
