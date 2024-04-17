@@ -54,6 +54,7 @@ export class ResourcesController {
           where: {
             chainId: chainId
           },
+          attributes: [],
           as: "Chain"
         },
       ],
