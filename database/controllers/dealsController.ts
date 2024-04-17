@@ -109,6 +109,7 @@ export class DealsController {
           where: {
             chainId: chainId
           },
+          attributes: [],
           as: "Chain"
         },
         {
@@ -124,11 +125,17 @@ export class DealsController {
           model: DealMetadata,
           as: "Metadata",
           where: metadataFilter,
+          attributes: {
+            exclude: ["id", "dealId"]
+          },
           include: [
             {
               model: BandwidthLimit,
               as: "BandwidthLimit",
-              where: bandwidthFilter
+              where: bandwidthFilter,
+              attributes: {
+                exclude: ["dealMetadataId", "offerMetadataId", "id"]
+              }
             },
           ]
         }

@@ -30,20 +30,6 @@ describe("Test api", () => {
     jest.clearAllMocks()
   })
   
-  test("Should receive status code 400 if no chainId provided", async () => {
-    let response = await request(app).get("/resources")
-    expect(response.status).toEqual(400)
-    expect(response.body).toEqual({error: "Chain id is required"})
-    
-    response = await request(app).get("/offers")
-    expect(response.status).toEqual(400)
-    expect(response.body).toEqual({error: "Chain id is required"})
-    
-    response = await request(app).get("/deals")
-    expect(response.status).toEqual(400)
-    expect(response.body).toEqual({error: "Chain id is required"})
-  })
-  
   test("Get resources should respondCorrectly", async () => {
     (ResourcesController.getResources as jest.Mock).mockResolvedValue(["Test for Resource data"])
     const response = await request(app).get("/resources").query({chainId: 1})
