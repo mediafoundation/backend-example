@@ -40,6 +40,15 @@ const mockResource = {
   encryptedSharedKey: "Some shared Key",
 }
 
+async function overPopulateDb(chainId: number) {
+  for (let i = 0; i < 100; i++) {
+    const mockDealCopy = structuredClone(mockDeal)
+    mockDealCopy.id = BigInt(i)
+    const dealFormatted = DealsController.formatDeal(mockDealCopy)
+    await DealsController.upsertDeal(dealFormatted, chainId)
+  }
+}
+
 beforeAll(async () => {
   await resetDB()
   
@@ -54,6 +63,11 @@ beforeAll(async () => {
   await Resource.create({...ResourcesController.formatResource(mockResource), chainId: 2})
 })
 
+afterEach(async () => {
+  await Deal.sync({force: true})
+  await NodeLocation.sync({force: true})
+})
+
 describe("Deal Controller", () => {
 
   test("should create or update a deal", async () => {
@@ -66,6 +80,7 @@ describe("Deal Controller", () => {
   })
 
   test("get deal", async () => {
+    await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 1)
     const nullDeal = await DealsController.getDealByIdAndChain(2, 1)
 
     expect(nullDeal).toBeNull()
@@ -83,6 +98,8 @@ describe("Deal Controller", () => {
   })
 
   test("filter deals, expecting no matching criteria", async () => {
+    await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 1)
+
     const metadataFilter = {
       apiEndpoint: "Endpoint"
     }
@@ -123,6 +140,8 @@ describe("Deal Controller", () => {
   })
 
   test("filter deals, expecting matching criteria", async () => {
+    await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 1)
+
     const metadataFilter = {
       apiEndpoint: "http:localhost:5000/"
     }
@@ -159,6 +178,8 @@ describe("Deal Controller", () => {
   })
 
   test("delete deal", async () => {
+    await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 1)
+
     const nullDeal = await DealsController.deleteDealById(2, 1)
 
     expect(nullDeal).toBeNull()
@@ -201,9 +222,10 @@ describe("Deal Controller", () => {
   })
   
   test("Delete deal on second chain", async() => {
+    await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 2)
     const result = await DealsController.deleteDealById(1, 2)
-    
-    expect((await Deal.findAll()).length).toBe(1)
+
+    expect((await Deal.findAll()).length).toBe(0)
     expect(result?.dealId).not.toBeNull()
   })
   
@@ -236,5 +258,47 @@ describe("Deal Controller", () => {
     const deal = await DealsController.upsertDeal(DealsController.formatDeal(noValidResourceDeal), 1)
     
     expect(deal.deal.resourceId).toBeNull()
+  })
+
+  test("Get deals with no pagination retrieve all deals in db", async () => {
+
+    await overPopulateDb(1)
+
+    let deals = await DealsController.getDeals()
+    expect(deals.length).toBe(100)
+
+    await overPopulateDb(2)
+
+    deals = await DealsController.getDeals()
+    expect(deals.length).toBe(200)
+  })
+
+  test("Get deals with no pagination specifying chainId", async () => {
+    await overPopulateDb(1)
+
+    let deals = await DealsController.getDeals(1)
+    expect(deals.length).toBe(100)
+
+    deals = await DealsController.getDeals(2)
+    expect(deals.length).toBe(0)
+  })
+
+  test("Get deals paginating", async () => {
+    await overPopulateDb(1)
+
+    let deals = await DealsController.getDeals(undefined, {}, {}, {}, {}, 1, 30 )
+    expect(deals.length).toBe(30)
+    expect(deals[0].id).toBe(1)
+    expect(deals[14].id).toBe(15)
+    expect(deals[29].id).toBe(30)
+
+    deals = await DealsController.getDeals(1, {}, {}, {}, {}, 3, 30 )
+    expect(deals.length).toBe(30)
+    expect(deals[0].id).toBe(61)
+    expect(deals[14].id).toBe(75)
+    expect(deals[29].id).toBe(90)
+
+    deals = await DealsController.getDeals(3, {}, {}, {}, {}, 3, 30 )
+    expect(deals.length).toBe(0)
   })
 })

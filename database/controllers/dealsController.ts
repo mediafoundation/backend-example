@@ -89,25 +89,26 @@ export class DealsController {
    * @returns Promise<Array<any>>
    */
   static async getDeals(
-    chainId: number = 1,
+    chainId: number | undefined = undefined,
     dealFilter: WhereOptions<any> = {},
     metadataFilter: WhereOptions<any> = {},
     bandwidthFilter: WhereOptions<any> = {},
     nodeLocationFilter: WhereOptions<any> = {},
-    page = 1,
-    pageSize = 10
+    page: number | undefined = undefined,
+    pageSize: number | undefined= undefined
   ): Promise<Array<any>> {
 
     // Calculate the offset
-    const offset = (page - 1) * pageSize
+    const offset = page && pageSize ? (page - 1) * pageSize : undefined
 
     // Find all deals with the given filters
     const deals = await Deal.findAll({
       include: [
         {
           model: Chain,
+          required: !!chainId,
           where: {
-            chainId: chainId
+            chainId: chainId ? chainId : null
           },
           attributes: [],
           as: "Chain"
