@@ -3,6 +3,7 @@ import request from "supertest"
 import {app, server} from "../api"
 import {DealsController} from "../database/controllers/dealsController"
 import {OffersController} from "../database/controllers/offersController"
+import {ProvidersController} from "../database/controllers/providersController"
 
 jest.mock("../database/controllers/resourcesController", () => ({
   ResourcesController: {
@@ -21,6 +22,13 @@ jest.mock("../database/controllers/offersController", () => ({
     getOffers: jest.fn()
   }
 }))
+
+jest.mock("../database/controllers/providersController", () => ({
+  ProvidersController: {
+    getProviders: jest.fn()
+  }
+}))
+
 afterAll((done) => {
   server.close(done)
 })
@@ -98,5 +106,19 @@ describe("Test api", () => {
     const response = await request(app).get("/offers").query({chainId: 1})
     expect(response.status).toEqual(500)
     expect(consoleSpy).toHaveBeenCalled()
+  })
+
+  test("Get providers should respond correctly", async () => {
+    (ProvidersController.getProviders as jest.Mock).mockResolvedValue(["1", "2", "3"])
+
+    let response = await request(app).get("/providers")
+    expect(response.status).toBe(200)
+    expect(response.body).toEqual(["1", "2", "3"])
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, undefined)
+
+    response = await request(app).get("/providers").query({page: 1, pageSize: 10})
+    expect(response.status).toBe(200)
+    expect(response.body).toEqual(["1", "2", "3"])
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith(1, 10)
   })
 })

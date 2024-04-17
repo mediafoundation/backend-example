@@ -9,6 +9,7 @@ import { ResourcesController } from "./database/controllers/resourcesController"
 import {OffersController} from "./database/controllers/offersController"
 import {parseFilter} from "./utils/filter"
 import {createRelationsBetweenTables} from "./database/utils"
+import {ProvidersController} from "./database/controllers/providersController"
 
 // Initialize express app
 export const app = express()
@@ -172,6 +173,19 @@ app.get("/offers", async (req, res) => {
       
       res.status(500).json({error: "Something went wrong"})
     }
+  }
+})
+
+app.get("/providers", async(req, res) => {
+  try {
+    const page = req.query.page ? Number(req.query.page) : undefined
+    const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
+
+    const providers = await ProvidersController.getProviders(page, pageSize)
+    res.json(providers)
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({error: "Some went wrong"})
   }
 })
 
