@@ -53,7 +53,6 @@ beforeAll(async () => {
   await resetDB()
   
   for (let i = 0; i < 5; i++) {
-    
     await Chain.create({
       chainId: i,
       name: `Chain name for ${i}`

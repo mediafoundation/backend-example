@@ -37,17 +37,25 @@ export class DealsController {
     // Upsert the client
     await Client.findOrCreate({
       where: {
-        account: deal.client
+        account: deal.client,
+        chainId: chainId
       },
-      defaults: {account: deal.client}
+      defaults: {
+        account: deal.client,
+        chainId: chainId
+      }
     })
     
     // Upsert the provider
     await Provider.findOrCreate({
       where: {
-        account: deal.provider
+        account: deal.provider,
+        chainId: chainId
       },
-      defaults: {account: deal.provider}
+      defaults: {
+        account: deal.provider,
+        chainId: chainId
+      }
     })
 
     // Upsert the deal

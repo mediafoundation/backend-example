@@ -21,8 +21,14 @@ export class OffersController{
   static async upsertOffer(offer: OfferFormatted, chainId: number) {
     // Find or create a provider
     await Provider.findOrCreate({
-      where: {account: offer.provider},
-      defaults: {account: offer.provider}
+      where: {
+        account: offer.provider,
+        chainId: chainId
+      },
+      defaults: {
+        account: offer.provider,
+        chainId: chainId
+      }
     })
     
     // Upsert the offer
