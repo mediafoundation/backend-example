@@ -7,6 +7,7 @@ import {NodeLocation} from "../../database/models/NodeLocation"
 import {Chain} from "../../database/models/Chain"
 import {Deal} from "../../database/models/deals/Deal"
 import {Resource} from "../../database/models/Resource"
+import {parseFilter} from "../../utils/filter"
 
 const mockDeal = {
   id: 1n,
@@ -145,9 +146,12 @@ describe("Deal Controller", () => {
       apiEndpoint: "http:localhost:5000/"
     }
 
-    const dealFilter = {
-      singlePeriodOnly: false
-    }
+    const dealFilter = parseFilter({
+      or: [
+        {singlePeriodOnly: true},
+        {minDealDuration: 900}
+      ]
+    })
 
     const bandwidthFilter = {
       amount: 1,
@@ -208,15 +212,6 @@ describe("Deal Controller", () => {
     
     deals = await Deal.findAll()
     expect(deals.length).toBe(2)
-  })
-  
-  test("Update first deal on chain 1", async () => {
-    /*mockDeal["provider"] = "Some new provider"
-    const updatedDeal = await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 1)
-    
-    expect(updatedDeal.deal.provider).toBe("Some new provider")
-    expect((await Deal.findAll()).length).toBe(2)
-    expect((await DealsController.getDealByIdAndChain(1, 2))?.deal.provider).toBe("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31")*/
   })
   
   test("Delete deal on second chain", async() => {
