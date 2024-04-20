@@ -16,7 +16,7 @@ import {Chain} from "../Chain"
 export class Offer extends Model<InferAttributes<Offer>, InferCreationAttributes<Offer>> {
   declare id: CreationOptional<number>
   declare offerId: number
-  declare provider: ForeignKey<Provider["account"]>
+  declare providerId: ForeignKey<Provider["id"]>
   declare chainId: ForeignKey<Chain["chainId"]>
   declare publicKey: string
   declare maximumDeals: number

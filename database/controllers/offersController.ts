@@ -20,7 +20,7 @@ export class OffersController{
    */
   static async upsertOffer(offer: OfferFormatted, chainId: number) {
     // Find or create a provider
-    await Provider.findOrCreate({
+    const provider = await Provider.findOrCreate({
       where: {
         account: offer.provider,
         chainId: chainId
@@ -45,7 +45,7 @@ export class OffersController{
       await Offer.update({...offer}, {where: {chainId: chainId, offerId: offer.offerId}})
     }*/
     
-    const [instance, created] = await Offer.upsert({...offer, id: offerFromDb?.id, chainId: chainId})
+    const [instance, created] = await Offer.upsert({...offer, id: offerFromDb?.id, chainId: chainId, providerId: provider[0].id})
     
     // Create metadata for the offer
     const metadata = await instance.createMetadata({offerId: instance.dataValues.id, ...offer.metadata})

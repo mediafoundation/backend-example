@@ -148,16 +148,16 @@ describe("Offer Controller", () => {
   
   test("Update first deal on chain 1", async () => {
     await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 1)
-    expect((await OffersController.getOfferByIdAndChain(7, 1))?.offer.provider).toBe("0xCf9d14f5ae5EfA571276958695f35f96860dB267")
+    expect((await OffersController.getOfferByIdAndChain(7, 1))?.offer.publicKey).toBe("ZQkZyAgdXpLKus918lXHTP9y9q3m8ddcUkYGSImiXxQ=")
     await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 2)
     const mockOfferCopy = structuredClone(mockOffer)
-    mockOfferCopy["provider"] = "Some new provider"
+    mockOfferCopy["publicKey"] = "Some new provider"
     const formattedOffer = OffersController.formatOffer(mockOfferCopy)
     const updatedOffer = await OffersController.upsertOffer(formattedOffer, 1)
     
-    expect(updatedOffer.offer.provider).toBe("Some new provider")
+    expect(updatedOffer.offer.publicKey).toBe("Some new provider")
     expect((await Offer.findAll()).length).toBe(2)
-    expect((await OffersController.getOfferByIdAndChain(7, 2))?.offer.provider).toBe("0xCf9d14f5ae5EfA571276958695f35f96860dB267")
+    expect((await OffersController.getOfferByIdAndChain(7, 2))?.offer.publicKey).toBe("ZQkZyAgdXpLKus918lXHTP9y9q3m8ddcUkYGSImiXxQ=")
   })
   
   test("Delete offer on second chain", async() => {
