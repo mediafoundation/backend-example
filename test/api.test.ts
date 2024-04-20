@@ -121,4 +121,30 @@ describe("Test api", () => {
     expect(response.body).toEqual(["1", "2", "3"])
     expect(ProvidersController.getProviders).toHaveBeenCalledWith(1, 10)
   })
+
+  test("Get providers paginating and with chainId", async () => {
+    (ProvidersController.getProviders as jest.Mock).mockResolvedValue(["1", "2", "3"])
+
+    const response = await request(app).get("/providers").query({
+      chainId: 1,
+      page: 1,
+      pageSize: 1
+    })
+    expect(response.status).toBe(200)
+    expect(response.body).toEqual(["1", "2", "3"])
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith(1, 1, 10)
+  })
+
+  test("Get providers get error", async () => {
+    (ProvidersController.getProviders as jest.Mock).mockRejectedValue(new Error("Something went wrong"))
+    const consoleSpy = jest.spyOn(console, "log")
+
+    const response = await request(app).get("/providers")
+    expect(response.status).toBe(500)
+    expect(response.body).toEqual({
+      error: new Error("Something went wrong")
+    })
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith()
+    expect(consoleSpy).toHaveBeenCalled()
+  })
 })

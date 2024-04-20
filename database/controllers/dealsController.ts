@@ -35,7 +35,7 @@ export class DealsController {
     }
     
     // Upsert the client
-    await Client.findOrCreate({
+    const client = await Client.findOrCreate({
       where: {
         account: deal.client,
         chainId: chainId
@@ -47,7 +47,7 @@ export class DealsController {
     })
     
     // Upsert the provider
-    await Provider.findOrCreate({
+    const provider = await Provider.findOrCreate({
       where: {
         account: deal.provider,
         chainId: chainId
@@ -66,7 +66,7 @@ export class DealsController {
       }
     })
     
-    const [instance, created] = await Deal.upsert({...deal, chainId: chainId, id: dealFromDb?.id})
+    const [instance, created] = await Deal.upsert({...deal, chainId: chainId, id: dealFromDb?.id, clientId: client[0].id, providerId: provider[0].id})
 
     // Create metadata for the deal
     const metadata = await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata})

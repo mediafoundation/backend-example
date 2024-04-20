@@ -199,7 +199,6 @@ describe("Deal Controller", () => {
   
   test("same deal id but on different networks should not be updated", async () => {
     const firstResult = await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 1)
-    console.log(firstResult)
     expect(firstResult.deal.chainId).toBe(1)
     
     let deals = await Deal.findAll()

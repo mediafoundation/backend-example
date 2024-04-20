@@ -51,11 +51,11 @@ const createRelationsBetweenTables = async () => {
   })
 
   Deal.belongsTo(Client, {
-    foreignKey: "client"
+    foreignKey: "clientId"
   })
 
   Deal.belongsTo(Provider, {
-    foreignKey: "provider"
+    foreignKey: "providerId"
   })
 
   Deal.hasOne(DealMetadata, {

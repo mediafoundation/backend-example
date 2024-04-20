@@ -133,8 +133,9 @@ app.get("/providers", async(req, res) => {
   try {
     const page = req.query.page ? Number(req.query.page) : undefined
     const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
+    const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
 
-    const providers = await ProvidersController.getProviders(page, pageSize)
+    const providers = await ProvidersController.getProviders(chainId, page, pageSize)
     res.json(providers)
   } catch (e) {
     console.log(e)
