@@ -10,11 +10,16 @@ export class ProvidersController {
       include: [
         {
           model: Chain,
-          where: chainFilter
+          where: chainFilter,
+          through: {
+            attributes: []
+          },
+          attributes: ["chainId"]
         },
       ],
       offset: offset,
       limit: pageSize,
+      nest: true,
       raw: true
     })
   }
