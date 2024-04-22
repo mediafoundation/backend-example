@@ -8,7 +8,6 @@ import {
   Model
 } from "sequelize"
 import {sequelize} from "../../database"
-import {array, boolean, number, object, string, z} from "zod"
 import {Deal} from "./Deal"
 import {BandwidthLimit} from "../BandwidthLimit"
 
@@ -40,19 +39,4 @@ DealMetadata.init({
 }, {
   sequelize,
   timestamps: false,
-})
-
-export const DealsMetadataType = z.object({
-  type: string(),
-  label: string(),
-  bandwidthLimit: object({
-    amount: number(),
-    period: string(),
-    unit: string()
-  }),
-  autoSsl: boolean(),
-  burstSpeed: number(),
-  nodeLocations: array(string()),
-  apiEndpoint: string(),
-  customCnames: boolean()
 })

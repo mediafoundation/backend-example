@@ -86,12 +86,12 @@ const init = async (chain: any) => {
 }
   
 async function start() {
-  const validChainKeys = Object.keys(validChains)
   await resetDB()
   try {
-    for (const chain of validChainKeys) {
-      await init(validChains[chain])
-      console.log("Initialized on chain: ", validChains[chain].network)
+    const chains: any[] = Object.values(validChains)
+    for (const chain of chains) {
+      await init(chain)
+      console.log("Initialized on chain: ", chain.name)
     }
   } catch (e) {
     console.log("Error", e)

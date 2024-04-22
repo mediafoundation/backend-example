@@ -1,4 +1,9 @@
-import {DataTypes, InferAttributes, InferCreationAttributes, Model} from "sequelize"
+import {
+  DataTypes,
+  InferAttributes,
+  InferCreationAttributes,
+  Model
+} from "sequelize"
 import {sequelize} from "../database"
 
 export class Client extends Model<InferAttributes<Client>, InferCreationAttributes<Client>> {

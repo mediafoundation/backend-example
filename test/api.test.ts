@@ -3,6 +3,7 @@ import request from "supertest"
 import {app, server} from "../api"
 import {DealsController} from "../database/controllers/dealsController"
 import {OffersController} from "../database/controllers/offersController"
+import {ProvidersController} from "../database/controllers/providersController"
 
 jest.mock("../database/controllers/resourcesController", () => ({
   ResourcesController: {
@@ -21,6 +22,13 @@ jest.mock("../database/controllers/offersController", () => ({
     getOffers: jest.fn()
   }
 }))
+
+jest.mock("../database/controllers/providersController", () => ({
+  ProvidersController: {
+    getProviders: jest.fn()
+  }
+}))
+
 afterAll((done) => {
   server.close(done)
 })
@@ -56,7 +64,7 @@ describe("Test api", () => {
     
     expect(response.status).toBe(200)
     expect(response.body).toEqual(["Test for Deal data"])
-    expect(DealsController.getDeals).toHaveBeenCalledWith(1, {}, {}, {}, {}, 1, 10)
+    expect(DealsController.getDeals).toHaveBeenCalledWith(1, {}, {}, {}, {}, undefined, undefined)
     
     const filter = JSON.stringify({
       nodeLocationFilter: {
@@ -68,7 +76,7 @@ describe("Test api", () => {
     response = await request(app).get("/deals").query({filters: filter, chainId: 1})
     expect(response.status).toBe(200)
     expect(response.body).toEqual(["Test for Deal data"])
-    expect(DealsController.getDeals).toHaveBeenCalledWith(1, {}, {}, {}, {location: "US"}, 1, 10)
+    expect(DealsController.getDeals).toHaveBeenCalledWith(1, {}, {}, {}, {location: "US"}, undefined, undefined)
   })
   
   test("Get deals should respond with error if exception occurred", async () => {
@@ -87,7 +95,7 @@ describe("Test api", () => {
     const response = await request(app).get("/offers").query({chainId: 1})
     expect(response.status).toBe(200)
     expect(response.body).toEqual(["Test for Offer data"])
-    expect(OffersController.getOffers).toHaveBeenCalledWith(1, {}, {}, {}, {}, 1, 10)
+    expect(OffersController.getOffers).toHaveBeenCalledWith(1, {}, {}, {}, {}, undefined, undefined)
   })
   
   test("Get offers should respond with error if exception occurred", async () => {
@@ -97,6 +105,46 @@ describe("Test api", () => {
     
     const response = await request(app).get("/offers").query({chainId: 1})
     expect(response.status).toEqual(500)
+    expect(consoleSpy).toHaveBeenCalled()
+  })
+
+  test("Get providers should respond correctly", async () => {
+    (ProvidersController.getProviders as jest.Mock).mockResolvedValue(["1", "2", "3"])
+
+    let response = await request(app).get("/providers")
+    expect(response.status).toBe(200)
+    expect(response.body).toEqual(["1", "2", "3"])
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, undefined, undefined)
+
+    response = await request(app).get("/providers").query({page: 1, pageSize: 10})
+    expect(response.status).toBe(200)
+    expect(response.body).toEqual(["1", "2", "3"])
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, 1, 10)
+  })
+
+  test("Get providers paginating and with chainId", async () => {
+    (ProvidersController.getProviders as jest.Mock).mockResolvedValue(["1", "2", "3"])
+
+    const response = await request(app).get("/providers").query({
+      filters: JSON.stringify({chainFilter: {chainId: 2}}),
+      page: 1,
+      pageSize: 1
+    })
+    expect(response.status).toBe(200)
+    expect(response.body).toEqual(["1", "2", "3"])
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith({chainId: 2}, 1, 1)
+  })
+
+  test("Get providers get error", async () => {
+    (ProvidersController.getProviders as jest.Mock).mockRejectedValue(new Error("Something went wrong"))
+    const consoleSpy = jest.spyOn(console, "log")
+
+    const response = await request(app).get("/providers")
+    expect(response.status).toBe(500)
+    expect(response.body).toEqual({
+      error: "Something went wrong"
+    })
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, undefined, undefined)
     expect(consoleSpy).toHaveBeenCalled()
   })
 })

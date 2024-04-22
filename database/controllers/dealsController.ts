@@ -7,7 +7,8 @@ import {BandwidthLimit} from "../models/BandwidthLimit"
 import {Chain} from "../models/Chain"
 import {ResourcesController} from "./resourcesController"
 import {Client} from "../models/Client"
-import {Provider} from "../models/Provider"
+import {ChainClient} from "../models/manyToMany/ChainClient"
+import {ProvidersController} from "./providersController"
 
 /**
  * DealsController class
@@ -37,18 +38,26 @@ export class DealsController {
     // Upsert the client
     await Client.findOrCreate({
       where: {
-        account: deal.client
+        account: deal.client,
       },
-      defaults: {account: deal.client}
+      defaults: {
+        account: deal.client,
+      }
+    })
+
+    await ChainClient.findOrCreate({
+      where: {
+        chainId: chainId,
+        client: deal.client
+      },
+      defaults: {
+        chainId: chainId,
+        client: deal.client
+      }
     })
     
     // Upsert the provider
-    await Provider.findOrCreate({
-      where: {
-        account: deal.provider
-      },
-      defaults: {account: deal.provider}
-    })
+    await ProvidersController.upsertProvider(deal.provider, chainId)
 
     // Upsert the deal
     const dealFromDb = await Deal.findOne({
@@ -89,25 +98,26 @@ export class DealsController {
    * @returns Promise<Array<any>>
    */
   static async getDeals(
-    chainId: number = 1,
+    chainId: number | undefined = undefined,
     dealFilter: WhereOptions<any> = {},
     metadataFilter: WhereOptions<any> = {},
     bandwidthFilter: WhereOptions<any> = {},
     nodeLocationFilter: WhereOptions<any> = {},
-    page = 1,
-    pageSize = 10
+    page: number | undefined = undefined,
+    pageSize: number | undefined= undefined
   ): Promise<Array<any>> {
 
     // Calculate the offset
-    const offset = (page - 1) * pageSize
+    const offset = page && pageSize ? (page - 1) * pageSize : undefined
 
     // Find all deals with the given filters
     const deals = await Deal.findAll({
       include: [
         {
           model: Chain,
+          required: !!chainId,
           where: {
-            chainId: chainId
+            chainId: chainId ? chainId : null
           },
           attributes: [],
           as: "Chain"

@@ -39,10 +39,15 @@ export class ResourcesController {
    * @param pageSize - Page size
    * @returns Promise<Array<any>>
    */
-  static getResources = async (chainId: number, filter: WhereOptions<any> = {}, page = 1, pageSize = 10) => {
+  static getResources = async (
+    chainId: number | undefined = undefined,
+    filter: WhereOptions<any> = {},
+    page: number | undefined = undefined,
+    pageSize: number | undefined= undefined
+  ) => {
     
     // Calculate the offset
-    const offset = (page - 1) * pageSize
+    const offset = page && pageSize ? (page - 1) * pageSize : undefined
     
     // Find all resources with the given filter
     return await Resource.findAll({
@@ -51,8 +56,9 @@ export class ResourcesController {
       include: [
         {
           model: Chain,
+          required: !!chainId,
           where: {
-            chainId: chainId
+            chainId: chainId ? chainId : null
           },
           attributes: [],
           as: "Chain"

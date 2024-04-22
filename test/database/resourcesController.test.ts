@@ -1,19 +1,40 @@
 import {Resource} from "../../database/models/Resource"
 import {ResourcesController} from "../../database/controllers/resourcesController"
-import {sequelize} from "../../database/database"
 import {resetDB} from "../../database/utils"
 import {Chain} from "../../database/models/Chain"
 
+const mockResource = {
+  id: 1n,
+  owner: "DataTypes.STRING",
+  encryptedData: "{\"encryptedData\": \"Some data encrypted\", \"tag\": \"some tag\", \"iv\": \"some iv\"}",
+  encryptedSharedKey: "Some shared Key",
+}
+
+async function overPopulateDb(chainId: number) {
+  for (let i = 0; i < 100; i++) {
+    const mockResourceCopy = structuredClone(mockResource)
+    mockResourceCopy.id = BigInt(i)
+    const dealFormatted = ResourcesController.formatResource(mockResourceCopy)
+    await ResourcesController.upsertResource(dealFormatted, chainId)
+  }
+}
+
 beforeAll(async () => {
   await resetDB()
-  await Chain.create({
-    chainId: 1,
-    name: "Ganache"
-  })
+  for (let i = 0; i < 5; i++) {
+    await Chain.create({
+      chainId: i,
+      name: `Ganache ${i}`
+    })
+  }
+})
+
+afterEach(async () => {
+  await Resource.sync({force: true})
 })
 
 describe("Resource Controller", () => {
-  test("should create and then update a resource", async () => {
+  test("Should create and then update a resource", async () => {
     const resource = {
       id: 1n,
       owner: "DataTypes.STRING",
@@ -39,7 +60,7 @@ describe("Resource Controller", () => {
     expect(updatedResource.instance.encryptedData).toStrictEqual(updatedResourceData.encryptedData)
   })
 
-  test("should get a resource by id", async () => {
+  test("Should get a resource by id", async () => {
     const resource = {
       id: 1,
       owner: "DataTypes.STRING",
@@ -54,7 +75,7 @@ describe("Resource Controller", () => {
     expect(foundResource?.encryptedSharedKey).toStrictEqual(resource.encryptedSharedKey)
   })
 
-  test("should delete a resource by id", async () => {
+  test("Should delete a resource by id", async () => {
     const resource = {
       id: 1,
       owner: "DataTypes.STRING",
@@ -76,31 +97,45 @@ describe("Resource Controller", () => {
     expect(foundResource).toBeNull()
   })
 
-  test("pagination", async() => {
-    await sequelize.transaction(async (t) => {
-      for (let i = 0; i < 20; i++) {
-        await Resource.create({
-          resourceId: i,
-          owner: "DataTypes.STRING",
-          encryptedData: "Some data encrypted",
-          encryptedSharedKey: "Some shared Key",
-          chainId: 1
-        }, {transaction: t})
-      }
-    })
+  test("Get resources with no pagination retrieve all deals in db", async () => {
 
-    const firstPageResources = await ResourcesController.getResources(1, {}, 1, 10)
+    await overPopulateDb(1)
 
-    expect(firstPageResources.length).toBe(10)
-    
-    expect(firstPageResources[0].resourceId).toBe(0)
+    let resources = await ResourcesController.getResources()
+    expect(resources.length).toBe(100)
 
-    const secondPageResources = await ResourcesController.getResources(1, {}, 2, 10)
+    await overPopulateDb(2)
 
-    expect(secondPageResources.length).toBe(10)
-    
-    expect(secondPageResources[0].resourceId).toBe(10)
-    
-    expect(secondPageResources[9].resourceId).toBe(19)
+    resources = await ResourcesController.getResources()
+    expect(resources.length).toBe(200)
+  })
+
+  test("Get resources with no pagination specifying chainId", async () => {
+    await overPopulateDb(1)
+
+    let resources = await ResourcesController.getResources(1)
+    expect(resources.length).toBe(100)
+
+    resources = await ResourcesController.getResources(2)
+    expect(resources.length).toBe(0)
+  })
+
+  test("Get resources paginating", async () => {
+    await overPopulateDb(1)
+
+    let resources = await ResourcesController.getResources(undefined, {}, 1, 30 )
+    expect(resources.length).toBe(30)
+    expect(resources[0].id).toBe(1)
+    expect(resources[14].id).toBe(15)
+    expect(resources[29].id).toBe(30)
+
+    resources = await ResourcesController.getResources(1, {}, 3, 30 )
+    expect(resources.length).toBe(30)
+    expect(resources[0].id).toBe(61)
+    expect(resources[14].id).toBe(75)
+    expect(resources[29].id).toBe(90)
+
+    resources = await ResourcesController.getResources(3, {}, 3, 30 )
+    expect(resources.length).toBe(0)
   })
 })

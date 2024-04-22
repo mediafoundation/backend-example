@@ -1,11 +1,11 @@
 import {Offer} from "../models/offers/Offer"
 import {WhereOptions} from "sequelize"
-import {Provider} from "../models/Provider"
 import {OfferFormatted, OfferMetadataSchema, OfferRawSchema, OfferTransformed} from "../models/types/offer"
 import {NodeLocation} from "../models/NodeLocation"
 import {BandwidthLimit} from "../models/BandwidthLimit"
 import {OfferMetadata} from "../models/offers/OffersMetadata"
 import {Chain} from "../models/Chain"
+import {ProvidersController} from "./providersController"
 
 /**
  * OffersController class
@@ -20,10 +20,7 @@ export class OffersController{
    */
   static async upsertOffer(offer: OfferFormatted, chainId: number) {
     // Find or create a provider
-    await Provider.findOrCreate({
-      where: {account: offer.provider},
-      defaults: {account: offer.provider}
-    })
+    await ProvidersController.upsertProvider(offer.provider, chainId)
     
     // Upsert the offer
     const offerFromDb = await Offer.findOne({
@@ -70,26 +67,27 @@ export class OffersController{
    * @returns Promise<Array<any>>
    */
   static async getOffers(
-    chainId: number = 1,
+    chainId: number | undefined = undefined,
     offerFilter: WhereOptions<any> = {},
     metadataFilter: WhereOptions<any> = {},
     bandwidthLimitFilter: WhereOptions<any> = {},
     nodeLocationFilter: WhereOptions<any> = {},
-    page = 1,
-    pageSize = 10): Promise<Array<any>> {
+    page: number | undefined = undefined,
+    pageSize: number | undefined= undefined): Promise<Array<any>> {
     
     // Calculate the offset
-    const offset = (page - 1) * pageSize
+    const offset = page && pageSize ? (page - 1) * pageSize : undefined
     
     // Find all offers with the given filters
     const offers = await Offer.findAll({
       include: [
         {
           model: Chain,
+          required: !!chainId,
           as: "Chain",
           attributes: [],
           where: {
-            chainId: chainId
+            chainId: chainId ? chainId : null
           }
         },
         {
