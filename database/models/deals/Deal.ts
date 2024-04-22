@@ -23,8 +23,8 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
   declare dealId: number
   declare resourceId: ForeignKey<Resource["id"]> | null
   declare chainId: ForeignKey<Chain["chainId"]>
-  declare clientId: ForeignKey<Client["id"]>
-  declare providerId: ForeignKey<Provider["id"]>
+  declare client: ForeignKey<Client["account"]>
+  declare provider: ForeignKey<Provider["account"]>
   declare totalPayment: number
   declare blockedBalance: number
   declare pricePerSecond: number

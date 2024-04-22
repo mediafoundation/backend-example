@@ -1,11 +1,11 @@
 import {Offer} from "../models/offers/Offer"
 import {WhereOptions} from "sequelize"
-import {Provider} from "../models/Provider"
 import {OfferFormatted, OfferMetadataSchema, OfferRawSchema, OfferTransformed} from "../models/types/offer"
 import {NodeLocation} from "../models/NodeLocation"
 import {BandwidthLimit} from "../models/BandwidthLimit"
 import {OfferMetadata} from "../models/offers/OffersMetadata"
 import {Chain} from "../models/Chain"
+import {ProvidersController} from "./providersController"
 
 /**
  * OffersController class
@@ -20,16 +20,7 @@ export class OffersController{
    */
   static async upsertOffer(offer: OfferFormatted, chainId: number) {
     // Find or create a provider
-    const provider = await Provider.findOrCreate({
-      where: {
-        account: offer.provider,
-        chainId: chainId
-      },
-      defaults: {
-        account: offer.provider,
-        chainId: chainId
-      }
-    })
+    await ProvidersController.upsertProvider(offer.provider, chainId)
     
     // Upsert the offer
     const offerFromDb = await Offer.findOne({
@@ -45,7 +36,7 @@ export class OffersController{
       await Offer.update({...offer}, {where: {chainId: chainId, offerId: offer.offerId}})
     }*/
     
-    const [instance, created] = await Offer.upsert({...offer, id: offerFromDb?.id, chainId: chainId, providerId: provider[0].id})
+    const [instance, created] = await Offer.upsert({...offer, id: offerFromDb?.id, chainId: chainId})
     
     // Create metadata for the offer
     const metadata = await instance.createMetadata({offerId: instance.dataValues.id, ...offer.metadata})

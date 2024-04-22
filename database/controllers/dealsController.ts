@@ -7,7 +7,8 @@ import {BandwidthLimit} from "../models/BandwidthLimit"
 import {Chain} from "../models/Chain"
 import {ResourcesController} from "./resourcesController"
 import {Client} from "../models/Client"
-import {Provider} from "../models/Provider"
+import {ChainClient} from "../models/manyToMany/ChainClient"
+import {ProvidersController} from "./providersController"
 
 /**
  * DealsController class
@@ -35,28 +36,28 @@ export class DealsController {
     }
     
     // Upsert the client
-    const client = await Client.findOrCreate({
+    await Client.findOrCreate({
       where: {
         account: deal.client,
-        chainId: chainId
       },
       defaults: {
         account: deal.client,
-        chainId: chainId
+      }
+    })
+
+    await ChainClient.findOrCreate({
+      where: {
+        chainId: chainId,
+        client: deal.client
+      },
+      defaults: {
+        chainId: chainId,
+        client: deal.client
       }
     })
     
     // Upsert the provider
-    const provider = await Provider.findOrCreate({
-      where: {
-        account: deal.provider,
-        chainId: chainId
-      },
-      defaults: {
-        account: deal.provider,
-        chainId: chainId
-      }
-    })
+    await ProvidersController.upsertProvider(deal.provider, chainId)
 
     // Upsert the deal
     const dealFromDb = await Deal.findOne({
@@ -66,7 +67,7 @@ export class DealsController {
       }
     })
     
-    const [instance, created] = await Deal.upsert({...deal, chainId: chainId, id: dealFromDb?.id, clientId: client[0].id, providerId: provider[0].id})
+    const [instance, created] = await Deal.upsert({...deal, chainId: chainId, id: dealFromDb?.id})
 
     // Create metadata for the deal
     const metadata = await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata})

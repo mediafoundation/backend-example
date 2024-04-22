@@ -1,24 +1,48 @@
 import {Provider} from "../models/Provider"
 import {Chain} from "../models/Chain"
+import {WhereOptions} from "sequelize"
+import {ChainProvider} from "../models/manyToMany/ChainProvider"
 
 export class ProvidersController {
-  static async getProviders(chainId: number | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined= undefined) {
+  static async getProviders(chainFilter: WhereOptions<any> | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined= undefined) {
     const offset = page && pageSize ? (page - 1) * pageSize : undefined
     return Provider.findAll({
       include: [
         {
           model: Chain,
-          required: !!chainId,
-          where: {
-            chainId: chainId ? chainId : null
-          },
-          attributes: [],
-          as: "Chain"
+          where: chainFilter
         },
       ],
       offset: offset,
       limit: pageSize,
       raw: true
     })
+  }
+
+  static async upsertProvider(provider: string, chainId: number) {
+    const [instance, created] = await Provider.findOrCreate({
+      where: {
+        account: provider
+      },
+      defaults: {
+        account: provider
+      }
+    })
+
+    await ChainProvider.findOrCreate({
+      where: {
+        chainId: chainId,
+        provider: provider
+      },
+      defaults: {
+        chainId: chainId,
+        provider: provider
+      }
+    })
+
+    return {
+      instance: instance.dataValues,
+      created: created
+    }
   }
 }

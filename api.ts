@@ -36,13 +36,15 @@ function manageIncomingFilterRequest(req: any) {
   const metadataFilter = parseFilter(filters.metadataFilter ? filters.metadataFilter : {})
   const bandwidthFilter = parseFilter(filters.bandwidthFilter ? filters.bandwidthFilter : {})
   const nodeLocationFilter = parseFilter(filters.nodeLocationFilter ? filters.nodeLocationFilter : {})
+  const clientFilter = parseFilter(filters.clientFilter ? filters.clientFilter : {})
   return {
     page,
     pageSize,
     genericFilter,
     metadataFilter,
     bandwidthFilter,
-    nodeLocationFilter
+    nodeLocationFilter,
+    clientFilter
   }
   
 }
@@ -133,13 +135,14 @@ app.get("/providers", async(req, res) => {
   try {
     const page = req.query.page ? Number(req.query.page) : undefined
     const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
-    const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
+    const filters = JSON.parse(req.query.filters ? req.query.filters as string : "{}")
+    const chainFilter = filters.chainFilter ? parseFilter(filters.chainFilter) : undefined
 
-    const providers = await ProvidersController.getProviders(chainId, page, pageSize)
+    const providers = await ProvidersController.getProviders(chainFilter, page, pageSize)
     res.json(providers)
   } catch (e) {
     console.log(e)
-    res.status(500).json({error: "Some went wrong"})
+    res.status(500).json({error: "Something went wrong"})
   }
 })
 

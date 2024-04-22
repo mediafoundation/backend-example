@@ -114,25 +114,25 @@ describe("Test api", () => {
     let response = await request(app).get("/providers")
     expect(response.status).toBe(200)
     expect(response.body).toEqual(["1", "2", "3"])
-    expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, undefined)
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, undefined, undefined)
 
     response = await request(app).get("/providers").query({page: 1, pageSize: 10})
     expect(response.status).toBe(200)
     expect(response.body).toEqual(["1", "2", "3"])
-    expect(ProvidersController.getProviders).toHaveBeenCalledWith(1, 10)
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, 1, 10)
   })
 
   test("Get providers paginating and with chainId", async () => {
     (ProvidersController.getProviders as jest.Mock).mockResolvedValue(["1", "2", "3"])
 
     const response = await request(app).get("/providers").query({
-      chainId: 1,
+      filters: JSON.stringify({chainFilter: {chainId: 2}}),
       page: 1,
       pageSize: 1
     })
     expect(response.status).toBe(200)
     expect(response.body).toEqual(["1", "2", "3"])
-    expect(ProvidersController.getProviders).toHaveBeenCalledWith(1, 1, 10)
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith({chainId: 2}, 1, 1)
   })
 
   test("Get providers get error", async () => {
@@ -142,9 +142,9 @@ describe("Test api", () => {
     const response = await request(app).get("/providers")
     expect(response.status).toBe(500)
     expect(response.body).toEqual({
-      error: new Error("Something went wrong")
+      error: "Something went wrong"
     })
-    expect(ProvidersController.getProviders).toHaveBeenCalledWith()
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, undefined, undefined)
     expect(consoleSpy).toHaveBeenCalled()
   })
 })

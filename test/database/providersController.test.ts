@@ -1,7 +1,8 @@
 import {resetDB} from "../../database/utils"
-import {Provider} from "../../database/models/Provider"
 import {ProvidersController} from "../../database/controllers/providersController"
 import {Chain} from "../../database/models/Chain"
+import {Provider} from "../../database/models/Provider"
+import {ChainProvider} from "../../database/models/manyToMany/ChainProvider"
 
 beforeAll(async () => {
   await resetDB()
@@ -12,15 +13,41 @@ beforeAll(async () => {
       name: `Chain name for ${i}`
     })
   }
+})
 
-  //Populate the db with several accounts
-  for (let i = 0; i < 100; i++) {
-    await Provider.create({account: `Account: ${i}`, chainId: 1})
-  }
+afterEach(async () => {
+  await Provider.sync({force: true})
+  await ChainProvider.sync({force: true})
 })
 
 describe("Providers Controller", () => {
+
+  test("Upsert provider", async () => {
+    let result = await ProvidersController.upsertProvider("Account 1", 1)
+
+    expect(result.instance).not.toBeNull()
+    expect(result.instance.account).toBe("Account 1")
+    expect(result.created).toBe(true)
+
+    result = await ProvidersController.upsertProvider("Account 1", 1)
+    expect(result.instance).not.toBeNull()
+    expect(result.instance.account).toBe("Account 1")
+    expect(result.created).toBe(false)
+  })
+
+  test("Get provider by chainId", async () => {
+    await ProvidersController.upsertProvider("Account 1", 1)
+    await ProvidersController.upsertProvider("Account 1", 0)
+
+    const result = await ProvidersController.getProviders({chainId: 1})
+    expect(result.length).toBe(1)
+  })
+
   test("Get all providers when no pagination given", async () => {
+    for (let i = 0; i < 100; i++) {
+      await ProvidersController.upsertProvider(`Account: ${i}`, 1)
+    }
+
     const providers = await ProvidersController.getProviders()
 
     expect(providers.length).toStrictEqual(100)
@@ -30,14 +57,18 @@ describe("Providers Controller", () => {
   })
 
   test("Get providers paginating", async () => {
-    const firstPageProviders = await ProvidersController.getProviders(1, 1, 20)
+    for (let i = 0; i < 100; i++) {
+      await ProvidersController.upsertProvider(`Account: ${i}`, 1)
+    }
+
+    const firstPageProviders = await ProvidersController.getProviders({chainId: 1}, 1, 20)
 
     expect(firstPageProviders.length).toStrictEqual(20)
     expect(firstPageProviders[0].account).toStrictEqual("Account: 0")
     expect(firstPageProviders[13].account).toStrictEqual("Account: 13")
     expect(firstPageProviders[19].account).toStrictEqual("Account: 19")
 
-    const thirdPageProviders = await ProvidersController.getProviders(1, 3, 10)
+    const thirdPageProviders = await ProvidersController.getProviders({chainId: 1}, 3, 10)
 
     expect(thirdPageProviders.length).toStrictEqual(10)
     expect(thirdPageProviders[0].account).toStrictEqual("Account: 20")
