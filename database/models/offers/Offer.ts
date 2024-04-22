@@ -45,6 +45,7 @@ Offer.init({
   singlePeriodOnly: DataTypes.BOOLEAN,
 }, {
   sequelize,
+  timestamps: false,
   modelName: "Offer",
   freezeTableName: true
 })

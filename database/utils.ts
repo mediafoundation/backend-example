@@ -57,11 +57,11 @@ const createRelationsBetweenTables = async () => {
   })
 
   Deal.belongsTo(Client, {
-    foreignKey: "clientId"
+    foreignKey: "client"
   })
 
   Deal.belongsTo(Provider, {
-    foreignKey: "providerId"
+    foreignKey: "provider"
   })
 
   Deal.hasOne(DealMetadata, {
@@ -100,7 +100,7 @@ const createRelationsBetweenTables = async () => {
   })
 
   Offer.belongsTo(Provider, {
-    foreignKey: "providerId",
+    foreignKey: "provider",
     as: "Provider"
   })
   
