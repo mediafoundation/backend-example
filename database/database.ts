@@ -26,7 +26,7 @@ else{
 const client = new MongoClient(uri!)
 
 async function connectToMongodb() {
-  await client.connect()
+  return await client.connect()
 }
 
 const eventsCollection = client.db(dbName).collection("events")
