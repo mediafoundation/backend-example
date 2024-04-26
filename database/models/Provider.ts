@@ -1,16 +1,25 @@
 import {
   DataTypes,
-  HasManyCountAssociationsMixin, InferAttributes,
+  HasManyCountAssociationsMixin,
   InferCreationAttributes,
-  Model
+  Model,
+  NonAttribute
 } from "sequelize"
 import {sequelize} from "../database"
+import {Chain} from "./Chain"
 
-export class Provider extends Model<InferAttributes<Provider>, InferCreationAttributes<Provider>> {
+interface ProviderAttributes {
+  account: string,
+  Chains?: Chain[]
+}
+
+export class Provider extends Model<ProviderAttributes, InferCreationAttributes<Provider>> {
   declare account: string
 
   declare countDeals: HasManyCountAssociationsMixin
   declare countOffers: HasManyCountAssociationsMixin
+
+  declare Chains?: NonAttribute<Chain[] | number[] | undefined>
 }
 
 Provider.init({

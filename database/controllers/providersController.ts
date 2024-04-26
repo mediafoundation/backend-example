@@ -1,20 +1,17 @@
 import {Provider} from "../models/Provider"
 import {Chain} from "../models/Chain"
-import {WhereOptions} from "sequelize"
 import {ChainProvider} from "../models/manyToMany/ChainProvider"
-
-interface ProviderAssociationCount {
-  [key: number]: number
-}
+import {ProviderAssociationCount} from "../models/types/provider"
 
 export class ProvidersController {
-  static async getProviders(chainFilter: WhereOptions<any> | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined= undefined) {
+  static async getProviders(chainId: number | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined= undefined) {
+    const whereClause = chainId ? {chainId: chainId} : {}
     const offset = page && pageSize ? (page - 1) * pageSize : undefined
     const providers = await Provider.findAll({
       include: [
         {
           model: Chain,
-          where: chainFilter,
+          where: whereClause,
           through: {
             attributes: []
           },
@@ -25,12 +22,10 @@ export class ProvidersController {
       limit: pageSize,
     })
 
-    const mappedProviders = providers.map((provider: any) => {
-      return provider.toJSON()
-    })
+    const mappedProviders = providers.map((provider) => provider.toJSON())
 
     for (let i = 0; i < providers.length; i++) {
-      mappedProviders[i].Chains = mappedProviders[i].Chains.map((chain: any) => chain.chainId)
+      mappedProviders[i].Chains = mappedProviders[i].Chains!.map((chain: any) => chain.chainId)
     }
 
     return mappedProviders
