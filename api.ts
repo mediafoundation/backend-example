@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
 import {validChains} from "media-sdk"
 import express from "express"
 import bodyParser from "body-parser"
@@ -10,6 +8,7 @@ import {OffersController} from "./database/controllers/offersController"
 import {parseFilter} from "./utils/filter"
 import {createRelationsBetweenTables} from "./database/utils"
 import {ProvidersController} from "./database/controllers/providersController"
+import {ProviderAssociationCount} from "./database/models/types/provider"
 
 // Initialize express app
 export const app = express()
@@ -133,13 +132,27 @@ app.get("/offers", async (req, res) => {
 
 app.get("/providers", async(req, res) => {
   try {
+
+    const result: ProviderAssociationCount = {}
+
     const page = req.query.page ? Number(req.query.page) : undefined
     const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
-    const filters = JSON.parse(req.query.filters ? req.query.filters as string : "{}")
-    const chainFilter = filters.chainFilter ? parseFilter(filters.chainFilter) : undefined
+    const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
 
-    const providers = await ProvidersController.getProviders(chainFilter, page, pageSize)
-    res.json(providers)
+    const providers = await ProvidersController.getProviders(chainId, page, pageSize)
+
+    for (const provider of providers) {
+      const dealsCount = await ProvidersController.countDeals(provider.account, chainId)
+      const offersCount = await ProvidersController.countOffers(provider.account, chainId)
+
+      result[provider.account] = {
+        "Chains": provider.Chains,
+        "deals": dealsCount,
+        "offers": offersCount
+      }
+    }
+
+    res.json(result)
   } catch (e) {
     console.log(e)
     res.status(500).json({error: "Something went wrong"})
