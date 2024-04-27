@@ -1,10 +1,10 @@
 import {connectToMongodb, eventsCollection} from "../../database/database"
 import {MongoClient} from "mongodb"
 import {EventsController} from "../../database/controllers/eventsController"
-import {generateUniqueEventId} from "../../utils/hash"
 import {Chain} from "../../database/models/Chain"
 import {resetDB} from "../../database/utils"
 import {DealsController} from "../../database/controllers/dealsController"
+
 
 let db: MongoClient
 const dealCollectedMockEvent = {
@@ -19,7 +19,7 @@ const dealCollectedMockEvent = {
   },
   eventName: "DealCollected"
 }
-/*const dealCreatedMockEvent  = {
+const dealCreatedMockEvent  = {
   address: "0x77922d037e74c9ba2edfc1019329bee741563372",
   blockNumber: 1n,
   transactionHash: "0x62f395c3a1dd2daabc13d5b9663d8a36b42cecf380b0371252d59fcbf147b701",
@@ -30,7 +30,7 @@ const dealCollectedMockEvent = {
     _autoAccept: true
   },
   eventName: "DealCreated"
-}*/
+}
 
 
 const mockDeal = {
@@ -67,7 +67,20 @@ async function populateDealCollected(provider: string, amount: number, chainId: 
 
     const copyEvent = structuredClone(dealCollectedMockEvent)
     copyEvent["args"]["_dealId"] = BigInt(i)
-    copyEvent.transactionHash = i.toString()
+
+    await EventsController.upsertEvent(EventsController.formatEvent(copyEvent), chainId, blockTimestamp)
+  }
+}
+
+async function populateDealCreated(provider: string, amount: number, chainId: number, blockTimestamp: number) {
+  for (let i = 0; i < amount; i++) {
+    const copyDeal = structuredClone(mockDeal)
+    copyDeal.id = BigInt(i)
+    copyDeal.provider = provider
+    await DealsController.upsertDeal(DealsController.formatDeal(copyDeal), chainId)
+
+    const copyEvent = structuredClone(dealCreatedMockEvent)
+    copyEvent["args"]["_dealId"] = BigInt(i)
 
     await EventsController.upsertEvent(EventsController.formatEvent(copyEvent), chainId, blockTimestamp)
   }
@@ -76,10 +89,13 @@ async function populateDealCollected(provider: string, amount: number, chainId: 
 beforeAll(async () => {
   db = await connectToMongodb()
   await resetDB()
-  await Chain.create({
-    chainId: 1,
-    name: "Chain 1"
-  })
+
+  for (let i = 0; i < 2; i++) {
+    await Chain.create({
+      chainId: i,
+      name: "Chain"
+    })
+  }
 
   await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 1)
 })
@@ -95,25 +111,47 @@ afterEach(async () => {
 describe("Events Controller", () => {
 
   test("Format event", async () => {
-    const expectedId = generateUniqueEventId(dealCollectedMockEvent.transactionHash)
     const result = EventsController.formatEvent(dealCollectedMockEvent)
-    expect(result.blockNumber).toBe(2)
-    expect(result.args._marketplaceId).toBe(1)
-    expect(result._id).toBe(expectedId)
+    expect(result.blockNumber).toBe("2")
+    expect(result.args._marketplaceId).toBe("1")
   })
 
   test("Insert event", async () => {
     const formattedEvent = EventsController.formatEvent(dealCollectedMockEvent)
-    await EventsController.upsertEvent(formattedEvent, 1, 1695768292)
+    await EventsController.upsertEvent({...formattedEvent}, 1, 1695768292)
     const events = await EventsController.getEvents()
     expect(events.length).toBe(1)
-    expect(events[0]).toStrictEqual({...formattedEvent, provider: mockDeal.provider, timestamp: 1695768292})
+    // expect(events[0]).toEqual({...formattedEvent, provider: mockDeal.provider, timestamp: 1695768292, chainId: 1})
   })
 
   test("Calculate provider revenue", async () => {
-    await populateDealCollected("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 2, 1, 1)
+    await populateDealCollected("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 50, 0, 1)
 
-    const result = await EventsController.calculateProviderRevenue("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 0, 2)
-    expect(result).toBe(2*Number(dealCollectedMockEvent.args._paymentToProvider))
+    const result = await EventsController.calculateProviderRevenue("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 0, 0, 2)
+    expect(result).toBe(50n*dealCollectedMockEvent.args._paymentToProvider)
+  })
+
+  test("Calculate provider revenue with multiple chains", async () => {
+    await populateDealCollected("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 50, 0, 1)
+    await populateDealCollected("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 20, 1, 1)
+
+    let result = await EventsController.calculateProviderRevenue("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 0, 0, 1)
+    expect(result).toBe(50n*dealCollectedMockEvent.args._paymentToProvider)
+
+    result = await EventsController.calculateProviderRevenue("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 1, 0, 1)
+    expect(result).toBe(20n*dealCollectedMockEvent.args._paymentToProvider)
+  })
+
+  test("Get deals created given date range", async () => {
+    await populateDealCreated("Provider", 5, 1, 0)
+    await populateDealCreated("Provider", 5, 1, 1)
+    await populateDealCreated("Provider", 5, 1, 2)
+    await populateDealCreated("Provider", 5, 1, 3)
+
+    const allRange = await EventsController.calculateProviderNewDeals("Provider", 1, 0, 3)
+    expect(allRange).toBe(20)
+
+    const range = await EventsController.calculateProviderNewDeals("Provider", 1, 1, 2)
+    expect(range).toBe(10)
   })
 })

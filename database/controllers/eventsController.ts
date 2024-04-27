@@ -1,7 +1,6 @@
 import {eventsCollection} from "../database"
 import {EventFormatted} from "../models/types/event"
 import {Document, Filter} from "mongodb"
-import {generateUniqueEventId} from "../../utils/hash"
 import {DealsController} from "./dealsController"
 
 export class EventsController {
@@ -15,7 +14,7 @@ export class EventsController {
     const deal = await DealsController.getDealByIdAndChain(event.args._dealId, chainId)
 
     //Get block-event timestamp
-    await eventsCollection.insertOne({...event, provider: deal?.deal.provider, timestamp: blockTimestamp})
+    await eventsCollection.insertOne({...event, provider: deal?.deal.provider, timestamp: blockTimestamp, chainId: chainId})
   }
 
   static async getEvents(filter: Filter<Document> = {}) {
@@ -27,7 +26,7 @@ export class EventsController {
 
     for (const key of Object.keys(result)) {
       if(typeof result[key] === "bigint"){
-        result[key] = Number(result[key])
+        result[key] = result[key].toString()
       }
 
       else if(typeof result[key] === "object") {
@@ -35,28 +34,37 @@ export class EventsController {
       }
     }
 
-    if(event.transactionHash) {
-      result["_id"] = generateUniqueEventId(event.transactionHash)
-    }
-
     return result
   }
 
-  static async calculateProviderRevenue(provider: string, fromDate: number = Date.now() / 1000, toDate: number = Date.now() / 1000) {
-    let totalRevenue: number = 0
+  static async calculateProviderRevenue(provider: string, chainId: number | undefined, fromDate: number = Date.now() / 1000, toDate: number = Date.now() / 1000) {
+    let totalRevenue: bigint = 0n
     const events = await eventsCollection.find({
       provider: provider,
       timestamp: {
         $gte: fromDate,
         $lte: toDate
       },
-      eventName: "DealCollected"
+      eventName: "DealCollected",
+      chainId: chainId
     }).toArray()
 
     events.forEach((event) => {
-      totalRevenue += event.args._paymentToProvider
+      totalRevenue += BigInt(event.args._paymentToProvider)
     })
 
     return totalRevenue
+  }
+
+  static async calculateProviderNewDeals(provider: string, chainId: number, fromDate: number = Date.now() / 1000, toDate: number = Date.now() / 1000) {
+    return eventsCollection.countDocuments({
+      provider: provider,
+      timestamp: {
+        $gte: fromDate,
+        $lte: toDate
+      },
+      chainId: chainId,
+      eventName: "DealCreated"
+    })
   }
 }
