@@ -38,6 +38,13 @@ const createRelationsBetweenTables = async () => {
     timestamps: false
   })
 
+  Provider.belongsToMany(Client, {
+    through: ChainProvider,
+    foreignKey: "provider",
+    otherKey: "client",
+    timestamps: false
+  })
+
   Provider.hasMany(Deal, {
     sourceKey: "account",
     foreignKey: "provider"
