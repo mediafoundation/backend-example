@@ -3,6 +3,7 @@ import {Chain} from "../models/Chain"
 import {ChainProvider} from "../models/manyToMany/ChainProvider"
 import {ProviderAssociationCount} from "../models/types/provider"
 import {ProviderClient} from "../models/manyToMany/ProviderClient"
+import {ChainClient} from "../models/manyToMany/ChainClient"
 
 export class ProvidersController {
   static async getProviders(chainId: number | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined= undefined) {
@@ -115,6 +116,32 @@ export class ProvidersController {
 
     else {
       result = await providerFromDb!.countOffers({where: {chainId: chainId}})
+    }
+
+    return result
+  }
+
+  static async countClients(provider: string, chainId: number | undefined = undefined) {
+    let result: ProviderAssociationCount | number = {}
+    const providerFromDb = await Provider.findOne({where: {account: provider}})
+
+    if(!providerFromDb) {
+      throw new Error("Provider not found")
+    }
+
+    if(chainId === undefined) {
+      const chains = await Chain.findAll({attributes: {include: ["chainId"]}})
+
+      for (const chain of chains) {
+
+        const clientsOnChain = await ChainClient.findAll({where: {chainId: chain.chainId}})
+        result[chain.chainId] = await providerFromDb!.countClients({where: {account: clientsOnChain.map(chainClient => chainClient.client)}})
+      }
+    }
+
+    else {
+      const clientsOnChain = await ChainClient.findAll({where: {chainId: chainId}})
+      result = await providerFromDb!.countClients({where: {account: clientsOnChain.map(chainClient => chainClient.client)}})
     }
 
     return result

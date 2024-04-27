@@ -1,4 +1,5 @@
 import {
+  BelongsToManyCountAssociationsMixin,
   DataTypes,
   HasManyCountAssociationsMixin,
   InferCreationAttributes,
@@ -18,6 +19,7 @@ export class Provider extends Model<ProviderAttributes, InferCreationAttributes<
 
   declare countDeals: HasManyCountAssociationsMixin
   declare countOffers: HasManyCountAssociationsMixin
+  declare countClients: BelongsToManyCountAssociationsMixin
 
   declare Chains?: NonAttribute<Chain[] | number[] | undefined>
 }

@@ -48,13 +48,13 @@ const mockOffer = {
   }
 }
 
-async function populateDeals(amount: number, provider: string, chainId: number) {
+async function populateDeals(amount: number, provider: string, client: string, chainId: number) {
   for (let i = 0; i < amount; i++) {
     const copyDeal = structuredClone(mockDeal)
 
-    copyDeal["id"] = BigInt(i)
-
-    copyDeal["provider"] = provider
+    copyDeal.id = BigInt(i)
+    copyDeal.provider = provider
+    copyDeal.client = client
 
     await DealsController.upsertDeal(DealsController.formatDeal(copyDeal), chainId)
   }
@@ -162,8 +162,8 @@ describe("Providers Controller", () => {
   })
 
   test("Count deals", async () => {
-    await populateDeals(20, "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 0)
-    await populateDeals(100, "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 1)
+    await populateDeals(20, "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", "Client 1", 0)
+    await populateDeals(100, "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", "Client 1", 1)
     const countDeals = await ProvidersController.countDeals("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31")
 
     expect(countDeals).toStrictEqual({
@@ -181,5 +181,32 @@ describe("Providers Controller", () => {
       0: 15,
       1: 32
     })
+  })
+
+  test("Count clients having only in one chain", async () => {
+    await populateDeals(10, "Provider 1", "Client 1", 1)
+    await populateDeals(10, "Provider 1", "Client 2", 1)
+
+    const result = await ProvidersController.countClients("Provider 1")
+
+    expect(result).toStrictEqual({
+      0: 0,
+      1: 2
+    })
+  })
+
+  test("Count clients across different chains", async () => {
+    await populateDeals(5, "Provider 1", "Client 1", 0)
+    await populateDeals(10, "Provider 1", "Client 1", 1)
+    await populateDeals(5, "Provider 1", "Client 2", 1)
+
+    const result = await ProvidersController.countClients("Provider 1")
+    expect(result).toStrictEqual({
+      0: 1,
+      1: 2
+    })
+
+    const clientsOnChain = await ProvidersController.countClients("Provider 1", 1)
+    expect(clientsOnChain).toBe(2)
   })
 })
