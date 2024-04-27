@@ -143,6 +143,7 @@ app.get("/providers", async(req, res) => {
     for (const provider of providers) {
       const dealsCount = await ProvidersController.countDeals(provider.account, chainId)
       const offersCount = await ProvidersController.countOffers(provider.account, chainId)
+      const clientCount = await ProvidersController.countClients(provider.account, chainId)
 
       /*providerResult["Address"] = {
         "Chains": provider.Chains,
@@ -154,7 +155,8 @@ app.get("/providers", async(req, res) => {
         "address": provider.account,
         "chains": provider.Chains,
         "deals": dealsCount,
-        "offers": offersCount
+        "offers": offersCount,
+        "clients": clientCount
       }
 
       result.push(providerResult)

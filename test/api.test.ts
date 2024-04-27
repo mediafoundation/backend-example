@@ -128,10 +128,12 @@ describe("Test api", () => {
     const getProviders = ProvidersController.getProviders as jest.Mock
     const countDeals = ProvidersController.countDeals as jest.Mock
     const countOffers = ProvidersController.countOffers as jest.Mock
+    const countClients = ProvidersController.countClients as jest.Mock
 
     countDeals.mockReturnValue(2)
     countOffers.mockReturnValue(1)
     getProviders.mockReturnValue([ { account: "Account 1", Chains: [ 2 ] } ])
+    countClients.mockReturnValue(10)
 
     const response = await request(app).get("/providers").query({
       chainId: 2,
@@ -143,7 +145,8 @@ describe("Test api", () => {
       "address": "Account 1",
       "chains": [2],
       "deals": 2,
-      "offers": 1
+      "offers": 1,
+      "clients": 10
     }])
     expect(ProvidersController.getProviders).toHaveBeenCalledWith(2, 1, 1)
     expect(ProvidersController.countDeals).toHaveBeenCalledWith("Account 1", 2)
