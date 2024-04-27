@@ -3,10 +3,9 @@ import {EventFormatted} from "../models/types/event"
 import {Document, Filter} from "mongodb"
 import {generateUniqueEventId} from "../../utils/hash"
 import {DealsController} from "./dealsController"
-import { Blockchain } from "media-sdk"
 
 export class EventsController {
-  static async upsertEvent(event: EventFormatted, chainId: number, blockChainInstance: Blockchain) {
+  static async upsertEvent(event: EventFormatted, chainId: number, blockTimestamp: number) {
     // Make sure event belongs to marketplace
     if(event.args._marketplaceId != process.env.MARKETPLACE_ID) {
       throw new Error(`Event does not belong to marketplace ${process.env.MARKETPLACE_ID}`)
@@ -16,9 +15,7 @@ export class EventsController {
     const deal = await DealsController.getDealByIdAndChain(event.args._dealId, chainId)
 
     //Get block-event timestamp
-    const block = await blockChainInstance.getBlockTimestamp(BigInt(event.blockNumber))
-
-    await eventsCollection.insertOne({...event, provider: deal?.deal.provider, timestamp: block.timestamp})
+    await eventsCollection.insertOne({...event, provider: deal?.deal.provider, timestamp: blockTimestamp})
   }
 
   static async getEvents(filter: Filter<Document> = {}) {
@@ -45,13 +42,21 @@ export class EventsController {
     return result
   }
 
-  static async calculateProviderRevenue(provider: string, fromDate?: Date, toDate?: Date) {
-    return await eventsCollection.find({
+  static async calculateProviderRevenue(provider: string, fromDate: number = Date.now() / 1000, toDate: number = Date.now() / 1000) {
+    let totalRevenue: number = 0
+    const events = await eventsCollection.find({
       provider: provider,
-      $and: [
-        {date: {$gt: fromDate}},
-        {date: {$lt: toDate}}
-      ]
+      timestamp: {
+        $gte: fromDate,
+        $lte: toDate
+      },
+      eventName: "DealCollected"
     }).toArray()
+
+    events.forEach((event) => {
+      totalRevenue += event.args._paymentToProvider
+    })
+
+    return totalRevenue
   }
 }

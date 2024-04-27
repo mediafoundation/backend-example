@@ -5,12 +5,11 @@ import {generateUniqueEventId} from "../../utils/hash"
 import {Chain} from "../../database/models/Chain"
 import {resetDB} from "../../database/utils"
 import {DealsController} from "../../database/controllers/dealsController"
-import {Blockchain, Sdk, validChains} from "../../../media-sdk"
 
 let db: MongoClient
-const mockEvent = {
+const dealCollectedMockEvent = {
   address: "0x77922d037e74c9ba2edfc1019329bee741563372",
-  blockNumber: 5368391n,
+  blockNumber: 2n,
   transactionHash: "0x62f395c3a1dd2daabc13d5b9663d8a36b42cecf380b0371252d59fcbf147b701",
   args: {
     _marketplaceId: 1n,
@@ -18,8 +17,22 @@ const mockEvent = {
     _paymentToProvider: 10900000000118592000n,
     _totalPayment: 10900000000118592000n
   },
-  eventName: "DealCreated"
+  eventName: "DealCollected"
 }
+
+/*const dealCreatedMockEvent  = {
+  address: "0x77922d037e74c9ba2edfc1019329bee741563372",
+  blockNumber: 1n,
+  transactionHash: "0x62f395c3a1dd2daabc13d5b9663d8a36b42cecf380b0371252d59fcbf147b701",
+  args: {
+    _marketplaceId: 1n,
+    _dealId: 1n,
+    _amount: 8592000n,
+    _autoAccept: true
+  },
+  eventName: "DealCreated"
+}*/
+
 const mockDeal = {
   id: 1n,
   offerId: 1n,
@@ -45,6 +58,21 @@ const mockDeal = {
   }
 }
 
+async function populateDealCollected(provider: string, amount: number, chainId: number, blockTimestamp: number) {
+  for (let i = 0; i < amount; i++) {
+    const copyDeal = structuredClone(mockDeal)
+    copyDeal.id = BigInt(i)
+    copyDeal.provider = provider
+    await DealsController.upsertDeal(DealsController.formatDeal(copyDeal), chainId)
+
+    const copyEvent = structuredClone(dealCollectedMockEvent)
+    copyEvent["args"]["_dealId"] = BigInt(i)
+    copyEvent.transactionHash = i.toString()
+
+    await EventsController.upsertEvent(EventsController.formatEvent(copyEvent), chainId, blockTimestamp)
+  }
+}
+
 beforeAll(async () => {
   db = await connectToMongodb()
   await resetDB()
@@ -67,26 +95,25 @@ afterEach(async () => {
 describe("Events Controller", () => {
 
   test("Format event", async () => {
-    const expectedId = generateUniqueEventId(mockEvent.transactionHash)
-    const result = EventsController.formatEvent(mockEvent)
-    expect(result.blockNumber).toBe(5368391)
+    const expectedId = generateUniqueEventId(dealCollectedMockEvent.transactionHash)
+    const result = EventsController.formatEvent(dealCollectedMockEvent)
+    expect(result.blockNumber).toBe(2)
     expect(result.args._marketplaceId).toBe(1)
     expect(result._id).toBe(expectedId)
   })
 
   test("Insert event", async () => {
-    const formattedEvent = EventsController.formatEvent(mockEvent)
-    const sdk = new Sdk({chain: validChains["84532"]})
-    const blockchain = new Blockchain(sdk)
-    await EventsController.upsertEvent(formattedEvent, 1, blockchain)
+    const formattedEvent = EventsController.formatEvent(dealCollectedMockEvent)
+    await EventsController.upsertEvent(formattedEvent, 1, 1695768292)
     const events = await EventsController.getEvents()
     expect(events.length).toBe(1)
-    expect(events[0]).toStrictEqual({...formattedEvent, provider: mockDeal.provider, timestamp: 1706505070})
+    expect(events[0]).toStrictEqual({...formattedEvent, provider: mockDeal.provider, timestamp: 1695768292})
   })
 
-  /*test("Calculate prover revenue", async () => {
-    await EventsController.upsertEvent(EventsController.formatEvent(mockEvent))
+  test("Calculate provider revenue", async () => {
+    await populateDealCollected("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 2, 1, 1)
 
-    const result = await EventsController.getEvents()
-  })*/
+    const result = await EventsController.calculateProviderRevenue("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 0, 2)
+    expect(result).toBe(2*Number(dealCollectedMockEvent.args._paymentToProvider))
+  })
 })
