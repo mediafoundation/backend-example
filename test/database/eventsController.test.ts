@@ -19,7 +19,6 @@ const dealCollectedMockEvent = {
   },
   eventName: "DealCollected"
 }
-
 /*const dealCreatedMockEvent  = {
   address: "0x77922d037e74c9ba2edfc1019329bee741563372",
   blockNumber: 1n,
@@ -32,6 +31,7 @@ const dealCollectedMockEvent = {
   },
   eventName: "DealCreated"
 }*/
+
 
 const mockDeal = {
   id: 1n,
