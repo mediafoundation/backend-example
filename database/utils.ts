@@ -11,6 +11,7 @@ import {OfferMetadata} from "./models/offers/OffersMetadata"
 import {Chain} from "./models/Chain"
 import {ChainClient} from "./models/manyToMany/ChainClient"
 import {ChainProvider} from "./models/manyToMany/ChainProvider"
+import {ProviderClient} from "./models/manyToMany/ProviderClient"
 
 const resetDB = async () => {
 
@@ -39,7 +40,7 @@ const createRelationsBetweenTables = async () => {
   })
 
   Provider.belongsToMany(Client, {
-    through: ChainProvider,
+    through: ProviderClient,
     foreignKey: "provider",
     otherKey: "client",
     timestamps: false

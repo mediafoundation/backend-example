@@ -3,10 +3,10 @@ import {Client} from "../Client"
 import {Provider} from "../Provider"
 import {sequelize} from "../../database"
 
-class ProviderClient extends Model<InferAttributes<ProviderClient>, InferCreationAttributes<ProviderClient>> {
+export class ProviderClient extends Model<InferAttributes<ProviderClient>, InferCreationAttributes<ProviderClient>> {
   declare id: CreationOptional<number>
-  declare client: ForeignKey<Client>
-  declare provider: ForeignKey<Provider>
+  declare client: ForeignKey<Client["account"]>
+  declare provider: ForeignKey<Provider["account"]>
 }
 
 ProviderClient.init({
