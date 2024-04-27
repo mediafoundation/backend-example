@@ -115,19 +115,12 @@ describe("Test api", () => {
 
     const response = await request(app).get("/providers")
     expect(response.status).toBe(200)
-    expect(response.body).toStrictEqual({
-      "Account 1": {
-        "Chains": [1, 2],
-        "deals": {
-          "1": 2,
-          "2": 10
-        },
-        "offers": {
-          "1": 4,
-          "2": 1
-        }
-      }
-    })
+    expect(response.body).toStrictEqual([{
+      "address": "Account 1",
+      "chains": [1, 2],
+      "deals": {"1": 2, "2": 10},
+      "offers": {"1": 4, "2": 1}
+    }])
     expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, undefined, undefined)
   })
 
@@ -146,7 +139,12 @@ describe("Test api", () => {
       pageSize: 1
     })
     expect(response.status).toBe(200)
-    expect(response.body).toStrictEqual({"Account 1": {"Chains": [2], "deals": 2, "offers": 1}})
+    expect(response.body).toStrictEqual([{
+      "address": "Account 1",
+      "chains": [2],
+      "deals": 2,
+      "offers": 1
+    }])
     expect(ProvidersController.getProviders).toHaveBeenCalledWith(2, 1, 1)
     expect(ProvidersController.countDeals).toHaveBeenCalledWith("Account 1", 2)
     expect(ProvidersController.countOffers).toHaveBeenCalledWith("Account 1", 2)

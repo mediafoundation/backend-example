@@ -8,7 +8,6 @@ import {OffersController} from "./database/controllers/offersController"
 import {parseFilter} from "./utils/filter"
 import {createRelationsBetweenTables} from "./database/utils"
 import {ProvidersController} from "./database/controllers/providersController"
-import {ProviderAssociationCount} from "./database/models/types/provider"
 
 // Initialize express app
 export const app = express()
@@ -133,7 +132,7 @@ app.get("/offers", async (req, res) => {
 app.get("/providers", async(req, res) => {
   try {
 
-    const result: ProviderAssociationCount = {}
+    const result = []
 
     const page = req.query.page ? Number(req.query.page) : undefined
     const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
@@ -145,11 +144,20 @@ app.get("/providers", async(req, res) => {
       const dealsCount = await ProvidersController.countDeals(provider.account, chainId)
       const offersCount = await ProvidersController.countOffers(provider.account, chainId)
 
-      result[provider.account] = {
+      /*providerResult["Address"] = {
         "Chains": provider.Chains,
         "deals": dealsCount,
         "offers": offersCount
+      }*/
+
+      const providerResult = {
+        "address": provider.account,
+        "chains": provider.Chains,
+        "deals": dealsCount,
+        "offers": offersCount
       }
+
+      result.push(providerResult)
     }
 
     res.json(result)
