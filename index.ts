@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 import {Sdk, MarketplaceViewer, Resources, validChains} from "media-sdk"
 import {DealsController} from "./database/controllers/dealsController"
 import {ResourcesController} from "./database/controllers/resourcesController"

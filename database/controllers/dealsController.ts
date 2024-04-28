@@ -57,7 +57,7 @@ export class DealsController {
     })
     
     // Upsert the provider
-    await ProvidersController.upsertProvider(deal.provider, chainId)
+    await ProvidersController.upsertProvider(deal.provider, chainId, deal.client)
 
     // Upsert the deal
     const dealFromDb = await Deal.findOne({

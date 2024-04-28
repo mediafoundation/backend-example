@@ -131,13 +131,38 @@ app.get("/offers", async (req, res) => {
 
 app.get("/providers", async(req, res) => {
   try {
+
+    const result = []
+
     const page = req.query.page ? Number(req.query.page) : undefined
     const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
-    const filters = JSON.parse(req.query.filters ? req.query.filters as string : "{}")
-    const chainFilter = filters.chainFilter ? parseFilter(filters.chainFilter) : undefined
+    const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
 
-    const providers = await ProvidersController.getProviders(chainFilter, page, pageSize)
-    res.json(providers)
+    const providers = await ProvidersController.getProviders(chainId, page, pageSize)
+
+    for (const provider of providers) {
+      const dealsCount = await ProvidersController.countDeals(provider.account, chainId)
+      const offersCount = await ProvidersController.countOffers(provider.account, chainId)
+      const clientCount = await ProvidersController.countClients(provider.account, chainId)
+
+      /*providerResult["Address"] = {
+        "Chains": provider.Chains,
+        "deals": dealsCount,
+        "offers": offersCount
+      }*/
+
+      const providerResult = {
+        "address": provider.account,
+        "chains": provider.Chains,
+        "deals": dealsCount,
+        "offers": offersCount,
+        "clients": clientCount
+      }
+
+      result.push(providerResult)
+    }
+
+    res.json(result)
   } catch (e) {
     console.log(e)
     res.status(500).json({error: "Something went wrong"})
