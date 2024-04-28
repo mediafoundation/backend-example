@@ -23,11 +23,7 @@ jest.mock("../database/controllers/offersController", () => ({
   }
 }))
 
-jest.mock("../database/controllers/providersController", () => ({
-  ProvidersController: {
-    getProviders: jest.fn()
-  }
-}))
+jest.mock("../database/controllers/providersController")
 
 afterAll((done) => {
   server.close(done)
@@ -109,30 +105,52 @@ describe("Test api", () => {
   })
 
   test("Get providers should respond correctly", async () => {
-    (ProvidersController.getProviders as jest.Mock).mockResolvedValue(["1", "2", "3"])
+    const getProviders = ProvidersController.getProviders as jest.Mock
+    const countDeals = ProvidersController.countDeals as jest.Mock
+    const countOffers = ProvidersController.countOffers as jest.Mock
 
-    let response = await request(app).get("/providers")
+    countDeals.mockReturnValue({1: 2, 2: 10})
+    countOffers.mockReturnValue({1: 4, 2: 1})
+    getProviders.mockReturnValue([ { account: "Account 1", Chains: [ 1, 2 ] } ])
+
+    const response = await request(app).get("/providers")
     expect(response.status).toBe(200)
-    expect(response.body).toEqual(["1", "2", "3"])
+    expect(response.body).toStrictEqual([{
+      "address": "Account 1",
+      "chains": [1, 2],
+      "deals": {"1": 2, "2": 10},
+      "offers": {"1": 4, "2": 1}
+    }])
     expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, undefined, undefined)
-
-    response = await request(app).get("/providers").query({page: 1, pageSize: 10})
-    expect(response.status).toBe(200)
-    expect(response.body).toEqual(["1", "2", "3"])
-    expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, 1, 10)
   })
 
   test("Get providers paginating and with chainId", async () => {
-    (ProvidersController.getProviders as jest.Mock).mockResolvedValue(["1", "2", "3"])
+    const getProviders = ProvidersController.getProviders as jest.Mock
+    const countDeals = ProvidersController.countDeals as jest.Mock
+    const countOffers = ProvidersController.countOffers as jest.Mock
+    const countClients = ProvidersController.countClients as jest.Mock
+
+    countDeals.mockReturnValue(2)
+    countOffers.mockReturnValue(1)
+    getProviders.mockReturnValue([ { account: "Account 1", Chains: [ 2 ] } ])
+    countClients.mockReturnValue(10)
 
     const response = await request(app).get("/providers").query({
-      filters: JSON.stringify({chainFilter: {chainId: 2}}),
+      chainId: 2,
       page: 1,
       pageSize: 1
     })
     expect(response.status).toBe(200)
-    expect(response.body).toEqual(["1", "2", "3"])
-    expect(ProvidersController.getProviders).toHaveBeenCalledWith({chainId: 2}, 1, 1)
+    expect(response.body).toStrictEqual([{
+      "address": "Account 1",
+      "chains": [2],
+      "deals": 2,
+      "offers": 1,
+      "clients": 10
+    }])
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith(2, 1, 1)
+    expect(ProvidersController.countDeals).toHaveBeenCalledWith("Account 1", 2)
+    expect(ProvidersController.countOffers).toHaveBeenCalledWith("Account 1", 2)
   })
 
   test("Get providers get error", async () => {

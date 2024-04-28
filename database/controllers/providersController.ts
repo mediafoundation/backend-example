@@ -1,16 +1,19 @@
 import {Provider} from "../models/Provider"
 import {Chain} from "../models/Chain"
-import {WhereOptions} from "sequelize"
 import {ChainProvider} from "../models/manyToMany/ChainProvider"
+import {ProviderAssociationCount} from "../models/types/provider"
+import {ProviderClient} from "../models/manyToMany/ProviderClient"
+import {ChainClient} from "../models/manyToMany/ChainClient"
 
 export class ProvidersController {
-  static async getProviders(chainFilter: WhereOptions<any> | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined= undefined) {
+  static async getProviders(chainId: number | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined= undefined) {
+    const whereClause = chainId ? {chainId: chainId} : {}
     const offset = page && pageSize ? (page - 1) * pageSize : undefined
-    return Provider.findAll({
+    const providers = await Provider.findAll({
       include: [
         {
           model: Chain,
-          where: chainFilter,
+          where: whereClause,
           through: {
             attributes: []
           },
@@ -19,12 +22,18 @@ export class ProvidersController {
       ],
       offset: offset,
       limit: pageSize,
-      nest: true,
-      raw: true
     })
+
+    const mappedProviders = providers.map((provider) => provider.toJSON())
+
+    for (let i = 0; i < providers.length; i++) {
+      mappedProviders[i].Chains = mappedProviders[i].Chains!.map((chain: any) => chain.chainId)
+    }
+
+    return mappedProviders
   }
 
-  static async upsertProvider(provider: string, chainId: number) {
+  static async upsertProvider(provider: string, chainId: number, client: string | undefined = undefined) {
     const [instance, created] = await Provider.findOrCreate({
       where: {
         account: provider
@@ -45,9 +54,96 @@ export class ProvidersController {
       }
     })
 
+    if(client) {
+      await ProviderClient.findOrCreate(
+        {
+          where: {
+            provider: provider,
+            client: client
+          },
+          defaults: {
+            provider: provider,
+            client: client
+          }
+        }
+      )
+    }
+
     return {
       instance: instance.dataValues,
       created: created
     }
+  }
+
+  static async countDeals(provider: string, chainId: number | undefined = undefined) {
+    let result: ProviderAssociationCount | number = {}
+    const providerFromDb = await Provider.findOne({where: {account: provider}})
+
+    if(!providerFromDb) {
+      throw new Error("Provider not found")
+    }
+
+    if(chainId === undefined) {
+      const chains = await Chain.findAll({attributes: {include: ["chainId"]}})
+
+      for (const chain of chains) {
+        result[chain.chainId] = await providerFromDb!.countDeals({where: {chainId: chain.chainId}})
+      }
+    }
+
+    else {
+      result = await providerFromDb!.countDeals({where: {chainId: chainId}})
+    }
+
+    return result
+  }
+
+  static async countOffers(provider: string, chainId: number | undefined = undefined) {
+    let result: ProviderAssociationCount | number = {}
+    const providerFromDb = await Provider.findOne({where: {account: provider}})
+
+    if(!providerFromDb) {
+      throw new Error("Provider not found")
+    }
+
+    if(chainId === undefined) {
+      const chains = await Chain.findAll({attributes: {include: ["chainId"]}})
+
+      for (const chain of chains) {
+        result[chain.chainId] = await providerFromDb!.countOffers({where: {chainId: chain.chainId}})
+      }
+    }
+
+    else {
+      result = await providerFromDb!.countOffers({where: {chainId: chainId}})
+    }
+
+    return result
+  }
+
+  static async countClients(provider: string, chainId: number | undefined = undefined) {
+    let result: ProviderAssociationCount | number = {}
+    const providerFromDb = await Provider.findOne({where: {account: provider}})
+
+    if(!providerFromDb) {
+      throw new Error("Provider not found")
+    }
+
+    if(chainId === undefined) {
+      const chains = await Chain.findAll({attributes: {include: ["chainId"]}})
+
+      for (const chain of chains) {
+
+        const clientsOnChain = await ChainClient.findAll({where: {chainId: chain.chainId}})
+        result[chain.chainId] = await providerFromDb!.countClients({where: {account: clientsOnChain.map(chainClient => chainClient.client)}})
+      }
+    }
+
+    else {
+      const clientsOnChain = await ChainClient.findAll({where: {chainId: chainId}})
+      result = await providerFromDb!.countClients({where: {account: clientsOnChain.map(chainClient => chainClient.client)}})
+    }
+
+    return result
   }
 }
