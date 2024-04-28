@@ -1,6 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
-import {Sdk, MarketplaceViewer, Resources, validChains, EventHandler} from "media-sdk"
+import {Sdk, MarketplaceViewer, Resources, validChains} from "media-sdk"
 import {DealsController} from "./database/controllers/dealsController"
 import {ResourcesController} from "./database/controllers/resourcesController"
 import {resetDB} from "./database/utils"
@@ -13,12 +12,6 @@ require("dotenv").config()
 
 const init = async (chain: any) => {
   const sdkInstance = new Sdk({chain: chain})
-
-  const eventHandler = new EventHandler(sdkInstance)
-
-  const result = await eventHandler.getMarketplacePastEvents({eventName: "DealCreated", fromBlock: 5367454n, toBlock: 5368474n})
-
-  console.log("Result", result)
   
   const marketplaceViewer: MarketplaceViewer = new MarketplaceViewer(sdkInstance)
   const resourcesInstance: Resources = new Resources(sdkInstance)

@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
 import {validChains} from "media-sdk"
 import express from "express"
 import bodyParser from "body-parser"

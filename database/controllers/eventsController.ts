@@ -6,12 +6,12 @@ import {DealsController} from "./dealsController"
 export class EventsController {
   static async upsertEvent(event: EventFormatted, chainId: number, blockTimestamp: number) {
     // Make sure event belongs to marketplace
-    if(event.args._marketplaceId != process.env.MARKETPLACE_ID) {
+    if(event.args._marketplaceId && event.args._marketplaceId.toString() != process.env.MARKETPLACE_ID) {
       throw new Error(`Event does not belong to marketplace ${process.env.MARKETPLACE_ID}`)
     }
 
     //Get deal-event provider
-    const deal = await DealsController.getDealByIdAndChain(event.args._dealId, chainId)
+    const deal = event.args._dealId ? await DealsController.getDealByIdAndChain( event.args._dealId , chainId) : null
 
     //Get block-event timestamp
     await eventsCollection.insertOne({...event, provider: deal?.deal.provider, timestamp: blockTimestamp, chainId: chainId})
