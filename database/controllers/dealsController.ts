@@ -9,6 +9,7 @@ import {ResourcesController} from "./resourcesController"
 import {Client} from "../models/Client"
 import {ChainClient} from "../models/manyToMany/ChainClient"
 import {ProvidersController} from "./providersController"
+import {DealNodeLocation} from "../models/manyToMany/DealNodeLocation"
 
 /**
  * DealsController class
@@ -77,7 +78,26 @@ export class DealsController {
 
     // Create node locations for the deal
     for (const nodeLocation of deal.metadata.nodeLocations) {
-      await instance.createNodeLocation({location: nodeLocation})
+      await NodeLocation.findOrCreate({
+        where: {
+          location: nodeLocation
+        },
+        defaults: {
+          location: nodeLocation
+        }
+      })
+
+      await DealNodeLocation.findOrCreate({
+        where: {
+          dealId: instance.id,
+          nodeLocationId: nodeLocation
+        },
+
+        defaults: {
+          dealId: instance.id,
+          nodeLocationId: nodeLocation
+        }
+      })
     }
 
     return {
