@@ -21,7 +21,7 @@ async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchai
 
   while (blockToRead < currentBlock) {
     try {
-      const events = await eventsHandler.getMarketplacePastEvents({eventName: "DealCreated", fromBlock: blockToRead, toBlock: blockToRead + BATCH_SIZE})
+      const events = await eventsHandler.getMarketplacePastEvents({eventName: undefined, fromBlock: blockToRead, toBlock: blockToRead + BATCH_SIZE})
 
       for (const event of events) {
         const blockTimestamp = await blockChain.getBlockTimestamp(event.blockNumber)

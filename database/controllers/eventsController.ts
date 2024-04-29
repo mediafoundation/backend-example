@@ -6,7 +6,7 @@ import {DealsController} from "./dealsController"
 export class EventsController {
   static async upsertEvent(event: EventFormatted, chainId: number, blockTimestamp: number) {
     // Make sure event belongs to marketplace
-    if(event.args._marketplaceId && event.args._marketplaceId.toString() != process.env.MARKETPLACE_ID) {
+    if(event.args._marketplaceId && event.args._marketplaceId != process.env.MARKETPLACE_ID) {
       throw new Error(`Event does not belong to marketplace ${process.env.MARKETPLACE_ID}`)
     }
 
@@ -22,15 +22,20 @@ export class EventsController {
   }
 
   static formatEvent(event: any): EventFormatted {
-    const result = {...event}
+    const result: any = {
+      args: event.args,
+      address: event.address,
+      blockNumber: event.blockNumber,
+      eventName: event.eventName
+    }
 
-    for (const key of Object.keys(result)) {
-      if(typeof result[key] === "bigint"){
-        result[key] = result[key].toString()
+    for (const key of Object.keys(result.args)) {
+      if(typeof result.args[key] === "bigint"){
+        result.args[key] = result.args[key].toString()
       }
 
-      else if(typeof result[key] === "object") {
-        result[key] = this.formatEvent(result[key])
+      else if(typeof result.args[key] === "object") {
+        result.args[key] = this.formatEvent(result.args[key])
       }
     }
 

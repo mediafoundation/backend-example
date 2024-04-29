@@ -1,5 +1,6 @@
 import {Dialect, Op, Sequelize} from "sequelize"
 import {MongoClient} from "mongodb"
+import {Events} from "./models/Event"
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("dotenv").config()
 
@@ -29,7 +30,7 @@ async function connectToMongodb() {
   return await client.connect()
 }
 
-const eventsCollection = client.db(dbName).collection("events")
+const eventsCollection = client.db(dbName).collection<Events>("events")
 const lastReadBlockCollection = client.db(dbName).collection("lastReadBlockCollection")
 
 
