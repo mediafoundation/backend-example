@@ -176,14 +176,14 @@ export class DealsController {
     })
 
     // Map the deals to JSON
-    const mappedDeals = deals.map((deal: any) => {
+    const mappedDeals = deals.map((deal) => {
       return deal.toJSON()
     })
 
     // Get the node locations for each deal
     for (let i = 0; i < deals.length; i++) {
       mappedDeals[i].NodeLocations = await deals[i].getNodeLocations({attributes: ["location"]})
-      mappedDeals[i].NodeLocations = mappedDeals[i].NodeLocations.map((location: any) => location.location)
+      mappedDeals[i].NodeLocations = mappedDeals[i].NodeLocations?.map((location: any) => location.location)
     }
 
     return mappedDeals
