@@ -53,8 +53,6 @@ describe("Offer Controller", () => {
     const formattedOffer = OffersController.formatOffer(mockOffer)
 
     const result = await OffersController.upsertOffer(formattedOffer, 1)
-    
-    console.log(result)
 
     expect(result.offer).not.toBeNull()
   })

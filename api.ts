@@ -8,6 +8,7 @@ import {OffersController} from "./database/controllers/offersController"
 import {parseFilter} from "./utils/filter"
 import {createRelationsBetweenTables} from "./database/utils"
 import {ProvidersController} from "./database/controllers/providersController"
+import {EventsController} from "./database/controllers/eventsController"
 
 // Initialize express app
 export const app = express()
@@ -167,6 +168,23 @@ app.get("/providers", async(req, res) => {
     console.log(e)
     res.status(500).json({error: "Something went wrong"})
   }
+})
+
+app.get("/providers/countNewDeals", async (req, res) => {
+  const provider = req.query.provider
+  const chainId = req.query.chainId
+  const fromDate = req.query.from
+  const toDate = req.query.to
+
+  try {
+    const amount = await EventsController.calculateProviderNewDeals(provider!.toString(), Number(chainId), Number(fromDate), Number(toDate))
+
+    res.json(amount)
+  } catch (e) {
+    console.log(e)
+    res.send(e)
+  }
+
 })
 
 // Start the server

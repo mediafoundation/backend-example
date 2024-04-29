@@ -1,7 +1,7 @@
 import {Client} from "./models/Client"
 import {Resource} from "./models/Resource"
 import {Deal} from "./models/deals/Deal"
-import {sequelize} from "./database"
+import {connectToMongodb, sequelize} from "./database"
 import {NodeLocation} from "./models/NodeLocation"
 import {BandwidthLimit} from "./models/BandwidthLimit"
 import {Provider} from "./models/Provider"
@@ -17,15 +17,12 @@ const resetDB = async () => {
 
   await createRelationsBetweenTables()
 
+  await connectToMongodb()
+
   await sequelize.sync({force: true})
 }
 
 const createRelationsBetweenTables = async () => {
-  
-  /*Resource.hasMany(Deal, {
-    as: "Deals",
-    foreignKey: "resourceId"
-  })*/
   
   Resource.belongsTo(Chain, {
     as: "Chain",
