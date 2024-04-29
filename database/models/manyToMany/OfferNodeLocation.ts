@@ -1,15 +1,15 @@
 import {CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model} from "sequelize"
-import {Deal} from "../deals/Deal"
 import {NodeLocation} from "../NodeLocation"
 import {sequelize} from "../../database"
+import {Offer} from "../offers/Offer"
 
-export class DealNodeLocation extends Model<InferAttributes<DealNodeLocation>, InferCreationAttributes<DealNodeLocation>> {
+export class OfferNodeLocation extends Model<InferAttributes<OfferNodeLocation>, InferCreationAttributes<OfferNodeLocation>> {
   declare id: CreationOptional<number>
-  declare dealId: ForeignKey<Deal["id"]>
+  declare offerId: ForeignKey<Offer["id"]>
   declare location: ForeignKey<NodeLocation["location"]>
 }
 
-DealNodeLocation.init({
+OfferNodeLocation.init({
   id: {type: DataTypes.BIGINT, autoIncrement: true, primaryKey: true},
 }, {
   sequelize,

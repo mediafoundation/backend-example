@@ -90,12 +90,12 @@ export class DealsController {
       await DealNodeLocation.findOrCreate({
         where: {
           dealId: instance.id,
-          nodeLocationId: nodeLocation
+          location: nodeLocation
         },
 
         defaults: {
           dealId: instance.id,
-          nodeLocationId: nodeLocation
+          location: nodeLocation
         }
       })
     }

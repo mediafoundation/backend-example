@@ -128,7 +128,7 @@ describe("Events Controller", () => {
     await populateDealCollected("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 50, 0, 1)
 
     const result = await EventsController.calculateProviderRevenue("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 0, 0, 2)
-    expect(result).toBe(50n*dealCollectedMockEvent.args._paymentToProvider)
+    expect(result).toBe(50n*BigInt(dealCollectedMockEvent.args._paymentToProvider))
   })
 
   test("Calculate provider revenue with multiple chains", async () => {
@@ -136,10 +136,10 @@ describe("Events Controller", () => {
     await populateDealCollected("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 20, 1, 1)
 
     let result = await EventsController.calculateProviderRevenue("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 0, 0, 1)
-    expect(result).toBe(50n*dealCollectedMockEvent.args._paymentToProvider)
+    expect(result).toBe(50n*BigInt(dealCollectedMockEvent.args._paymentToProvider))
 
     result = await EventsController.calculateProviderRevenue("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 1, 0, 1)
-    expect(result).toBe(20n*dealCollectedMockEvent.args._paymentToProvider)
+    expect(result).toBe(20n*BigInt(dealCollectedMockEvent.args._paymentToProvider))
   })
 
   test("Get deals created given date range", async () => {

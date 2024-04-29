@@ -12,6 +12,8 @@ import {Chain} from "./models/Chain"
 import {ChainClient} from "./models/manyToMany/ChainClient"
 import {ChainProvider} from "./models/manyToMany/ChainProvider"
 import {ProviderClient} from "./models/manyToMany/ProviderClient"
+import {DealNodeLocation} from "./models/manyToMany/DealNodeLocation"
+import {OfferNodeLocation} from "./models/manyToMany/OfferNodeLocation"
 
 const resetDB = async () => {
 
@@ -94,9 +96,9 @@ const createRelationsBetweenTables = async () => {
   })
 
   Deal.belongsToMany(NodeLocation, {
-    through: "DealNodeLocation",
+    through: DealNodeLocation,
     foreignKey: "dealId",
-    otherKey: "nodeLocationId",
+    otherKey: "location",
     timestamps: false
   })
 
@@ -125,9 +127,9 @@ const createRelationsBetweenTables = async () => {
   })
 
   Offer.belongsToMany(NodeLocation, {
-    through: "OfferNodeLocation",
+    through: OfferNodeLocation,
     foreignKey: "offerId",
-    otherKey: "nodeLocationId",
+    otherKey: "location",
     timestamps: false
   })
 

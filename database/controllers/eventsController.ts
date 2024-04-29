@@ -25,7 +25,7 @@ export class EventsController {
     const result: any = {
       args: event.args,
       address: event.address,
-      blockNumber: event.blockNumber,
+      blockNumber: event.blockNumber.toString(),
       eventName: event.eventName
     }
 
