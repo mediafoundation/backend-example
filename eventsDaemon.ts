@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
 import {Blockchain, EventsHandler, Sdk, validChains} from "media-sdk"
 import {lastReadBlockCollection} from "./database/database"
 import {EventsController} from "./database/controllers/eventsController"
