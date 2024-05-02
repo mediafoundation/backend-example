@@ -9,6 +9,7 @@ import {ResourcesController} from "./resourcesController"
 import {Client} from "../models/Client"
 import {ChainClient} from "../models/manyToMany/ChainClient"
 import {ProvidersController} from "./providersController"
+import {DealNodeLocation} from "../models/manyToMany/DealNodeLocation"
 
 /**
  * DealsController class
@@ -77,7 +78,26 @@ export class DealsController {
 
     // Create node locations for the deal
     for (const nodeLocation of deal.metadata.nodeLocations) {
-      await instance.createNodeLocation({location: nodeLocation})
+      await NodeLocation.findOrCreate({
+        where: {
+          location: nodeLocation
+        },
+        defaults: {
+          location: nodeLocation
+        }
+      })
+
+      await DealNodeLocation.findOrCreate({
+        where: {
+          dealId: instance.id,
+          location: nodeLocation
+        },
+
+        defaults: {
+          dealId: instance.id,
+          location: nodeLocation
+        }
+      })
     }
 
     return {
@@ -156,14 +176,14 @@ export class DealsController {
     })
 
     // Map the deals to JSON
-    const mappedDeals = deals.map((deal: any) => {
+    const mappedDeals = deals.map((deal) => {
       return deal.toJSON()
     })
 
     // Get the node locations for each deal
     for (let i = 0; i < deals.length; i++) {
       mappedDeals[i].NodeLocations = await deals[i].getNodeLocations({attributes: ["location"]})
-      mappedDeals[i].NodeLocations = mappedDeals[i].NodeLocations.map((location: any) => location.location)
+      mappedDeals[i].NodeLocations = mappedDeals[i].NodeLocations?.map((location: any) => location.location)
     }
 
     return mappedDeals

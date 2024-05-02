@@ -1,14 +1,11 @@
 import {
   DataTypes,
   Model,
-  InferAttributes,
-  InferCreationAttributes,
   HasOneGetAssociationMixin,
   HasOneCreateAssociationMixin,
   ForeignKey,
-  BelongsToManyCreateAssociationMixin,
   BelongsToManyGetAssociationsMixin,
-  CreationOptional,
+  CreationOptional, NonAttribute, InferCreationAttributes,
 } from "sequelize"
 import {DECIMALS_DIGITS, sequelize} from "../../database"
 import {DealMetadata} from "./DealsMetadata"
@@ -18,7 +15,32 @@ import {Client} from "../Client"
 import {Provider} from "../Provider"
 import {Chain} from "../Chain"
 
-export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<Deal>> {
+type DealAttributes = {
+  id: number
+  dealId: number
+  resourceId: ForeignKey<Resource["id"]> | null
+  chainId: ForeignKey<Chain["chainId"]>
+  client: ForeignKey<Client["account"]>
+  provider: ForeignKey<Provider["account"]>
+  totalPayment: number
+  blockedBalance: number
+  pricePerSecond: number
+  minDealDuration: number
+  billFullPeriods: boolean
+  singlePeriodOnly: boolean
+  createdAt: number
+  acceptedAt: number
+  billingStart: number
+  active: boolean
+  cancelled: boolean
+  cancelledAt: number
+  
+  NodeLocations?: NodeLocation[]
+}
+
+//type DealCreationAttributes = Optional<DealAttributes, "id">
+
+export class Deal extends Model<DealAttributes, InferCreationAttributes<Deal>> {
   declare id: CreationOptional<number>
   declare dealId: number
   declare resourceId: ForeignKey<Resource["id"]> | null
@@ -38,11 +60,12 @@ export class Deal extends Model<InferAttributes<Deal>, InferCreationAttributes<D
   declare cancelled: boolean
   declare cancelledAt: number
 
+  declare NodeLocations: NonAttribute<NodeLocation[] | undefined>
+
   declare getMetadata: HasOneGetAssociationMixin<DealMetadata>
   declare createMetadata: HasOneCreateAssociationMixin<DealMetadata>
 
   declare getNodeLocations: BelongsToManyGetAssociationsMixin<NodeLocation>
-  declare createNodeLocation: BelongsToManyCreateAssociationMixin<NodeLocation>
 }
 
 Deal.init({

@@ -1,7 +1,8 @@
 import {eventsCollection} from "../database"
 import {EventFormatted} from "../models/types/event"
-import {Document, Filter} from "mongodb"
+import {Document, Filter, WithId} from "mongodb"
 import {DealsController} from "./dealsController"
+import {Events} from "../models/Event"
 
 export class EventsController {
   static async upsertEvent(event: EventFormatted, chainId: number, blockTimestamp: number) {
@@ -17,7 +18,7 @@ export class EventsController {
     await eventsCollection.insertOne({...event, provider: deal?.deal.provider, timestamp: blockTimestamp, chainId: chainId})
   }
 
-  static async getEvents(filter: Filter<Document> = {}) {
+  static async getEvents(filter: Filter<Document> = {}): Promise<WithId<Events>[]> {
     return eventsCollection.find(filter).toArray()
   }
 
@@ -25,7 +26,7 @@ export class EventsController {
     const result: any = {
       args: event.args,
       address: event.address,
-      blockNumber: event.blockNumber,
+      blockNumber: event.blockNumber.toString(),
       eventName: event.eventName
     }
 
@@ -42,7 +43,7 @@ export class EventsController {
     return result
   }
 
-  static async calculateProviderRevenue(provider: string, chainId: number | undefined, fromDate: number = Date.now() / 1000, toDate: number = Date.now() / 1000) {
+  static async calculateProviderRevenue(provider: string, chainId: number | undefined, fromDate: number = Date.now() / 1000, toDate: number = Date.now() / 1000): Promise<bigint> {
     let totalRevenue: bigint = 0n
     const events = await eventsCollection.find({
       provider: provider,
@@ -61,7 +62,7 @@ export class EventsController {
     return totalRevenue
   }
 
-  static async calculateProviderNewDeals(provider: string, chainId: number, fromDate: number = Date.now() / 1000, toDate: number = Date.now() / 1000) {
+  static async calculateProviderNewDeals(provider: string, chainId: number, fromDate: number = Date.now() / 1000, toDate: number = Date.now() / 1000): Promise<number> {
     return eventsCollection.countDocuments({
       provider: provider,
       timestamp: {
@@ -70,6 +71,17 @@ export class EventsController {
       },
       chainId: chainId,
       eventName: "DealCreated"
+    })
+  }
+
+  static async calculateNetworkNewResources(chainId: number, fromDate: number = Date.now() / 1000, toDate: number = Date.now() / 1000) : Promise<number>{
+    return eventsCollection.countDocuments({
+      timestamp: {
+        $gte: fromDate,
+        $lte: toDate
+      },
+      chainId: chainId,
+      eventName: "AddedResource"
     })
   }
 }

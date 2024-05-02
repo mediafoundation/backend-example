@@ -71,8 +71,8 @@ describe("Offer Controller", () => {
     expect(offer!.nodeLocations).not.toBeNull()
     expect(offer!.bandwidthLimit).not.toBeNull()
 
-    expect(offer!.nodeLocations.length).toBe(4)
-    expect(offer!.nodeLocations[0]).toBe("NNN")
+    expect(offer!.nodeLocations.length).toBe(3)
+    expect(offer!.nodeLocations[0]).toBe("EEE")
   })
 
   test("Filter offers, expecting no matching criteria", async () => {
@@ -128,7 +128,7 @@ describe("Offer Controller", () => {
     expect(offer!.offerId).toBe(7)
     expect(bandwidthLimit.length).toBe(0)
     expect(metadata.length).toBe(0)
-    expect(nodeLocations.length).toBe(4)
+    expect(nodeLocations.length).toBe(3)
   })
   
   test("Same offer id but on different networks should not be updated", async () => {

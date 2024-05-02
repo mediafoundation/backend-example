@@ -7,6 +7,7 @@ import {DealsController} from "../../database/controllers/dealsController"
 import {OffersController} from "../../database/controllers/offersController"
 import {Deal} from "../../database/models/deals/Deal"
 import {Offer} from "../../database/models/offers/Offer"
+import {ChainClient} from "../../database/models/manyToMany/ChainClient"
 
 const mockDeal = {
   id: 1n,
@@ -86,6 +87,7 @@ beforeAll(async () => {
 afterEach(async () => {
   await Provider.sync({force: true})
   await ChainProvider.sync({force: true})
+  await ChainClient.sync({force: true})
   await Deal.sync({force: true})
   await Offer.sync({force: true})
 })
@@ -110,8 +112,6 @@ describe("Providers Controller", () => {
     await ProvidersController.upsertProvider("Account 1", 0)
 
     const result = await ProvidersController.getProviders()
-
-    console.log("Resutl", result)
 
     expect(result.length).toBe(1)
     expect(result[0].account).toBe("Account 1")

@@ -6,6 +6,7 @@ import {BandwidthLimit} from "../models/BandwidthLimit"
 import {OfferMetadata} from "../models/offers/OffersMetadata"
 import {Chain} from "../models/Chain"
 import {ProvidersController} from "./providersController"
+import {OfferNodeLocation} from "../models/manyToMany/OfferNodeLocation"
 
 /**
  * OffersController class
@@ -46,7 +47,27 @@ export class OffersController{
     
     // Create node locations for the offer
     for (const nodeLocation of offer.metadata.nodeLocations) {
-      await instance.createNodeLocation({location: nodeLocation})
+      await NodeLocation.findOrCreate({
+        where: {
+          location: nodeLocation
+        },
+        defaults: {
+          location: nodeLocation
+        }
+      })
+
+      await OfferNodeLocation.findOrCreate({
+        where: {
+          offerId: instance.id,
+          location: nodeLocation
+        },
+
+        defaults: {
+          offerId: instance.id,
+          location: nodeLocation
+        }
+      })
+
     }
     
     return {
