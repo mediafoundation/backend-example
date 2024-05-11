@@ -8,7 +8,6 @@ import {Chain} from "../models/Chain"
 import {ResourcesController} from "./resourcesController"
 import {Client} from "../models/Client"
 import {ChainClient} from "../models/manyToMany/ChainClient"
-import {ProvidersController} from "./providersController"
 import {DealNodeLocation} from "../models/manyToMany/DealNodeLocation"
 
 /**
@@ -58,7 +57,7 @@ export class DealsController {
     })
     
     // Upsert the provider
-    await ProvidersController.upsertProvider(deal.provider, chainId, deal.client)
+    //await ProvidersController.upsertProvider(deal.provider, chainId, deal.client, providerMetadata, publicKey)
 
     // Upsert the deal
     const dealFromDb = await Deal.findOne({

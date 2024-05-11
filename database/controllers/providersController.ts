@@ -4,6 +4,7 @@ import {ChainProvider} from "../models/manyToMany/ChainProvider"
 import {ProviderAssociationCount} from "../models/types/provider"
 import {ProviderClient} from "../models/manyToMany/ProviderClient"
 import {ChainClient} from "../models/manyToMany/ChainClient"
+import {providersCollection} from "../database"
 
 export class ProvidersController {
   static async getProviders(chainId: number | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined= undefined) {
@@ -33,15 +34,19 @@ export class ProvidersController {
     return mappedProviders
   }
 
-  static async upsertProvider(provider: string, chainId: number, client: string | undefined = undefined) {
+  static async upsertProvider(provider: string, chainId: number, client: string | undefined = undefined, providerMetadata: string, publicKey: string) {
     const [instance, created] = await Provider.findOrCreate({
       where: {
-        account: provider
+        account: provider,
+        publicKey: publicKey
       },
       defaults: {
-        account: provider
+        account: provider,
+        publicKey: publicKey
       }
     })
+
+    await providersCollection.insertOne(JSON.parse(providerMetadata))
 
     await ChainProvider.findOrCreate({
       where: {
