@@ -7,6 +7,7 @@ import {resetDB} from "./database/utils"
 import {z} from "zod"
 import {OffersController} from "./database/controllers/offersController"
 import {Chain} from "./database/models/Chain"
+import {EventsController} from "./database/controllers/eventsController"
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("dotenv").config()
@@ -96,6 +97,9 @@ async function start() {
   } catch (e) {
     console.log("Error", e)
   }
+
+  const totalRevenue = await EventsController.calculateFutureProviderRevenue("0xb34c80FdaBb37Ca8964fb20046AF982d27cFBFd7", 11155111, 1707886512, 1714166940)
+  console.log(totalRevenue)
 }
   
 start()
