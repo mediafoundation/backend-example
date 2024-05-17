@@ -17,11 +17,13 @@ export class OffersController{
    * Upsert an offer
    * @param offer - The offer to be upserted
    * @param chainId - The id of the chain where the offer is
+   * @param providerMetadata - The offer's provider metadata
+   * @param publicKey - The offer's provider publicKey
    * @returns Promise<{offer: InferAttributes<Offer, {omit: never}>, created: boolean | null}>
    */
-  static async upsertOffer(offer: OfferFormatted, chainId: number) {
+  static async upsertOffer(offer: OfferFormatted, chainId: number, providerMetadata: string, publicKey: string) {
     // Find or create a provider
-    await ProvidersController.upsertProvider(offer.provider, chainId)
+    await ProvidersController.upsertProvider(offer.provider, chainId, undefined, providerMetadata, publicKey)
     
     // Upsert the offer
     const offerFromDb = await Offer.findOne({

@@ -1,6 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
-import {Sdk, MarketplaceViewer, Resources, validChains} from "media-sdk"
+import {Sdk, MarketplaceViewer, Resources, validChains, Marketplace} from "media-sdk"
 import {DealsController} from "./database/controllers/dealsController"
 import {ResourcesController} from "./database/controllers/resourcesController"
 import {resetDB} from "./database/utils"
@@ -31,7 +29,11 @@ const init = async (chain: any) => {
   for (const offer of offers) {
     try {
       const offerFormatted = OffersController.formatOffer(offer)
-      await OffersController.upsertOffer(offerFormatted, chain.id)
+      const providerData = await (new Marketplace(sdkInstance)).getProvider({
+        marketplaceId: Number(process.env.MARKETPLACE_ID),
+        provider: offerFormatted.provider
+      })
+      await OffersController.upsertOffer(offerFormatted, chain.id, providerData.metadata, providerData.publicKey)
       providerAddresses.push(offerFormatted.provider)
     } catch (e: any) {
       if (e instanceof z.ZodError) {

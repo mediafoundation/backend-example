@@ -31,7 +31,8 @@ async function connectToMongodb() {
 }
 
 const eventsCollection = client.db(dbName).collection<Events>("events")
+const providersCollection = client.db(dbName).collection("providers")
 const lastReadBlockCollection = client.db(dbName).collection("lastReadBlockCollection")
 
 
-export {sequelize, Op, DECIMALS_DIGITS, connectToMongodb, eventsCollection, lastReadBlockCollection}
+export {sequelize, Op, DECIMALS_DIGITS, connectToMongodb, eventsCollection, lastReadBlockCollection, providersCollection}
