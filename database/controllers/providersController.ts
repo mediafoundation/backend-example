@@ -4,6 +4,7 @@ import {ChainProvider} from "../models/manyToMany/ChainProvider"
 import {ProviderAssociationCount} from "../models/types/provider"
 import {ProviderClient} from "../models/manyToMany/ProviderClient"
 import {ChainClient} from "../models/manyToMany/ChainClient"
+import {providersCollection} from "../database"
 
 export class ProvidersController {
   static async getProviders(chainId: number | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined= undefined) {
@@ -33,15 +34,31 @@ export class ProvidersController {
     return mappedProviders
   }
 
-  static async upsertProvider(provider: string, chainId: number, client: string | undefined = undefined) {
+  static async getMetadata(provider: string, chainId: number) {
+    return await providersCollection.findOne({provider: provider, chainId: chainId})
+  }
+
+  static async upsertProvider(provider: string, chainId: number, client: string | undefined = undefined, providerMetadata: string, publicKey: string) {
     const [instance, created] = await Provider.findOrCreate({
       where: {
-        account: provider
+        account: provider,
+        publicKey: publicKey
       },
       defaults: {
-        account: provider
+        account: provider,
+        publicKey: publicKey
       }
     })
+
+    const query = {provider: provider, chainId: chainId}
+    const update = {$set: {
+      provider: provider,
+      chainId: chainId,
+      ...JSON.parse(providerMetadata)
+    }}
+    const options = {upsert: true}
+
+    await providersCollection.updateOne(query, update, options)
 
     await ChainProvider.findOrCreate({
       where: {

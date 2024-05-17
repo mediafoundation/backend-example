@@ -11,11 +11,13 @@ import {Chain} from "./Chain"
 
 interface ProviderAttributes {
   account: string,
-  Chains?: Chain[]
+  publicKey: string,
+  Chains?: number[]
 }
 
 export class Provider extends Model<ProviderAttributes, InferCreationAttributes<Provider>> {
   declare account: string
+  declare publicKey: string
 
   declare countDeals: HasManyCountAssociationsMixin
   declare countOffers: HasManyCountAssociationsMixin
@@ -26,6 +28,7 @@ export class Provider extends Model<ProviderAttributes, InferCreationAttributes<
 
 Provider.init({
   account: {type: DataTypes.STRING, primaryKey: true},
+  publicKey: DataTypes.STRING
 }, {
   sequelize,
   timestamps: false,
