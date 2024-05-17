@@ -46,7 +46,15 @@ export class ProvidersController {
       }
     })
 
-    await providersCollection.insertOne(JSON.parse(providerMetadata))
+    const query = {provider: provider, chainId: chainId}
+    const update = {$set: {
+      provider: provider,
+      chainId: chainId,
+      ...JSON.parse(providerMetadata)
+    }}
+    const options = {upsert: true}
+
+    await providersCollection.updateOne(query, update, options)
 
     await ChainProvider.findOrCreate({
       where: {
