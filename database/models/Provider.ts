@@ -12,7 +12,7 @@ import {Chain} from "./Chain"
 interface ProviderAttributes {
   account: string,
   publicKey: string,
-  Chains?: Chain[]
+  Chains?: number[]
 }
 
 export class Provider extends Model<ProviderAttributes, InferCreationAttributes<Provider>> {

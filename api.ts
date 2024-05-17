@@ -9,6 +9,7 @@ import {parseFilter} from "./utils/filter"
 import {createRelationsBetweenTables} from "./database/utils"
 import {ProvidersController} from "./database/controllers/providersController"
 import {EventsController} from "./database/controllers/eventsController"
+import {Document, WithId} from "mongodb"
 
 // Initialize express app
 export const app = express()
@@ -145,19 +146,26 @@ app.get("/providers", async(req, res) => {
       const dealsCount = await ProvidersController.countDeals(provider.account, chainId)
       const offersCount = await ProvidersController.countOffers(provider.account, chainId)
       const clientCount = await ProvidersController.countClients(provider.account, chainId)
+      let providerMetadata: { [index: number]: any } | WithId<Document> | null = {}
 
-      /*providerResult["Address"] = {
-        "Chains": provider.Chains,
-        "deals": dealsCount,
-        "offers": offersCount
-      }*/
+      if(chainId) {
+        providerMetadata = await ProvidersController.getMetadata(provider.account, chainId)
+      }
+
+      else {
+        const chains = provider.Chains
+        for (const chain of chains!) {
+          providerMetadata[chain] = await ProvidersController.getMetadata(provider.account, chain)
+        }
+      }
 
       const providerResult = {
         "address": provider.account,
         "chains": provider.Chains,
         "deals": dealsCount,
         "offers": offersCount,
-        "clients": clientCount
+        "clients": clientCount,
+        "metadata": providerMetadata
       }
 
       result.push(providerResult)

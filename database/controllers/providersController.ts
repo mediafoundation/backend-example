@@ -34,6 +34,10 @@ export class ProvidersController {
     return mappedProviders
   }
 
+  static async getMetadata(provider: string, chainId: number) {
+    return await providersCollection.findOne({provider: provider, chainId: chainId})
+  }
+
   static async upsertProvider(provider: string, chainId: number, client: string | undefined = undefined, providerMetadata: string, publicKey: string) {
     const [instance, created] = await Provider.findOrCreate({
       where: {
