@@ -9,6 +9,7 @@ import {ResourcesController} from "./resourcesController"
 import {Client} from "../models/Client"
 import {ChainClient} from "../models/manyToMany/ChainClient"
 import {DealNodeLocation} from "../models/manyToMany/DealNodeLocation"
+import {ProviderClient} from "../models/manyToMany/ProviderClient"
 
 /**
  * DealsController class
@@ -57,7 +58,18 @@ export class DealsController {
     })
     
     // Upsert the provider
-    //await ProvidersController.upsertProvider(deal.provider, chainId, deal.client, providerMetadata, publicKey)
+    await ProviderClient.findOrCreate(
+      {
+        where: {
+          provider: deal.provider,
+          client: deal.client
+        },
+        defaults: {
+          provider: deal.provider,
+          client: deal.client
+        }
+      }
+    )
 
     // Upsert the deal
     const dealFromDb = await Deal.findOne({
