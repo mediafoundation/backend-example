@@ -7,10 +7,12 @@ import {ChainClient} from "../models/manyToMany/ChainClient"
 import {providersCollection} from "../database"
 
 export class ProvidersController {
-  static async getProviders(chainId: number | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined= undefined) {
+  static async getProviders(chainId: number | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined= undefined, account: string | undefined) {
     const whereClause = chainId ? {chainId: chainId} : {}
+    const filter = account ? {account: account} : {}
     const offset = page && pageSize ? (page - 1) * pageSize : undefined
     const providers = await Provider.findAll({
+      where: filter,
       include: [
         {
           model: Chain,
