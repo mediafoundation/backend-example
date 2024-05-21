@@ -70,7 +70,7 @@ export class EventsController {
 
     for (const deal of deals) {
 
-      const events = await eventsCollection.find({
+      let events = await eventsCollection.find({
         provider: provider,
         timestamp: {
           $gte: fromDate,
@@ -88,8 +88,10 @@ export class EventsController {
 
       //console.log("Deal", deal.dealId, events)
       if(events.length > 1) {
-        EventsController.deleteUselessEvents(events, (a, b) => a.eventName === b)
+        events = EventsController.deleteUselessEvents(events, (a, b) => a.eventName === b)
       }
+
+      console.log("Events", deal.dealId, events)
       totalRevenue += EventsController.calculateDealRevenue(events, deal, toDate)
     }
 
@@ -140,21 +142,32 @@ export class EventsController {
       }
     }
 
-    console.log("Deal", deal.id, totalDealRevenue)
-
     return totalDealRevenue
   }
 
   private static deleteUselessEvents<T>(events: T[], comparator: (a: T, b: string) => boolean) {
 
-    const breakpoints = ["DealCreated"]
+    //Delete all elements on index equal or minor to last DealCollected
 
-    breakpoints.forEach(breakpoint => {
-      const index = events.findIndex(item => comparator(item, breakpoint))
-      if(index !== -1){
-        events.splice(index, 1)
-      }
-    })
+    let index = events.map(item => comparator(item, "AddedBalance")).lastIndexOf(true)
+    if (index !== -1) {
+      events = events.slice(0, index)
+    }
+
+    index = events.map(item => comparator(item, "DealCollected")).lastIndexOf(true)
+    if (index !== -1) {
+      events = events.slice(0, index)
+
+    }
+
+    //Delete all elements before added balance
+
+    //Delete dealCreated
+
+    index = events.map(item => comparator(item, "DealCreated")).lastIndexOf(true)
+    if(index !== 1) {
+      events = events.slice(index + 1)
+    }
 
     return events
   }
