@@ -18,6 +18,7 @@ export class OfferMetadata extends Model<InferAttributes<OfferMetadata>, InferCr
   declare label: string
   declare autoSsl: boolean
   declare burstSpeed: number
+  declare customCnames: boolean
   declare apiEndpoint: string
   
   declare getBandwidthLimit: HasOneGetAssociationMixin<BandwidthLimit>
