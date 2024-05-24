@@ -2,7 +2,7 @@ import {connectToMongodb, eventsCollection} from "../../database/database"
 import {MongoClient} from "mongodb"
 import {EventsController} from "../../database/controllers/eventsController"
 import {Chain} from "../../database/models/Chain"
-import {resetDB} from "../../database/utils"
+import {resetSequelizeDB} from "../../database/utils"
 import {DealsController} from "../../database/controllers/dealsController"
 
 
@@ -88,7 +88,7 @@ async function populateDealCreated(provider: string, amount: number, chainId: nu
 
 beforeAll(async () => {
   db = await connectToMongodb()
-  await resetDB()
+  await resetSequelizeDB()
 
   for (let i = 0; i < 2; i++) {
     await Chain.create({

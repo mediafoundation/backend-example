@@ -1,6 +1,6 @@
 import {Resource} from "../../database/models/Resource"
 import {ResourcesController} from "../../database/controllers/resourcesController"
-import {resetDB} from "../../database/utils"
+import {resetSequelizeDB} from "../../database/utils"
 import {Chain} from "../../database/models/Chain"
 
 const mockResource = {
@@ -20,7 +20,7 @@ async function overPopulateDb(chainId: number) {
 }
 
 beforeAll(async () => {
-  await resetDB()
+  await resetSequelizeDB()
   for (let i = 0; i < 5; i++) {
     await Chain.create({
       chainId: i,

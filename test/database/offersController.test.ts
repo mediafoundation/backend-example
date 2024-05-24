@@ -1,5 +1,5 @@
 import {OffersController} from "../../database/controllers/offersController"
-import {resetDB} from "../../database/utils"
+import {resetSequelizeDB} from "../../database/utils"
 import {BandwidthLimit} from "../../database/models/BandwidthLimit"
 import {OfferMetadata} from "../../database/models/offers/OffersMetadata"
 import {NodeLocation} from "../../database/models/NodeLocation"
@@ -31,7 +31,7 @@ async function overPopulateDb(chainId: number) {
 }
 
 beforeAll(async () => {
-  await resetDB()
+  await resetSequelizeDB()
 
   for (let i = 0; i < 5; i++) {
 

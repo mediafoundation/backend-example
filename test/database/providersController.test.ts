@@ -1,4 +1,4 @@
-import {resetDB} from "../../database/utils"
+import {resetSequelizeDB} from "../../database/utils"
 import {ProvidersController} from "../../database/controllers/providersController"
 import {Chain} from "../../database/models/Chain"
 import {Provider} from "../../database/models/Provider"
@@ -74,7 +74,7 @@ async function populateOffers(amount: number, provider: string, chainId: number)
 }
 
 beforeAll(async () => {
-  await resetDB()
+  await resetSequelizeDB()
 
   for (let i = 0; i < 2; i++) {
     await Chain.create({

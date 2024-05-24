@@ -1,6 +1,6 @@
 import {DealsController} from "../../database/controllers/dealsController"
 import {ResourcesController} from "../../database/controllers/resourcesController"
-import {resetDB} from "../../database/utils"
+import {resetSequelizeDB} from "../../database/utils"
 import {DealMetadata} from "../../database/models/deals/DealsMetadata"
 import {BandwidthLimit} from "../../database/models/BandwidthLimit"
 import {NodeLocation} from "../../database/models/NodeLocation"
@@ -51,7 +51,7 @@ async function overPopulateDb(chainId: number) {
 }
 
 beforeAll(async () => {
-  await resetDB()
+  await resetSequelizeDB()
   
   for (let i = 0; i < 5; i++) {
     await Chain.create({
