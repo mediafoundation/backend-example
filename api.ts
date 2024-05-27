@@ -195,6 +195,16 @@ app.get("/providers/countNewDeals", async (req, res) => {
 
 })
 
+app.get("/providers/revenue", async (req, res) => {
+  try {
+    const revenue = await EventsController.calculateFutureProviderRevenue("0xb34c80FdaBb37Ca8964fb20046AF982d27cFBFd7", 11155111)
+    res.send(revenue)
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({error: e})
+  }
+})
+
 // Start the server
 const port = 5000
 export const server = app.listen(port, () => console.log(`Server is running on port ${port}`))

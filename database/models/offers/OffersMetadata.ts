@@ -30,6 +30,7 @@ OfferMetadata.init({
   type: DataTypes.STRING,
   label: DataTypes.STRING,
   autoSsl: DataTypes.BOOLEAN,
+  customCnames: DataTypes.BOOLEAN,
   burstSpeed: DataTypes.INTEGER,
   apiEndpoint: DataTypes.STRING,
 }, {

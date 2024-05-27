@@ -1,18 +1,24 @@
 import {Blockchain, EventsHandler, Marketplace, Sdk, validChains} from "media-sdk"
 import {lastReadBlockCollection} from "./database/database"
 import {EventsController} from "./database/controllers/eventsController"
-import {createRelationsBetweenTables} from "./database/utils"
+import {createRelationsBetweenTables, resetMongoDB} from "./database/utils"
 import {DealsController} from "./database/controllers/dealsController"
 
 const BATCH_SIZE = 1000n
+
+const marketplaceGenesisBlock: {[index: number]: bigint} = {
+  11155111: 5284652n,
+  84532: 6059860n
+}
 
 function delay(ms: number) {
   return new Promise( resolve => setTimeout(resolve, ms) )
 }
 
 async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchain, chainId: number) {
+  console.log("Getting past events on chain:", chainId)
   const lastBlockOnDb = await lastReadBlockCollection.findOne({chainId: chainId})
-  let blockToRead = lastBlockOnDb ? BigInt(lastBlockOnDb.block) : 5284652n
+  let blockToRead = lastBlockOnDb ? BigInt(lastBlockOnDb.block) : marketplaceGenesisBlock[chainId]
 
   const currentBlock = await blockChain.getBlockNumber()
 
@@ -20,7 +26,7 @@ async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchai
     try {
       const events = []
 
-      events.push(...await eventsHandler.getResourcesPastEvents({eventName: undefined, fromBlock: blockToRead, toBlock: blockToRead + BATCH_SIZE}))
+      //events.push(...await eventsHandler.getResourcesPastEvents({eventName: undefined, fromBlock: blockToRead, toBlock: blockToRead + BATCH_SIZE}))
       events.push(...await eventsHandler.getMarketplacePastEvents({eventName: undefined, fromBlock: blockToRead, toBlock: blockToRead + BATCH_SIZE}))
 
       for (const event of events) {
@@ -89,10 +95,8 @@ async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, m
 }
 
 async function start() {
-  createRelationsBetweenTables()
-    .then(() => {
-      console.log("Associations created")
-    })
+  await createRelationsBetweenTables()
+  await resetMongoDB()
   try {
     const chains: any[] = Object.values(validChains)
     for (const chain of chains) {
@@ -109,6 +113,9 @@ start()
     console.log("Past events gotten")
   })
 
+/*
+console.log("Start getting new events")
+
 setInterval(async () => {
   try {
     const chains: any[] = Object.values(validChains)
@@ -119,4 +126,4 @@ setInterval(async () => {
   } catch (e) {
     console.log("Error", e)
   }
-}, 60000)
+}, 60000)*/

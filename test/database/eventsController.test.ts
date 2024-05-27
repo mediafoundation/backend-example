@@ -2,8 +2,9 @@ import {connectToMongodb, eventsCollection} from "../../database/database"
 import {MongoClient} from "mongodb"
 import {EventsController} from "../../database/controllers/eventsController"
 import {Chain} from "../../database/models/Chain"
-import {resetSequelizeDB} from "../../database/utils"
+import {createRelationsBetweenTables, resetSequelizeDB} from "../../database/utils"
 import {DealsController} from "../../database/controllers/dealsController"
+import {Marketplace} from "../../../media-sdk"
 
 
 let db: MongoClient
@@ -42,7 +43,7 @@ const mockDeal = {
   totalPayment: 0n,
   blockedBalance: 446499999999553500n,
   terms: {
-    pricePerSecond: 111111111111n,
+    pricePerSecond: 1n,
     minDealDuration: 900n,
     billFullPeriods: false,
     singlePeriodOnly: false,
@@ -87,7 +88,7 @@ async function populateDealCreated(provider: string, amount: number, chainId: nu
 }
 
 beforeAll(async () => {
-  db = await connectToMongodb()
+  /*db = await connectToMongodb()
   await resetSequelizeDB()
 
   for (let i = 0; i < 2; i++) {
@@ -97,7 +98,7 @@ beforeAll(async () => {
     })
   }
 
-  await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 1)
+  await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 1)*/
 })
 
 afterAll(async () => {
@@ -105,7 +106,7 @@ afterAll(async () => {
 })
 
 afterEach(async () => {
-  await eventsCollection.drop()
+  //await eventsCollection.drop()
 })
 
 describe("Events Controller", () => {
@@ -153,5 +154,47 @@ describe("Events Controller", () => {
 
     const range = await EventsController.calculateProviderNewDeals("Provider", 1, 1, 2)
     expect(range).toBe(10)
+  })
+
+  test("Delete useless events for future revenue with auto accept", () => {
+    const events = [
+      {eventName: "DealCreated"},
+      {eventName: "AddedBalance"},
+      {eventName: "DealCancelled"},
+    ]
+    const result = EventsController.deleteUselessEvents(events, (a, b) => a.eventName === b)
+    expect(result).toStrictEqual([])
+  })
+
+  test("Delete useless events for future revenue without auto accept", () => {
+    const events = [
+      {eventName: "DealCreated"},
+      {eventName: "DealCollected"},
+      {eventName: "AddedBalance"},
+      {eventName: "DealAccepted"},
+    ]
+    const result = EventsController.deleteUselessEvents(events, (a, b) => a.eventName === b)
+    expect(result).toStrictEqual([{eventName: "DealAccepted"}])
+  })
+
+  test("If last event is collected, no event for future revenue should be evaluated", () => {
+    const events = [
+      {eventName: "DealCreated"},
+      {eventName: "DealAccepted"},
+      {eventName: "DealCollected"},
+    ]
+
+    const result = EventsController.deleteUselessEvents(events, (a, b) => a.eventName === b)
+    expect(result).toStrictEqual([])
+  })
+
+  test("Calculate future revenue for deal", async () => {
+    const events = await eventsCollection.find({
+      chainId: 11155111,
+      "args._dealId": "82"
+    }).toArray()
+
+    const result = EventsController.deleteUselessEvents(events, (a, b) => a.eventName === b)
+    console.log(result)
   })
 })

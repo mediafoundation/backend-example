@@ -3,7 +3,7 @@ import {EventFormatted} from "../models/types/event"
 import {Document, Filter, WithId} from "mongodb"
 import {DealsController} from "./dealsController"
 import {Events} from "../models/Event"
-import {Deal} from "../models/deals/Deal"
+import {DealAttributes} from "../models/deals/Deal"
 
 export class EventsController {
   static async upsertEvent(event: EventFormatted, chainId: number, blockTimestamp: number) {
@@ -63,7 +63,7 @@ export class EventsController {
     return totalRevenue
   }
 
-  static async calculateFutureProviderRevenue(provider: string, chainId: number | undefined, fromDate: number = Date.now() / 1000, toDate: number = Date.now() / 1000) {
+  static async calculateFutureProviderRevenue(provider: string, chainId: number | undefined, fromDate: number = 0, toDate: number = Math.floor(Date.now()/1000)) {
 
     let totalRevenue = BigInt(0)
     const deals = await DealsController.getDeals(chainId, {provider: provider})
@@ -76,12 +76,6 @@ export class EventsController {
           $gte: fromDate,
           $lte: toDate
         },
-        $or: [
-          {eventName: "DealCreated"},
-          {eventName: "DealCancelled"},
-          {eventName: "AddedBalance"},
-          {eventName: "DealCollected"},
-        ],
         chainId: chainId,
         "args._dealId": deal.dealId
       }).toArray()
@@ -92,7 +86,7 @@ export class EventsController {
       }
 
       console.log("Events", deal.dealId, events)
-      totalRevenue += EventsController.calculateDealRevenue(events, deal, toDate)
+      totalRevenue += EventsController.calculateDealFutureRevenue(events, deal, fromDate, toDate)
     }
 
     return totalRevenue
@@ -121,58 +115,62 @@ export class EventsController {
     })
   }
 
-  private static calculateDealRevenue(events: Events[], deal: Deal, toTimestamp: number) {
+  static calculateDealFutureRevenue(events: Events[], deal: DealAttributes, fromTimestamp: number, toTimestamp: number) {
     let totalDealRevenue = BigInt(0)
-    for (const event of events) {
-      if(event.eventName == "DealCancelled") {
-        //todo: check for time accuracy on calculus
-        totalDealRevenue += BigInt(event.args._paymentToProvider)
+    for (let i = 0; i < events.length; i++){
+      //Calculate earn if no singlePeriodOnly
+      if(this.dealIsActive(deal)) {
+        const elapsedTime = deal.billingStart >= fromTimestamp ? BigInt(toTimestamp - Number(deal.billingStart)) : BigInt(toTimestamp - fromTimestamp)
+        totalDealRevenue += elapsedTime * BigInt(deal.pricePerSecond)
       }
 
-      if(event.eventName == "DealCreated" && event.args._autoAccept) {
-        if(this.dealIsActive(deal)) {
-          const elapsedTime = BigInt(toTimestamp - deal.billingStart)
-          totalDealRevenue += elapsedTime * BigInt(deal.pricePerSecond)
+      else{
+        if(deal.billingStart < fromTimestamp) {
+          const notElapseTime = fromTimestamp - deal.billingStart
+          totalDealRevenue += BigInt(deal.blockedBalance) - BigInt(deal.pricePerSecond) * BigInt(notElapseTime)
         }
-
         else{
-          //todo: get fee
           totalDealRevenue += BigInt(deal.blockedBalance)
         }
       }
     }
 
+    console.log("Total deal revenue", deal.id, totalDealRevenue)
+
     return totalDealRevenue
   }
 
-  private static deleteUselessEvents<T>(events: T[], comparator: (a: T, b: string) => boolean) {
+  static deleteUselessEvents<T>(events: T[], comparator: (a: T, b: string) => boolean) {
 
     //Delete all elements on index equal or minor to last DealCollected
 
     let index = events.map(item => comparator(item, "AddedBalance")).lastIndexOf(true)
     if (index !== -1) {
-      events = events.slice(0, index)
+      events = events.slice(index)
     }
 
     index = events.map(item => comparator(item, "DealCollected")).lastIndexOf(true)
     if (index !== -1) {
-      events = events.slice(0, index)
+      events = events.slice(index+1)
 
     }
 
-    //Delete all elements before added balance
+    index = events.map(item => comparator(item, "DealCancelled")).lastIndexOf(true)
+    if (index !== -1) {
+      events = events.slice(index+1)
 
-    //Delete dealCreated
+    }
 
-    index = events.map(item => comparator(item, "DealCreated")).lastIndexOf(true)
-    if(index !== 1) {
-      events = events.slice(index + 1)
+    index = events.map(item => comparator(item, "DealAccepted")).lastIndexOf(true)
+    if(index !== -1) {
+      events = events.slice(index)
     }
 
     return events
   }
 
-  private static dealIsActive(deal: Deal) {
+  private static dealIsActive(deal: DealAttributes) {
+    if(!deal.active) return false
     const totalTime = deal.blockedBalance / deal.pricePerSecond
     const calculatedEnd = deal.billingStart + totalTime
     if(Number(calculatedEnd) * 1000 > 8640000000000000) return true
