@@ -1,10 +1,10 @@
-import {connectToMongodb, eventsCollection} from "../../database/database"
+import {connectToMongodb, eventsCollection, sequelize} from "../../database/database"
 import {MongoClient} from "mongodb"
 import {EventsController} from "../../database/controllers/eventsController"
 import {Chain} from "../../database/models/Chain"
-import {createRelationsBetweenTables, resetSequelizeDB} from "../../database/utils"
+import {resetSequelizeDB} from "../../database/utils"
 import {DealsController} from "../../database/controllers/dealsController"
-import {Marketplace} from "../../../media-sdk"
+import {ProvidersController} from "../../database/controllers/providersController"
 
 
 let db: MongoClient
@@ -59,28 +59,15 @@ const mockDeal = {
   }
 }
 
-async function populateDealCollected(provider: string, amount: number, chainId: number, blockTimestamp: number) {
+async function populateDealEvent(dealEvent: any, provider: string, amount: number, chainId: number, blockTimestamp: number) {
   for (let i = 0; i < amount; i++) {
     const copyDeal = structuredClone(mockDeal)
     copyDeal.id = BigInt(i)
     copyDeal.provider = provider
+    await ProvidersController.upsertProvider(provider, 1, undefined, JSON.stringify({metadata: "metadata"}), "PubKey")
     await DealsController.upsertDeal(DealsController.formatDeal(copyDeal), chainId)
 
-    const copyEvent = structuredClone(dealCollectedMockEvent)
-    copyEvent["args"]["_dealId"] = BigInt(i)
-
-    await EventsController.upsertEvent(EventsController.formatEvent(copyEvent), chainId, blockTimestamp)
-  }
-}
-
-async function populateDealCreated(provider: string, amount: number, chainId: number, blockTimestamp: number) {
-  for (let i = 0; i < amount; i++) {
-    const copyDeal = structuredClone(mockDeal)
-    copyDeal.id = BigInt(i)
-    copyDeal.provider = provider
-    await DealsController.upsertDeal(DealsController.formatDeal(copyDeal), chainId)
-
-    const copyEvent = structuredClone(dealCreatedMockEvent)
+    const copyEvent = structuredClone(dealEvent)
     copyEvent["args"]["_dealId"] = BigInt(i)
 
     await EventsController.upsertEvent(EventsController.formatEvent(copyEvent), chainId, blockTimestamp)
@@ -88,7 +75,7 @@ async function populateDealCreated(provider: string, amount: number, chainId: nu
 }
 
 beforeAll(async () => {
-  /*db = await connectToMongodb()
+  db = await connectToMongodb()
   await resetSequelizeDB()
 
   for (let i = 0; i < 2; i++) {
@@ -98,15 +85,18 @@ beforeAll(async () => {
     })
   }
 
-  await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 1)*/
+  await ProvidersController.upsertProvider(mockDeal.provider, 1, undefined, JSON.stringify({metadata: "metadata"}), "PubKey")
+
+  await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 1)
 })
 
 afterAll(async () => {
   await db.close()
+  await sequelize.close()
 })
 
 afterEach(async () => {
-  //await eventsCollection.drop()
+  await eventsCollection.drop()
 })
 
 describe("Events Controller", () => {
@@ -126,15 +116,15 @@ describe("Events Controller", () => {
   })
 
   test("Calculate provider revenue", async () => {
-    await populateDealCollected("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 50, 0, 1)
+    await populateDealEvent(dealCollectedMockEvent, "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 50, 0, 1)
 
     const result = await EventsController.calculateProviderRevenue("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 0, 0, 2)
     expect(result).toBe(50n*BigInt(dealCollectedMockEvent.args._paymentToProvider))
   })
 
   test("Calculate provider revenue with multiple chains", async () => {
-    await populateDealCollected("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 50, 0, 1)
-    await populateDealCollected("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 20, 1, 1)
+    await populateDealEvent(dealCollectedMockEvent,"0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 50, 0, 1)
+    await populateDealEvent(dealCollectedMockEvent,"0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 20, 1, 1)
 
     let result = await EventsController.calculateProviderRevenue("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 0, 0, 1)
     expect(result).toBe(50n*BigInt(dealCollectedMockEvent.args._paymentToProvider))
@@ -144,10 +134,10 @@ describe("Events Controller", () => {
   })
 
   test("Get deals created given date range", async () => {
-    await populateDealCreated("Provider", 5, 1, 0)
-    await populateDealCreated("Provider", 5, 1, 1)
-    await populateDealCreated("Provider", 5, 1, 2)
-    await populateDealCreated("Provider", 5, 1, 3)
+    await populateDealEvent(dealCreatedMockEvent,"Provider", 5, 1, 0)
+    await populateDealEvent(dealCreatedMockEvent,"Provider", 5, 1, 1)
+    await populateDealEvent(dealCreatedMockEvent,"Provider", 5, 1, 2)
+    await populateDealEvent(dealCreatedMockEvent,"Provider", 5, 1, 3)
 
     const allRange = await EventsController.calculateProviderNewDeals("Provider", 1, 0, 3)
     expect(allRange).toBe(20)
