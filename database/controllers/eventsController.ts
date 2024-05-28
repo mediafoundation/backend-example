@@ -104,7 +104,7 @@ export class EventsController {
     })
   }
 
-  static async calculateNetworkNewResources(chainId: number, fromDate: number = Date.now() / 1000, toDate: number = Date.now() / 1000) : Promise<number>{
+  /*static async calculateNetworkNewResources(chainId: number, fromDate: number = Date.now() / 1000, toDate: number = Date.now() / 1000) : Promise<number>{
     return eventsCollection.countDocuments({
       timestamp: {
         $gte: fromDate,
@@ -113,7 +113,7 @@ export class EventsController {
       chainId: chainId,
       eventName: "AddedResource"
     })
-  }
+  }*/
 
   static calculateDealFutureRevenue(events: Events[], deal: DealAttributes, fromTimestamp: number, toTimestamp: number) {
     let totalDealRevenue = BigInt(0)
@@ -121,7 +121,26 @@ export class EventsController {
       //Calculate earn if no singlePeriodOnly
       if(this.dealIsActive(deal)) {
         const elapsedTime = deal.billingStart >= fromTimestamp ? BigInt(toTimestamp - Number(deal.billingStart)) : BigInt(toTimestamp - fromTimestamp)
-        totalDealRevenue += elapsedTime * BigInt(deal.pricePerSecond)
+        if (elapsedTime < deal.minDealDuration) {
+          // if the elapsed time is less than the minimum duration, payment is for entire minimum duration
+          totalDealRevenue =
+            BigInt(deal.pricePerSecond *
+              deal.minDealDuration)
+        } else {
+          // if the deal is billable only for full periods
+          if (deal.billFullPeriods) {
+            const periods = elapsedTime == 0n
+              ? 1n
+              : (elapsedTime - 1n) / BigInt(deal.minDealDuration) + 1n
+            totalDealRevenue =
+              periods *
+              BigInt((deal.minDealDuration *
+                deal.pricePerSecond))
+            // if more than one period elapsed and the deal is not set to be billed for full periods afterward
+          } else {
+            totalDealRevenue = BigInt(deal.pricePerSecond) * elapsedTime
+          }
+        }
       }
 
       else{
