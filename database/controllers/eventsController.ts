@@ -63,7 +63,7 @@ export class EventsController {
     return totalRevenue
   }
 
-  static async calculateFutureProviderRevenue(provider: string, chainId: number | undefined, fromDate: number = 0, toDate: number = Math.floor(Date.now()/1000)) {
+  static async calculateFutureProviderRevenue(provider: string, chainId: number, fromDate: number = 0, toDate: number = Math.floor(Date.now()/1000)) {
 
     let totalRevenue = BigInt(0)
     const deals = await DealsController.getDeals(chainId, {provider: provider})
@@ -87,6 +87,27 @@ export class EventsController {
 
       console.log("Events", deal.dealId, events)
       totalRevenue += EventsController.calculateDealFutureRevenue(events, deal, fromDate, toDate)
+    }
+
+    return totalRevenue
+  }
+
+  static async calculateCollectedProviderRevenue(provider: string, chainId: number, fromDate: number = 0, toDate: number = Math.floor(Date.now()/1000)) {
+    let totalRevenue = 0n
+    const deals = await DealsController.getDeals(chainId, {provider: provider})
+    for (const deal of deals) {
+      const events = await eventsCollection.find({
+        provider: provider,
+        eventName: "DealCollected",
+        timestamp: {
+          $gte: fromDate,
+          $lte: toDate
+        },
+        chainId: chainId,
+        "args._dealId": deal.dealId
+      }).toArray()
+      const dealRevenue = this.calculateDealCollectedRevenue(events)
+      totalRevenue += dealRevenue
     }
 
     return totalRevenue
@@ -155,6 +176,15 @@ export class EventsController {
     }
 
     console.log("Total deal revenue", deal.id, totalDealRevenue)
+
+    return totalDealRevenue
+  }
+
+  static calculateDealCollectedRevenue(events: Events[]) {
+    let totalDealRevenue = 0n
+    for (const event of events) {
+      totalDealRevenue += BigInt(event.args._paymentToProvider)
+    }
 
     return totalDealRevenue
   }
