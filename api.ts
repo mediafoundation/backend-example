@@ -196,10 +196,25 @@ app.get("/providers/countNewDeals", async (req, res) => {
 
 })
 
-app.get("/providers/revenue", async (req, res) => {
+app.get("/revenue", async (req, res) => {
   try {
-    const revenue = await EventsController.calculateFutureProviderRevenue("0xb34c80FdaBb37Ca8964fb20046AF982d27cFBFd7", 11155111)
-    res.send(revenue)
+    const provider = req.query.provider
+    const chainId = req.query.chainId
+    const fromTimestamp = req.query.fromTimestamp ? Number(req.query.fromTimstamp) : undefined
+    const toTimestamp = req.query.toTimestamp ? Number(req.query.toTimestamp) : undefined
+
+    if(!provider || !chainId) {
+      res.status(500).json({error: "No provider or chainId founded"})
+    }
+    else {
+      const futureRevenue = await EventsController.calculateFutureProviderRevenue(provider!.toString(), Number(chainId), fromTimestamp, toTimestamp)
+      const collectedRevenue = await EventsController.calculateCollectedProviderRevenue(provider!.toString(), Number(chainId), fromTimestamp, toTimestamp)
+      res.send({
+        futureRevenue: futureRevenue.toString(),
+        collectedRevenue: collectedRevenue.toString(),
+        totalRevenue: (futureRevenue + collectedRevenue).toString()
+      })
+    }
   } catch (e) {
     console.log(e)
     res.status(500).json({error: e})
