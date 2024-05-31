@@ -204,7 +204,7 @@ app.get("/revenue", async (req, res) => {
     const toTimestamp = req.query.toTimestamp ? Number(req.query.toTimestamp) : undefined
 
     if(!provider || !chainId) {
-      res.status(500).json({error: "No provider or chainId founded"})
+      res.status(500).json({error: "No provider or chainId provided"})
     }
     else {
       const futureRevenue = await EventsController.calculateFutureProviderRevenue(provider!.toString(), Number(chainId), fromTimestamp, toTimestamp)
