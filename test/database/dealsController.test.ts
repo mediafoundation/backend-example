@@ -8,6 +8,7 @@ import {Chain} from "../../database/models/Chain"
 import {Deal} from "../../database/models/deals/Deal"
 import {Resource} from "../../database/models/Resource"
 import {parseFilter} from "../../utils/filter"
+import {ProvidersController} from "../../database/controllers/providersController"
 
 const mockDeal = {
   id: 1n,
@@ -58,9 +59,11 @@ beforeAll(async () => {
       chainId: i,
       name: `Chain name for ${i}`
     })
+    await ProvidersController.upsertProvider(mockDeal.provider, i, undefined, JSON.stringify({metadata: "Some metadata"}), "Pub Key")
   }
   await Resource.create({...ResourcesController.formatResource(mockResource), chainId: 1})
   await Resource.create({...ResourcesController.formatResource(mockResource), chainId: 2})
+
 })
 
 afterEach(async () => {
