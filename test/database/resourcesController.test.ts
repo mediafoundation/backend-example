@@ -2,6 +2,7 @@ import {Resource} from "../../database/models/Resource"
 import {ResourcesController} from "../../database/controllers/resourcesController"
 import {resetSequelizeDB} from "../../database/utils"
 import {Chain} from "../../database/models/Chain"
+import {closeMongoDB, sequelize} from "../../database/database"
 
 const mockResource = {
   id: 1n,
@@ -27,6 +28,11 @@ beforeAll(async () => {
       name: `Ganache ${i}`
     })
   }
+})
+
+afterAll(async () => {
+  await sequelize.close()
+  await closeMongoDB()
 })
 
 afterEach(async () => {
