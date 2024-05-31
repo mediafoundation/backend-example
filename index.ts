@@ -1,11 +1,11 @@
 import {Sdk, MarketplaceViewer, Resources, validChains, Marketplace} from "media-sdk"
 import {DealsController} from "./database/controllers/dealsController"
 import {ResourcesController} from "./database/controllers/resourcesController"
-import {resetDB} from "./database/utils"
+import {resetSequelizeDB} from "./database/utils"
 import {z} from "zod"
 import {OffersController} from "./database/controllers/offersController"
 import {Chain} from "./database/models/Chain"
-
+import {closeMongoDB, sequelize} from "./database/database"
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("dotenv").config()
 
@@ -88,13 +88,15 @@ const init = async (chain: any) => {
 }
   
 async function start() {
-  await resetDB()
+  await resetSequelizeDB()
   try {
     const chains: any[] = Object.values(validChains)
     for (const chain of chains) {
       await init(chain)
       console.log("Initialized on chain: ", chain.name)
     }
+    await sequelize.close()
+    await closeMongoDB()
   } catch (e) {
     console.log("Error", e)
   }

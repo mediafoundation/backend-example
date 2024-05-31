@@ -1,4 +1,4 @@
-import {resetDB} from "../../database/utils"
+import {resetSequelizeDB} from "../../database/utils"
 import {ProvidersController} from "../../database/controllers/providersController"
 import {Chain} from "../../database/models/Chain"
 import {Provider} from "../../database/models/Provider"
@@ -8,6 +8,7 @@ import {OffersController} from "../../database/controllers/offersController"
 import {Deal} from "../../database/models/deals/Deal"
 import {Offer} from "../../database/models/offers/Offer"
 import {ChainClient} from "../../database/models/manyToMany/ChainClient"
+import {closeMongoDB, sequelize} from "../../database/database"
 
 const mockDeal = {
   id: 1n,
@@ -68,13 +69,14 @@ async function populateOffers(amount: number, provider: string, chainId: number)
     copyOffer["id"] = BigInt(i)
 
     copyOffer["provider"] = provider
+    const metadata = JSON.stringify({"metadata": "someExample"})
 
-    await OffersController.upsertOffer(OffersController.formatOffer(copyOffer), chainId)
+    await OffersController.upsertOffer(OffersController.formatOffer(copyOffer), chainId, metadata, "pubKey")
   }
 }
 
 beforeAll(async () => {
-  await resetDB()
+  await resetSequelizeDB()
 
   for (let i = 0; i < 2; i++) {
     await Chain.create({
@@ -92,24 +94,31 @@ afterEach(async () => {
   await Offer.sync({force: true})
 })
 
+afterAll(async () => {
+  await sequelize.close()
+  await closeMongoDB()
+})
+
 describe("Providers Controller", () => {
 
   test("Upsert provider", async () => {
-    let result = await ProvidersController.upsertProvider("Account 1", 1)
+    const metadata = JSON.stringify({"metadata": "someExample"})
+    let result = await ProvidersController.upsertProvider("Account 1", 1, undefined, metadata, "pubKey")
 
     expect(result.instance).not.toBeNull()
     expect(result.instance.account).toBe("Account 1")
     expect(result.created).toBe(true)
 
-    result = await ProvidersController.upsertProvider("Account 1", 1)
+    result = await ProvidersController.upsertProvider("Account 1", 1, undefined, metadata, "pubKey")
     expect(result.instance).not.toBeNull()
     expect(result.instance.account).toBe("Account 1")
     expect(result.created).toBe(false)
   })
 
   test("Get provider", async () => {
-    await ProvidersController.upsertProvider("Account 1", 1)
-    await ProvidersController.upsertProvider("Account 1", 0)
+    const metadata = JSON.stringify({"metadata": "someExample"})
+    await ProvidersController.upsertProvider("Account 1", 1, undefined, metadata, "pubKey")
+    await ProvidersController.upsertProvider("Account 1", 0, undefined, metadata, "pubKey")
 
     const result = await ProvidersController.getProviders()
 
@@ -119,8 +128,9 @@ describe("Providers Controller", () => {
   })
 
   test("Get provider by chainId", async () => {
-    await ProvidersController.upsertProvider("Account 1", 1)
-    await ProvidersController.upsertProvider("Account 1", 0)
+    const metadata = JSON.stringify({"metadata": "someExample"})
+    await ProvidersController.upsertProvider("Account 1", 1, undefined, metadata, "pubKey")
+    await ProvidersController.upsertProvider("Account 1", 0, undefined, metadata, "pubKey")
 
     const result = await ProvidersController.getProviders(1)
     expect(result.length).toBe(1)
@@ -129,8 +139,9 @@ describe("Providers Controller", () => {
   })
 
   test("Get all providers when no pagination given", async () => {
+    const metadata = JSON.stringify({"metadata": "someExample"})
     for (let i = 0; i < 100; i++) {
-      await ProvidersController.upsertProvider(`Account: ${i}`, 1)
+      await ProvidersController.upsertProvider(`Account: ${i}`, 1, undefined, metadata, "pubKey")
     }
 
     const providers = await ProvidersController.getProviders()
@@ -142,8 +153,9 @@ describe("Providers Controller", () => {
   })
 
   test("Get providers paginating", async () => {
+    const metadata = JSON.stringify({"metadata": "someExample"})
     for (let i = 0; i < 100; i++) {
-      await ProvidersController.upsertProvider(`Account: ${i}`, 1)
+      await ProvidersController.upsertProvider(`Account: ${i}`, 1, undefined, metadata, "pubKey")
     }
 
     const firstPageProviders = await ProvidersController.getProviders(1, 1, 20)
@@ -162,6 +174,9 @@ describe("Providers Controller", () => {
   })
 
   test("Count deals", async () => {
+    const metadata = JSON.stringify({"metadata": "someExample"})
+    await ProvidersController.upsertProvider("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 0, undefined, metadata, "pubKey")
+    await ProvidersController.upsertProvider("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 1, undefined, metadata, "pubKey")
     await populateDeals(20, "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", "Client 1", 0)
     await populateDeals(100, "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", "Client 1", 1)
     const countDeals = await ProvidersController.countDeals("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31")
@@ -184,6 +199,8 @@ describe("Providers Controller", () => {
   })
 
   test("Count clients having only in one chain", async () => {
+    const metadata = JSON.stringify({"metadata": "someExample"})
+    await ProvidersController.upsertProvider("Provider 1", 1, undefined, metadata, "pubKey")
     await populateDeals(10, "Provider 1", "Client 1", 1)
     await populateDeals(10, "Provider 1", "Client 2", 1)
 
@@ -196,6 +213,9 @@ describe("Providers Controller", () => {
   })
 
   test("Count clients across different chains", async () => {
+    const metadata = JSON.stringify({"metadata": "someExample"})
+    await ProvidersController.upsertProvider("Provider 1", 0, undefined, metadata, "pubKey")
+    await ProvidersController.upsertProvider("Provider 1", 1, undefined, metadata, "pubKey")
     await populateDeals(5, "Provider 1", "Client 1", 0)
     await populateDeals(10, "Provider 1", "Client 1", 1)
     await populateDeals(5, "Provider 1", "Client 2", 1)

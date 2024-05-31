@@ -1,7 +1,8 @@
 import {Resource} from "../../database/models/Resource"
 import {ResourcesController} from "../../database/controllers/resourcesController"
-import {resetDB} from "../../database/utils"
+import {resetSequelizeDB} from "../../database/utils"
 import {Chain} from "../../database/models/Chain"
+import {closeMongoDB, sequelize} from "../../database/database"
 
 const mockResource = {
   id: 1n,
@@ -20,13 +21,18 @@ async function overPopulateDb(chainId: number) {
 }
 
 beforeAll(async () => {
-  await resetDB()
+  await resetSequelizeDB()
   for (let i = 0; i < 5; i++) {
     await Chain.create({
       chainId: i,
       name: `Ganache ${i}`
     })
   }
+})
+
+afterAll(async () => {
+  await sequelize.close()
+  await closeMongoDB()
 })
 
 afterEach(async () => {

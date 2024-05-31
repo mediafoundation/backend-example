@@ -15,7 +15,7 @@ import {Client} from "../Client"
 import {Provider} from "../Provider"
 import {Chain} from "../Chain"
 
-type DealAttributes = {
+export type DealAttributes = {
   id: number
   dealId: number
   resourceId: ForeignKey<Resource["id"]> | null

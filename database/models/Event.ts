@@ -1,5 +1,5 @@
 export interface Events {
-  args: any,
+  args: { [index: string | number]: any },
   address: string,
   blockNumber: number,
   chainId: number,

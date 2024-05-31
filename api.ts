@@ -156,7 +156,7 @@ app.get("/providers", async(req, res) => {
       else {
         const chains = provider.Chains
         for (const chain of chains!) {
-          providerMetadata[chain] = await ProvidersController.getMetadata(provider.account, chain)
+          providerMetadata[chain] = await ProvidersController.getMetadata(provider.account, Number(chain))
         }
       }
 
@@ -194,6 +194,31 @@ app.get("/providers/countNewDeals", async (req, res) => {
     res.send(e)
   }
 
+})
+
+app.get("/revenue", async (req, res) => {
+  try {
+    const provider = req.query.provider
+    const chainId = req.query.chainId
+    const fromTimestamp = req.query.fromTimestamp ? Number(req.query.fromTimstamp) : undefined
+    const toTimestamp = req.query.toTimestamp ? Number(req.query.toTimestamp) : undefined
+
+    if(!provider || !chainId) {
+      res.status(500).json({error: "No provider or chainId provided"})
+    }
+    else {
+      const futureRevenue = await EventsController.calculateFutureProviderRevenue(provider!.toString(), Number(chainId), fromTimestamp, toTimestamp)
+      const collectedRevenue = await EventsController.calculateCollectedProviderRevenue(provider!.toString(), Number(chainId), fromTimestamp, toTimestamp)
+      res.send({
+        futureRevenue: futureRevenue.toString(),
+        collectedRevenue: collectedRevenue.toString(),
+        totalRevenue: (futureRevenue + collectedRevenue).toString()
+      })
+    }
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({error: e})
+  }
 })
 
 // Start the server

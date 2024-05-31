@@ -119,9 +119,10 @@ describe("Test api", () => {
       "address": "Account 1",
       "chains": [1, 2],
       "deals": {"1": 2, "2": 10},
-      "offers": {"1": 4, "2": 1}
+      "offers": {"1": 4, "2": 1},
+      "metadata": {}
     }])
-    expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, undefined, undefined)
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, undefined, undefined, undefined)
   })
 
   test("Get providers paginating and with chainId", async () => {
@@ -146,9 +147,9 @@ describe("Test api", () => {
       "chains": [2],
       "deals": 2,
       "offers": 1,
-      "clients": 10
+      "clients": 10,
     }])
-    expect(ProvidersController.getProviders).toHaveBeenCalledWith(2, 1, 1)
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith(2, 1, 1, undefined)
     expect(ProvidersController.countDeals).toHaveBeenCalledWith("Account 1", 2)
     expect(ProvidersController.countOffers).toHaveBeenCalledWith("Account 1", 2)
   })
@@ -162,7 +163,7 @@ describe("Test api", () => {
     expect(response.body).toEqual({
       error: "Something went wrong"
     })
-    expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, undefined, undefined)
+    expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, undefined, undefined, undefined)
     expect(consoleSpy).toHaveBeenCalled()
   })
 })

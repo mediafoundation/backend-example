@@ -18,6 +18,7 @@ export class OfferMetadata extends Model<InferAttributes<OfferMetadata>, InferCr
   declare label: string
   declare autoSsl: boolean
   declare burstSpeed: number
+  declare customCnames: boolean
   declare apiEndpoint: string
   
   declare getBandwidthLimit: HasOneGetAssociationMixin<BandwidthLimit>
@@ -29,6 +30,7 @@ OfferMetadata.init({
   type: DataTypes.STRING,
   label: DataTypes.STRING,
   autoSsl: DataTypes.BOOLEAN,
+  customCnames: DataTypes.BOOLEAN,
   burstSpeed: DataTypes.INTEGER,
   apiEndpoint: DataTypes.STRING,
 }, {

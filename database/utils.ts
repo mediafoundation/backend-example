@@ -1,7 +1,7 @@
 import {Client} from "./models/Client"
 import {Resource} from "./models/Resource"
 import {Deal} from "./models/deals/Deal"
-import {connectToMongodb, sequelize} from "./database"
+import {connectToMongodb, eventsCollection, lastReadBlockCollection, providersCollection, sequelize} from "./database"
 import {NodeLocation} from "./models/NodeLocation"
 import {BandwidthLimit} from "./models/BandwidthLimit"
 import {Provider} from "./models/Provider"
@@ -15,13 +15,18 @@ import {ProviderClient} from "./models/manyToMany/ProviderClient"
 import {DealNodeLocation} from "./models/manyToMany/DealNodeLocation"
 import {OfferNodeLocation} from "./models/manyToMany/OfferNodeLocation"
 
-const resetDB = async () => {
-
+const resetSequelizeDB = async () => {
   await createRelationsBetweenTables()
+  await connectToMongodb()
+  await providersCollection.drop()
+  await sequelize.sync({force: true})
+}
 
+const resetMongoDB = async () => {
   await connectToMongodb()
 
-  await sequelize.sync({force: true})
+  await eventsCollection.drop()
+  await lastReadBlockCollection.drop()
 }
 
 const createRelationsBetweenTables = async () => {
@@ -135,4 +140,4 @@ const createRelationsBetweenTables = async () => {
 
 }
 
-export {resetDB, createRelationsBetweenTables}
+export {resetSequelizeDB, createRelationsBetweenTables, resetMongoDB}
