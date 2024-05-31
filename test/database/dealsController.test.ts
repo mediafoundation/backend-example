@@ -9,6 +9,7 @@ import {Deal} from "../../database/models/deals/Deal"
 import {Resource} from "../../database/models/Resource"
 import {parseFilter} from "../../utils/filter"
 import {ProvidersController} from "../../database/controllers/providersController"
+import {closeMongoDB, sequelize} from "../../database/database"
 
 const mockDeal = {
   id: 1n,
@@ -64,6 +65,11 @@ beforeAll(async () => {
   await Resource.create({...ResourcesController.formatResource(mockResource), chainId: 1})
   await Resource.create({...ResourcesController.formatResource(mockResource), chainId: 2})
 
+})
+
+afterAll(async () => {
+  await closeMongoDB()
+  await sequelize.close()
 })
 
 afterEach(async () => {
