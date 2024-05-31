@@ -5,6 +5,7 @@ import {OfferMetadata} from "../../database/models/offers/OffersMetadata"
 import {NodeLocation} from "../../database/models/NodeLocation"
 import {Chain} from "../../database/models/Chain"
 import {Offer} from "../../database/models/offers/Offer"
+import {closeMongoDB, sequelize} from "../../database/database"
 
 const mockOffer = {
   id: 7n,
@@ -26,7 +27,7 @@ async function overPopulateDb(chainId: number) {
     const mockOfferCopy = structuredClone(mockOffer)
     mockOfferCopy.id = BigInt(i)
     const offerFormatted = OffersController.formatOffer(mockOfferCopy)
-    await OffersController.upsertOffer(offerFormatted, chainId, "metadata", "PubKey")
+    await OffersController.upsertOffer(offerFormatted, chainId, JSON.stringify({metadata: "Some metadata"}), "PubKey")
   }
 }
 
@@ -42,6 +43,11 @@ beforeAll(async () => {
   }
 })
 
+afterAll(async () => {
+  await closeMongoDB()
+  await sequelize.close()
+})
+
 afterEach(async () => {
   await Offer.sync({force: true})
   await NodeLocation.sync({force: true})
@@ -52,13 +58,13 @@ describe("Offer Controller", () => {
   test("Should create or update an offer", async () => {
     const formattedOffer = OffersController.formatOffer(mockOffer)
 
-    const result = await OffersController.upsertOffer(formattedOffer, 1, "metadata", "PubKey")
+    const result = await OffersController.upsertOffer(formattedOffer, 1, JSON.stringify({metadata: "Some metadata"}), "PubKey")
 
     expect(result.offer).not.toBeNull()
   })
 
   test("Get offer", async () => {
-    await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 1, "metadata", "PubKey")
+    await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 1, JSON.stringify({metadata: "Some metadata"}), "PubKey")
     const nullDeal = await OffersController.getOfferByIdAndChain(2, 1)
 
     expect(nullDeal).toBeNull()
@@ -94,7 +100,7 @@ describe("Offer Controller", () => {
   })
 
   test("Filter offers, expecting matching criteria", async () => {
-    await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 1, "metadata", "PubKey")
+    await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 1, JSON.stringify({metadata: "Some metadata"}), "PubKey")
     const metadataFilter = {"autoSsl": true}
     const nodeLocationFilter = {"location": "NNN"}
     const bandwidthLimitFilter = {"amount": 0, "unit": "tb", "period": "monthly"}
@@ -113,7 +119,7 @@ describe("Offer Controller", () => {
   })
 
   test("Delete offer", async () => {
-    await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 1, "metadata", "PubKey")
+    await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 1, JSON.stringify({metadata: "Some metadata"}), "PubKey")
     const nullOffer = await OffersController.deleteOfferById(1, 1)
 
     expect(nullOffer).toBeNull()
@@ -132,12 +138,12 @@ describe("Offer Controller", () => {
   })
   
   test("Same offer id but on different networks should not be updated", async () => {
-    const firstResult = await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 1, "metadata", "PubKey")
+    const firstResult = await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 1, JSON.stringify({metadata: "Some metadata"}), "PubKey")
     expect(firstResult.offer.chainId).toBe(1)
     
     let offers = await Offer.findAll()
     expect(offers.length).toBe(1)
-    const secondResult = await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 2, "metadata", "PubKey")
+    const secondResult = await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 2, JSON.stringify({metadata: "Some metadata"}), "PubKey")
     expect(secondResult.offer.chainId).toBe(2)
     
     offers = await Offer.findAll()
@@ -145,13 +151,13 @@ describe("Offer Controller", () => {
   })
   
   test("Update first deal on chain 1", async () => {
-    await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 1, "metadata", "PubKey")
+    await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 1, JSON.stringify({metadata: "Some metadata"}), "PubKey")
     expect((await OffersController.getOfferByIdAndChain(7, 1))?.offer.publicKey).toBe("ZQkZyAgdXpLKus918lXHTP9y9q3m8ddcUkYGSImiXxQ=")
-    await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 2, "metadata", "PubKey")
+    await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 2, JSON.stringify({metadata: "Some metadata"}), "PubKey")
     const mockOfferCopy = structuredClone(mockOffer)
     mockOfferCopy["publicKey"] = "Some new provider"
     const formattedOffer = OffersController.formatOffer(mockOfferCopy)
-    const updatedOffer = await OffersController.upsertOffer(formattedOffer, 1, "metadata", "PubKey")
+    const updatedOffer = await OffersController.upsertOffer(formattedOffer, 1, JSON.stringify({metadata: "Some metadata"}), "PubKey")
     
     expect(updatedOffer.offer.publicKey).toBe("Some new provider")
     expect((await Offer.findAll()).length).toBe(2)
@@ -159,8 +165,8 @@ describe("Offer Controller", () => {
   })
   
   test("Delete offer on second chain", async() => {
-    await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 1, "metadata", "PubKey")
-    await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 2, "metadata", "PubKey")
+    await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 1, JSON.stringify({metadata: "Some metadata"}), "PubKey")
+    await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), 2, JSON.stringify({metadata: "Some metadata"}), "PubKey")
     const result = await OffersController.deleteOfferById(7, 2)
     
     expect((await Offer.findAll()).length).toBe(1)
