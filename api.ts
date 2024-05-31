@@ -156,7 +156,7 @@ app.get("/providers", async(req, res) => {
       else {
         const chains = provider.Chains
         for (const chain of chains!) {
-          providerMetadata[chain] = await ProvidersController.getMetadata(provider.account, chain)
+          providerMetadata[chain] = await ProvidersController.getMetadata(provider.account, Number(chain))
         }
       }
 
