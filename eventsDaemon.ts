@@ -80,64 +80,67 @@ async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, m
   const lastReadBlock = await lastReadBlockCollection.findOne({chainId: chainId})
   const blockToRead = await blockChain.getBlockNumber()
   console.log(`Getting events on blocks: ${lastReadBlock!.block + 1} - ${blockToRead}`)
-  const dealCreated = await eventsHandler.getMarketplacePastEvents({
-    eventName: "DealCreated",
-    fromBlock: BigInt(lastReadBlock!.block) + 1n,
-    toBlock: blockToRead
-  })
+  if(blockToRead >= lastReadBlock!.block) {
+    const dealCreated = await eventsHandler.getMarketplacePastEvents({
+      eventName: "DealCreated",
+      fromBlock: BigInt(lastReadBlock!.block) + 1n,
+      toBlock: blockToRead
+    })
 
-  const addedBalance = await eventsHandler.getMarketplacePastEvents({
-    eventName: "AddedBalance",
-    fromBlock: BigInt(lastReadBlock!.block) + 1n,
-    toBlock: blockToRead
-  })
+    const addedBalance = await eventsHandler.getMarketplacePastEvents({
+      eventName: "AddedBalance",
+      fromBlock: BigInt(lastReadBlock!.block) + 1n,
+      toBlock: blockToRead
+    })
 
-  const dealAccepted = await eventsHandler.getMarketplacePastEvents({
-    eventName: "DealAccepted",
-    fromBlock: BigInt(lastReadBlock!.block) + 1n,
-    toBlock: blockToRead
-  })
+    const dealAccepted = await eventsHandler.getMarketplacePastEvents({
+      eventName: "DealAccepted",
+      fromBlock: BigInt(lastReadBlock!.block) + 1n,
+      toBlock: blockToRead
+    })
 
-  const offerCreated = await eventsHandler.getMarketplacePastEvents({
-    eventName: "OfferCreated",
-    fromBlock: BigInt(lastReadBlock!.block) + 1n,
-    toBlock: blockToRead
-  })
+    const offerCreated = await eventsHandler.getMarketplacePastEvents({
+      eventName: "OfferCreated",
+      fromBlock: BigInt(lastReadBlock!.block) + 1n,
+      toBlock: blockToRead
+    })
 
-  const offerUpdated = await eventsHandler.getMarketplacePastEvents({
-    eventName: "OfferUpdated",
-    fromBlock: BigInt(lastReadBlock!.block) + 1n,
-    toBlock: blockToRead
-  })
+    const offerUpdated = await eventsHandler.getMarketplacePastEvents({
+      eventName: "OfferUpdated",
+      fromBlock: BigInt(lastReadBlock!.block) + 1n,
+      toBlock: blockToRead
+    })
 
-  //todo: check if offer should be deleted or not
-  /*const offerDeleted = await eventsHandler.getMarketplacePastEvents({
-    eventName: "OfferDeleted",
-    fromBlock: BigInt(lastReadBlock!.block) + 1n,
-    toBlock: blockToRead
-  })*/
+    //todo: check if offer should be deleted or not
+    /*const offerDeleted = await eventsHandler.getMarketplacePastEvents({
+      eventName: "OfferDeleted",
+      fromBlock: BigInt(lastReadBlock!.block) + 1n,
+      toBlock: blockToRead
+    })*/
 
-  for (const event of dealAccepted) {
-    await manageDealUpdated(event, marketplace, blockChain, chainId)
+    for (const event of dealAccepted) {
+      await manageDealUpdated(event, marketplace, blockChain, chainId)
+    }
+
+    for (const event of dealCreated) {
+      await manageDealUpdated(event, marketplace, blockChain, chainId)
+    }
+
+    for (const event of addedBalance) {
+      await manageDealUpdated(event, marketplace, blockChain, chainId)
+    }
+
+    for (const event of offerCreated) {
+      await manageOfferUpdated(event, marketplace, blockChain, chainId)
+    }
+
+    for (const event of offerUpdated) {
+      await manageOfferUpdated(event, marketplace, blockChain, chainId)
+    }
+
+    await lastReadBlockCollection.updateOne({block: lastReadBlock!.block, chainId: chainId}, {$set: {block: blockToRead}}, {upsert: true})
   }
 
-  for (const event of dealCreated) {
-    await manageDealUpdated(event, marketplace, blockChain, chainId)
-  }
-
-  for (const event of addedBalance) {
-    await manageDealUpdated(event, marketplace, blockChain, chainId)
-  }
-
-  for (const event of offerCreated) {
-    await manageOfferUpdated(event, marketplace, blockChain, chainId)
-  }
-
-  for (const event of offerUpdated) {
-    await manageOfferUpdated(event, marketplace, blockChain, chainId)
-  }
-
-  await lastReadBlockCollection.updateOne({block: lastReadBlock!.block, chainId: chainId}, {$set: {block: blockToRead}}, {upsert: true})
 }
 
 async function start() {
