@@ -23,7 +23,7 @@ async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchai
 
   const currentBlock = await blockChain.getBlockNumber()
 
-  while (blockToRead < currentBlock) {
+  while (blockToRead + BATCH_SIZE < currentBlock) {
     try {
       const events = []
 
@@ -42,6 +42,22 @@ async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchai
     }
 
     await delay(1000)
+  }
+
+  try {
+    const events = []
+
+    //events.push(...await eventsHandler.getResourcesPastEvents({eventName: undefined, fromBlock: blockToRead, toBlock: blockToRead + BATCH_SIZE}))
+    events.push(...await eventsHandler.getMarketplacePastEvents({eventName: undefined, fromBlock: blockToRead, toBlock: currentBlock}))
+
+    for (const event of events) {
+      const blockTimestamp = await blockChain.getBlockTimestamp(event.blockNumber)
+      await EventsController.upsertEvent(EventsController.formatEvent(event), chainId, Number(blockTimestamp.timestamp))
+    }
+
+    await lastReadBlockCollection.updateOne({block: blockToRead, chainId: chainId}, {$set: {block: currentBlock}}, {upsert: true})
+  } catch (e) {
+    console.log(e)
   }
 
   console.log("Finish getting past events on chain:", chainId)
