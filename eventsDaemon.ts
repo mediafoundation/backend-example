@@ -3,6 +3,7 @@ import {lastReadBlockCollection} from "./database/database"
 import {EventsController} from "./database/controllers/eventsController"
 import {createRelationsBetweenTables, resetMongoDB} from "./database/utils"
 import {DealsController} from "./database/controllers/dealsController"
+import {OffersController} from "./database/controllers/offersController"
 
 const BATCH_SIZE = 1000n
 
@@ -60,12 +61,19 @@ async function manageDealUpdated(event: any, marketplace: Marketplace, blockChai
 async function manageOfferUpdated(event: any, marketplace: Marketplace, blockChain: Blockchain, chainId: number) {
   const blockTimestamp = await blockChain.getBlockTimestamp(event.blockNumber)
   await EventsController.upsertEvent(EventsController.formatEvent(event), chainId, Number(blockTimestamp.timestamp))
-  const deal = await marketplace.getOfferById({
+  const offer = await marketplace.getOfferById({
     marketplaceId: process.env.MARKETPLACE_ID,
     offerId: event._offerId
   })
 
-  await DealsController.upsertDeal(DealsController.formatDeal(deal), chainId)
+  const formattedOffer = OffersController.formatOffer(offer)
+
+  const providerData = await marketplace.getProvider({
+    marketplaceId: Number(process.env.MARKETPLACE_ID),
+    provider: formattedOffer.provider
+  })
+
+  await OffersController.upsertOffer(formattedOffer, chainId, providerData.metadata, providerData.publicKey)
 }
 
 async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, marketplace: Marketplace, chainId: number) {
