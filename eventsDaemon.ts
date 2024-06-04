@@ -176,19 +176,16 @@ async function start() {
 start()
   .then(() => {
     console.log("Past events gotten")
+    console.log("Start getting new events")
+    setInterval(async () => {
+      try {
+        const chains: any[] = Object.values(validChains)
+        for (const chain of chains) {
+          const sdk = new Sdk({chain: chain})
+          await getEvents(new EventsHandler(sdk), new Blockchain(sdk), new Marketplace(sdk), chain.id)
+        }
+      } catch (e) {
+        console.log("Error", e)
+      }
+    }, 60000)
   })
-
-
-console.log("Start getting new events")
-
-setInterval(async () => {
-  try {
-    const chains: any[] = Object.values(validChains)
-    for (const chain of chains) {
-      const sdk = new Sdk({chain: chain})
-      await getEvents(new EventsHandler(sdk), new Blockchain(sdk), new Marketplace(sdk), chain.id)
-    }
-  } catch (e) {
-    console.log("Error", e)
-  }
-}, 60000)
