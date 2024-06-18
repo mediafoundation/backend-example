@@ -41,21 +41,71 @@ const mockDeal = {
   provider: "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31",
   resourceId: 3n,
   totalPayment: 0n,
-  blockedBalance: 446499999999553500n,
+  blockedBalance: 3n,
   terms: {
     pricePerSecond: 1n,
-    minDealDuration: 900n,
+    minDealDuration: 1n,
     billFullPeriods: false,
     singlePeriodOnly: false,
     metadata: "{\"type\":\"cdn\",\"label\":\"Testing Backend\",\"apiEndpoint\":\"http:localhost:5000/\",\"bandwidthLimit\":{\"amount\":1,\"unit\":\"tb\",\"period\":\"monthly\"},\"autoSsl\":true,\"burstSpeed\":1000,\"nodeLocations\":[\"ABB\", \"CL\", \"BR\"],\"customCnames\":true}"
   },
   status: {
     active: true,
-    createdAt: 1710153976n,
-    acceptedAt: 1710153976n,
-    billingStart: 1710153976n,
+    createdAt: 1n,
+    acceptedAt: 1n,
+    billingStart: 1n,
     cancelled: false,
     cancelledAt: 0n
+  }
+}
+
+const secondMockDeal = {
+  id: 2n,
+  offerId: 1n,
+  client: "0xB76c9A2fC1367f92cBB73b1ECE0c98Abb0c5097B",
+  provider: "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31",
+  resourceId: 3n,
+  totalPayment: 0n,
+  blockedBalance: 1n,
+  terms: {
+    pricePerSecond: 1n,
+    minDealDuration: 1n,
+    billFullPeriods: false,
+    singlePeriodOnly: false,
+    metadata: "{\"type\":\"cdn\",\"label\":\"Testing Backend\",\"apiEndpoint\":\"http:localhost:5000/\",\"bandwidthLimit\":{\"amount\":1,\"unit\":\"tb\",\"period\":\"monthly\"},\"autoSsl\":true,\"burstSpeed\":1000,\"nodeLocations\":[\"ABB\", \"CL\", \"BR\"],\"customCnames\":true}"
+  },
+  status: {
+    active: true,
+    createdAt: 2n,
+    acceptedAt: 3n,
+    billingStart: 3n,
+    cancelled: false,
+    cancelledAt: 0n
+  }
+}
+
+const thirdMockDeal = {
+  id: 3n,
+  offerId: 1n,
+  client: "0xB76c9A2fC1367f92cBB73b1ECE0c98Abb0c5097B",
+  provider: "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31",
+  resourceId: 3n,
+  totalPayment: 0n,
+  blockedBalance: 100n,
+  terms: {
+    pricePerSecond: 1n,
+    minDealDuration: 1n,
+    billFullPeriods: false,
+    singlePeriodOnly: false,
+    metadata: "{\"type\":\"cdn\",\"label\":\"Testing Backend\",\"apiEndpoint\":\"http:localhost:5000/\",\"bandwidthLimit\":{\"amount\":1,\"unit\":\"tb\",\"period\":\"monthly\"},\"autoSsl\":true,\"burstSpeed\":1000,\"nodeLocations\":[\"ABB\", \"CL\", \"BR\"],\"customCnames\":true}"
+  },
+  status: {
+    active: false,
+    createdAt: 4n,
+    acceptedAt: 4n,
+    billingStart: 4n,
+    cancelled: true,
+    cancelledAt: 6n
   }
 }
 
@@ -88,6 +138,8 @@ beforeAll(async () => {
   await ProvidersController.upsertProvider(mockDeal.provider, 1, undefined, JSON.stringify({metadata: "metadata"}), "PubKey")
 
   await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), 1)
+  await DealsController.upsertDeal(DealsController.formatDeal(secondMockDeal), 1)
+  await DealsController.upsertDeal(DealsController.formatDeal(thirdMockDeal), 1)
 })
 
 afterAll(async () => {
@@ -185,6 +237,106 @@ describe("Events Controller", () => {
     }).toArray()
 
     const result = EventsController.deleteUselessEvents(events, (a, b) => a.eventName === b)
+    console.log(result)
+  })
+
+  test("Get provider revenue daily", async () => {
+    const result = await EventsController.calculateProviderRevenue("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 1, 1, 5)
+    console.log(result)
+    //expect(result["1970-01-01"]).toBe(5n )
+  })
+
+  test("Get provider revenue in a week", async () => {
+    //Override deals
+    const firstDeal = {
+      id: 1n,
+      offerId: 1n,
+      client: "0xB76c9A2fC1367f92cBB73b1ECE0c98Abb0c5097B",
+      provider: "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31",
+      resourceId: 3n,
+      totalPayment: 0n,
+      //5 days
+      blockedBalance: 432000n,
+      terms: {
+        pricePerSecond: 1n,
+        minDealDuration: 1n,
+        billFullPeriods: false,
+        singlePeriodOnly: false,
+        metadata: "{\"type\":\"cdn\",\"label\":\"Testing Backend\",\"apiEndpoint\":\"http:localhost:5000/\",\"bandwidthLimit\":{\"amount\":1,\"unit\":\"tb\",\"period\":\"monthly\"},\"autoSsl\":true,\"burstSpeed\":1000,\"nodeLocations\":[\"ABB\", \"CL\", \"BR\"],\"customCnames\":true}"
+      },
+      status: {
+        active: true,
+        // 18/06/2024 10hs
+        createdAt: 1718715600n,
+        acceptedAt: 1718715600n,
+        billingStart: 1718715600n,
+        cancelled: false,
+        cancelledAt: 0n
+      }
+    }
+
+    const secondDeal = {
+      id: 2n,
+      offerId: 1n,
+      client: "0xB76c9A2fC1367f92cBB73b1ECE0c98Abb0c5097B",
+      provider: "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31",
+      resourceId: 3n,
+      totalPayment: 0n,
+      //Active for 1.5 days
+      blockedBalance: 129600n,
+      terms: {
+        pricePerSecond: 1n,
+        minDealDuration: 1n,
+        billFullPeriods: false,
+        singlePeriodOnly: false,
+        metadata: "{\"type\":\"cdn\",\"label\":\"Testing Backend\",\"apiEndpoint\":\"http:localhost:5000/\",\"bandwidthLimit\":{\"amount\":1,\"unit\":\"tb\",\"period\":\"monthly\"},\"autoSsl\":true,\"burstSpeed\":1000,\"nodeLocations\":[\"ABB\", \"CL\", \"BR\"],\"customCnames\":true}"
+      },
+      status: {
+        active: true,
+        // 19/06/2024 10hs
+        createdAt: 1718802000n,
+        // 20/06/2024 10hs
+        acceptedAt: 1718888400n,
+        billingStart: 1718888400n,
+        cancelled: false,
+        cancelledAt: 0n
+      }
+    }
+
+    const thirdDeal = {
+      id: 3n,
+      offerId: 1n,
+      client: "0xB76c9A2fC1367f92cBB73b1ECE0c98Abb0c5097B",
+      provider: "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31",
+      resourceId: 3n,
+      totalPayment: 0n,
+      // Week
+      blockedBalance: 604800n,
+      terms: {
+        pricePerSecond: 1n,
+        minDealDuration: 1n,
+        billFullPeriods: false,
+        singlePeriodOnly: false,
+        metadata: "{\"type\":\"cdn\",\"label\":\"Testing Backend\",\"apiEndpoint\":\"http:localhost:5000/\",\"bandwidthLimit\":{\"amount\":1,\"unit\":\"tb\",\"period\":\"monthly\"},\"autoSsl\":true,\"burstSpeed\":1000,\"nodeLocations\":[\"ABB\", \"CL\", \"BR\"],\"customCnames\":true}"
+      },
+      status: {
+        active: false,
+        // 19/06/2024 10hs
+        createdAt: 1718802000n,
+        acceptedAt: 1718802000n,
+        billingStart: 1718802000n,
+        cancelled: true,
+        // 21/06/2024 18hs
+        cancelledAt: 1719003600n
+      }
+    }
+
+    await DealsController.upsertDeal(DealsController.formatDeal(firstDeal), 1)
+    await DealsController.upsertDeal(DealsController.formatDeal(secondDeal), 1)
+    await DealsController.upsertDeal(DealsController.formatDeal(thirdDeal), 1)
+
+    // From 15/06/2024 10hs to 22/06/2024 10hs
+    const result = await EventsController.calculateProviderRevenue("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 1, 1718456400, 1719061200)
     console.log(result)
   })
 })
