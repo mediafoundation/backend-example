@@ -1,13 +1,14 @@
 import {
   BelongsToManyCountAssociationsMixin,
   DataTypes,
-  HasManyCountAssociationsMixin,
+  HasManyCountAssociationsMixin, HasManyGetAssociationsMixin,
   InferCreationAttributes,
   Model,
   NonAttribute
 } from "sequelize"
 import {sequelize} from "../database"
 import {Chain} from "./Chain"
+import {Client} from "./Client"
 
 interface ProviderAttributes {
   account: string,
@@ -22,6 +23,8 @@ export class Provider extends Model<ProviderAttributes, InferCreationAttributes<
   declare countDeals: HasManyCountAssociationsMixin
   declare countOffers: HasManyCountAssociationsMixin
   declare countClients: BelongsToManyCountAssociationsMixin
+
+  declare getClients: HasManyGetAssociationsMixin<Client>
 
   declare Chains?: NonAttribute<Chain[] | number[] | undefined>
 }

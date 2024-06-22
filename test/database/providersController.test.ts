@@ -229,4 +229,28 @@ describe("Providers Controller", () => {
     const clientsOnChain = await ProvidersController.countClients("Provider 1", 1)
     expect(clientsOnChain).toBe(2)
   })
+
+  test("Get clients on period", async () => {
+    const metadata = JSON.stringify({"metadata": "someExample"})
+    await ProvidersController.upsertProvider("Provider 1", 0, undefined, metadata, "pubKey")
+    await ProvidersController.upsertProvider("Provider 1", 1, undefined, metadata, "pubKey")
+    await populateDeals(5, "Provider 1", "Client 1", 0)
+    await populateDeals(10, "Provider 1", "Client 1", 1)
+    await populateDeals(5, "Provider 1", "Client 2", 1)
+
+    const result = await ProvidersController.getProviderNewClients("Provider 1", 1)
+    console.log(result)
+  })
+
+  test("Get clients", async() => {
+    const metadata = JSON.stringify({"metadata": "someExample"})
+    await ProvidersController.upsertProvider("Provider 1", 0, undefined, metadata, "pubKey")
+    await ProvidersController.upsertProvider("Provider 1", 1, undefined, metadata, "pubKey")
+    await populateDeals(5, "Provider 1", "Client 1", 0)
+    await populateDeals(10, "Provider 1", "Client 1", 1)
+    await populateDeals(5, "Provider 1", "Client 2", 1)
+
+    const result = await ProvidersController.getProviderActiveClients("Provider 1")
+    console.log(result)
+  })
 })

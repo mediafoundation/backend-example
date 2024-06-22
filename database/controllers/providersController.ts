@@ -4,7 +4,8 @@ import {ChainProvider} from "../models/manyToMany/ChainProvider"
 import {ProviderAssociationCount} from "../models/types/provider"
 import {ProviderClient} from "../models/manyToMany/ProviderClient"
 import {ChainClient} from "../models/manyToMany/ChainClient"
-import {providersCollection} from "../database"
+import {Op, providersCollection, sequelize} from "../database"
+import {Deal} from "../models/deals/Deal"
 
 export class ProvidersController {
   static async getProviders(chainId: number | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined= undefined, account: string | undefined = undefined) {
@@ -164,5 +165,76 @@ export class ProvidersController {
     }
 
     return result
+  }
+
+  static async getProviderActiveClients(provider: string, chainId: number | undefined = undefined, fromDate: number = 0, toDate: number = Math.floor(Date.now() / 1000)) {
+    const providerFromDb = await Provider.findOne({where: {account: provider}})
+
+    if(!providerFromDb) {
+      throw new Error("Provider not found")
+    }
+
+    const chains = chainId ? [chainId] : (await Chain.findAll({attributes: {include: ["chainId"]}})).map(chain => chain.chainId)
+
+    const result: ProviderAssociationCount = {}
+
+    for (const chain of chains) {
+      const clientsOnChain = await ChainClient.findAll({where: {chainId: chain}})
+      const clients = (await providerFromDb!.getClients({where: {account: clientsOnChain.map(chainClient => chainClient.client)}})).map(client => client.dataValues.account)
+
+      for (const client of clients) {
+        const clientsDeals = await Deal.count({
+          where: {
+            client: client,
+            [Op.and]: [
+              sequelize.where(
+                sequelize.literal("(CAST(blockedBalance AS DECIMAL) / CAST(pricePerSecond AS DECIMAL)) + CAST(billingStart AS DECIMAL)"),
+                {
+                  [Op.gte]: fromDate
+                }
+              )
+            ],
+            billingStart: {
+              [Op.lte]: toDate
+            }
+          }
+        })
+
+        if(clientsDeals == 0){
+          const index = clients.indexOf(client)
+          if (index > -1) {
+            clients.splice(index, 1)
+          }
+        }
+
+      }
+
+      result[chain] = clients
+    }
+    return result
+  }
+
+  static async getProviderNewClients(provider: string, chainId: number, fromDate: number = 0, toDate: number = Math.floor(Date.now() / 1000)) {
+    const latestBillings = await Deal.findAll({
+      where: {
+        provider: provider,
+        chainId: chainId
+      },
+
+      attributes: [
+        "*",
+        [sequelize.fn("MAX", sequelize.col("billingStart")), "billingStart"]
+      ],
+      group: ["client"],
+      raw: true
+    })
+
+    // Filter the results within the specified period
+    const clientsInPeriod = latestBillings.filter(record => {
+      const billingStart = new Date(record.billingStart)
+      return billingStart >= new Date(fromDate) && billingStart <= new Date(toDate)
+    })
+
+    console.log(clientsInPeriod)
   }
 }
