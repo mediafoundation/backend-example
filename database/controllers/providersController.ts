@@ -235,11 +235,9 @@ export class ProvidersController {
     })
 
     // Filter the results within the specified period
-    const clientsInPeriod = latestBillings.filter(record => {
+    return latestBillings.filter(record => {
       const billingStart = new Date(record.billingStart)
       return billingStart >= new Date(fromDate) && billingStart <= new Date(toDate)
     })
-
-    return clientsInPeriod
   }
 }
