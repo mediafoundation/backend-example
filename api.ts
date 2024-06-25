@@ -245,7 +245,7 @@ app.get("/providers/countNewClients", async (req, res) => {
   }
 
   try {
-    const result = await ProvidersController.getProviderNewClients(provider, chainId, fromTimestamp, toTimestamp)
+    const result = await ProvidersController.getProviderNewClients(provider as string, Number(chainId), fromTimestamp, toTimestamp)
     res.send(result)
   } catch (e) {
     res.status(500).json({error: e})
@@ -264,7 +264,7 @@ app.get("/providers/countActiveClients", async (req, res) => {
   }
 
   try {
-    const result = await ProvidersController.getProviderActiveClients(provider, chainId, fromTimestamp, toTimestamp)
+    const result = await ProvidersController.getProviderActiveClients(provider as string, Number(chainId), fromTimestamp, toTimestamp)
     res.send(result)
   } catch (e) {
     res.status(500).json({error: e})
