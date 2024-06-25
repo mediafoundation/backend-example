@@ -87,8 +87,22 @@ export class EventsController {
 
       if (activeSeconds <= 0) continue // Skip if no active period within the interval
 
+      let totalDealRevenue
+
       // Calculate the total revenue for the deal within the active period
-      let totalDealRevenue = BigInt(deal.pricePerSecond) * BigInt(activeSeconds)
+      if (deal.billFullPeriods) {
+        const periods = BigInt(activeSeconds) == 0n
+          ? 1n
+          : (BigInt(activeSeconds) - 1n) / BigInt(deal.minDealDuration) + 1n
+        totalDealRevenue =
+          periods *
+          BigInt((deal.minDealDuration *
+            deal.pricePerSecond))
+        // if more than one period elapsed and the deal is not set to be billed for full periods afterward
+      } else {
+        totalDealRevenue = BigInt(deal.pricePerSecond) * BigInt(activeSeconds)
+      }
+      //let totalDealRevenue = BigInt(deal.pricePerSecond) * BigInt(activeSeconds)
 
       totalRevenue += totalDealRevenue
       collectedRevenue += BigInt(deal.totalPayment)

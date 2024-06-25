@@ -5,6 +5,6 @@ export type EventFormatted = {
   address: string,
   data: string,
   blockNumber: number,
-  args: NonNullable<any>,
+  args: NonNullable<{ [index: string]: any }>,
   eventName: string,
 }
