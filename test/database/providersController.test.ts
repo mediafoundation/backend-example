@@ -230,7 +230,7 @@ describe("Providers Controller", () => {
     expect(clientsOnChain).toBe(2)
   })
 
-  test("Get clients on period", async () => {
+  test("Get new clients on period", async () => {
     const metadata = JSON.stringify({"metadata": "someExample"})
     await ProvidersController.upsertProvider("Provider 1", 0, undefined, metadata, "pubKey")
     await ProvidersController.upsertProvider("Provider 1", 1, undefined, metadata, "pubKey")
@@ -242,7 +242,7 @@ describe("Providers Controller", () => {
     console.log(result)
   })
 
-  test("Get clients", async() => {
+  test("Get active clients", async() => {
     const metadata = JSON.stringify({"metadata": "someExample"})
     await ProvidersController.upsertProvider("Provider 1", 0, undefined, metadata, "pubKey")
     await ProvidersController.upsertProvider("Provider 1", 1, undefined, metadata, "pubKey")

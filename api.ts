@@ -234,6 +234,43 @@ app.get("/providers/partialRevenue", async (req, res) => {
   }
 })
 
+app.get("/providers/countNewClients", async (req, res) => {
+  const provider = req.query.provider
+  const chainId = req.query.chainId
+  const fromTimestamp = req.query.from ? Number(req.query.from) : undefined
+  const toTimestamp = req.query.to ? Number(req.query.to) : undefined
+
+  if(!provider || !chainId) {
+    res.status(500).json({error: "No provider or chainId provided"})
+  }
+
+  try {
+    const result = await ProvidersController.getProviderNewClients(provider, chainId, fromTimestamp, toTimestamp)
+    res.send(result)
+  } catch (e) {
+    res.status(500).json({error: e})
+  }
+
+})
+
+app.get("/providers/countActiveClients", async (req, res) => {
+  const provider = req.query.provider
+  const chainId = req.query.chainId
+  const fromTimestamp = req.query.from ? Number(req.query.from) : undefined
+  const toTimestamp = req.query.to ? Number(req.query.to) : undefined
+
+  if(!provider || !chainId) {
+    res.status(500).json({error: "No provider or chainId provided"})
+  }
+
+  try {
+    const result = await ProvidersController.getProviderActiveClients(provider, chainId, fromTimestamp, toTimestamp)
+    res.send(result)
+  } catch (e) {
+    res.status(500).json({error: e})
+  }
+})
+
 // Start the server
 const port = 5000
 export const server = app.listen(port, () => console.log(`Server is running on port ${port}`))
