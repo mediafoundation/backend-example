@@ -203,10 +203,27 @@ app.get("/providers/totalRevenue", async (req, res) => {
 
     if(!provider || !chainId) {
       res.status(500).json({error: "No provider or chainId provided"})
+      return
     }
     else {
       const queryResult = await EventsController.calculateProviderRevenue(provider.toString(), Number(chainId))
-      res.send(queryResult)
+      const dailyRevenue = queryResult.dailyRevenue
+
+      const formattedData: { [key: string]: string } = {}
+
+      for (const key in dailyRevenue) {
+        const timestamp = Number(key)
+        const bigNumber = dailyRevenue[key]
+        formattedData[timestamp] = bigNumber.toString()
+      }
+
+      const response = {
+        dailyRevenue: formattedData,
+        totalRevenue: queryResult.totalRevenue.toString(),
+        collectedRevenue: queryResult.collectedRevenue.toString(),
+        uncollectedRevenue: queryResult.uncollectedRevenue.toString()
+      }
+      res.send(response)
     }
   } catch (e) {
     console.log(e)
@@ -223,10 +240,29 @@ app.get("/providers/partialRevenue", async (req, res) => {
 
     if(!provider || !chainId) {
       res.status(500).json({error: "No provider or chainId provided"})
+      return
     }
     else {
       const queryResult = await EventsController.calculateProviderRevenue(provider.toString(), Number(chainId), fromTimestamp, toTimestamp)
-      res.send(queryResult)
+
+      const dailyRevenue = queryResult.dailyRevenue
+
+      const formattedData: { [key: string]: string } = {}
+
+      for (const key in dailyRevenue) {
+        const timestamp = Number(key)
+        const bigNumber = dailyRevenue[key]
+        formattedData[timestamp] = bigNumber.toString()
+      }
+
+      const response = {
+        dailyRevenue: formattedData,
+        totalRevenue: queryResult.totalRevenue.toString(),
+        collectedRevenue: queryResult.collectedRevenue.toString(),
+        uncollectedRevenue: queryResult.uncollectedRevenue.toString()
+      }
+
+      res.send(response)
     }
   } catch (e) {
     console.log(e)
@@ -242,12 +278,16 @@ app.get("/providers/countNewClients", async (req, res) => {
 
   if(!provider || !chainId) {
     res.status(500).json({error: "No provider or chainId provided"})
+    return
   }
 
   try {
     const result = await ProvidersController.getProviderNewClients(provider as string, Number(chainId), fromTimestamp, toTimestamp)
-    res.send(result)
+    res.send({
+      "clients": result
+    })
   } catch (e) {
+    console.log(e)
     res.status(500).json({error: e})
   }
 
@@ -255,18 +295,20 @@ app.get("/providers/countNewClients", async (req, res) => {
 
 app.get("/providers/countActiveClients", async (req, res) => {
   const provider = req.query.provider
-  const chainId = req.query.chainId
+  const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
   const fromTimestamp = req.query.from ? Number(req.query.from) : undefined
   const toTimestamp = req.query.to ? Number(req.query.to) : undefined
 
-  if(!provider || !chainId) {
-    res.status(500).json({error: "No provider or chainId provided"})
+  if(!provider) {
+    res.status(500).json({error: "No provider provided"})
+    return
   }
 
   try {
-    const result = await ProvidersController.getProviderActiveClients(provider as string, Number(chainId), fromTimestamp, toTimestamp)
+    const result = await ProvidersController.getProviderActiveClients(provider as string, chainId, fromTimestamp, toTimestamp)
     res.send(result)
   } catch (e) {
+    console.log(e)
     res.status(500).json({error: e})
   }
 })
