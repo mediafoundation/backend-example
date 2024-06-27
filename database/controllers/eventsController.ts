@@ -210,7 +210,7 @@ export class EventsController {
     return totalRevenue
   }*/
 
-  static async calculateProviderNewDeals(provider: string, chainId: number, fromDate: number = Date.now() / 1000, toDate: number = Date.now() / 1000): Promise<number> {
+  static async calculateProviderNewDeals(provider: string, chainId: number, fromDate: number = 0, toDate: number = Date.now() / 1000): Promise<number> {
     return eventsCollection.countDocuments({
       provider: provider,
       timestamp: {

@@ -182,11 +182,11 @@ app.get("/providers", async(req, res) => {
 app.get("/providers/countNewDeals", async (req, res) => {
   const provider = req.query.provider
   const chainId = req.query.chainId
-  const fromDate = req.query.from
-  const toDate = req.query.to
+  const fromDate = req.query.from ? Number(req.query.from) : undefined
+  const toDate = req.query.to ? Number(req.query.to) : undefined
 
   try {
-    const amount = await EventsController.calculateProviderNewDeals(provider!.toString(), Number(chainId), Number(fromDate), Number(toDate))
+    const amount = await EventsController.calculateProviderNewDeals(provider!.toString(), Number(chainId), fromDate, toDate)
 
     res.json(amount)
   } catch (e) {
@@ -312,6 +312,13 @@ app.get("/providers/countActiveClients", async (req, res) => {
     res.status(500).json({error: e})
   }
 })
+
+/*app.get("/offerCreated", async (req, res) => {
+  const chains = Object.values(validChains)
+  const chain = chains.filter((chain) => chain.id === 111551311)
+  console.log(chain)
+  res.send(200)
+})*/
 
 // Start the server
 const port = 5000

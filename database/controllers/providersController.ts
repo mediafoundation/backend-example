@@ -205,7 +205,7 @@ export class ProvidersController {
           }
         })
 
-        if(clientsDeals[0].count == 0){
+        if(clientsDeals[0].count == 0 && clientsDeals[0].count == 0){
           const index = clients.indexOf(client)
           if (index > -1) {
             clients.splice(index, 1)
