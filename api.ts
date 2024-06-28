@@ -202,7 +202,9 @@ app.get("/providers/countNewDeals", async (req, res) => {
   try {
     const amount = await EventsController.calculateProviderNewDeals(provider!.toString(), Number(chainId), fromDate, toDate)
 
-    res.json(amount)
+    res.json({
+      "dealsCount": amount
+    })
   } catch (e) {
     console.log(e)
     res.send(e)
