@@ -223,7 +223,7 @@ app.get("/providers/totalRevenue", async (req, res) => {
         collectedRevenue: queryResult.collectedRevenue.toString(),
         uncollectedRevenue: queryResult.uncollectedRevenue.toString()
       }
-      res.send(response)
+      res.json(response)
     }
   } catch (e) {
     console.log(e)
@@ -262,7 +262,7 @@ app.get("/providers/partialRevenue", async (req, res) => {
         uncollectedRevenue: queryResult.uncollectedRevenue.toString()
       }
 
-      res.send(response)
+      res.json(response)
     }
   } catch (e) {
     console.log(e)
@@ -283,7 +283,7 @@ app.get("/providers/countNewClients", async (req, res) => {
 
   try {
     const result = await ProvidersController.getProviderNewClients(provider as string, Number(chainId), fromTimestamp, toTimestamp)
-    res.send({
+    res.json({
       "clients": result
     })
   } catch (e) {
@@ -306,7 +306,7 @@ app.get("/providers/countActiveClients", async (req, res) => {
 
   try {
     const result = await ProvidersController.getProviderActiveClients(provider as string, chainId, fromTimestamp, toTimestamp)
-    res.send(result)
+    res.json(result)
   } catch (e) {
     console.log(e)
     res.status(500).json({error: e})
