@@ -2,6 +2,11 @@
 
 ### This section will cover every aspect that is needed to use the backend-example's API and its endpoint.
 
+## Glossary
+
+**Active clients**
+> Clients who have at least one active deal with the given provider.
+
 ## Endpoints
 
 ### 1. Retrieve all resources
@@ -68,9 +73,9 @@
 | `to`       | `int`    | (Optional) The time where count must be stopped. Must be unix time, expressed in seconds.              |
 
 
-### 5. Retrieves provider's revenue on a blockchain
+### 5. Retrieves provider's total revenue on a marketplace
 
-#### GET /revenue
+#### GET /providers/totalRevenue
 
 #### Request Parameters
 
@@ -78,5 +83,43 @@
 |------------|----------|------------------------------------------------------------------------------|
 | `chainId`  | `int`    | (Required) The chain ID from where revenue will be calculated.               |
 | `provider` | `string` | (Required) The provider from which want to get the revenue.                  |
-| `from`     | `int`    | (Optional) The start time from where to start counting counting the revenue. |
-| `to`       | `int`    | (Optional) The time where count must be stopped.                             |
+
+
+### 6. Retrieves provider's partial revenue on a marketplace
+#### GET /providers/partialRevenue
+#### Request Parameters
+
+| Name       | Type     | Default Value | Description                                                                                                 |
+|------------|----------|:-------------:|-------------------------------------------------------------------------------------------------------------|
+| `chainId`  | `int`    |       -       | (Required) The chain ID from where revenue will be calculated.                                              |
+| `provider` | `string` |       -       | (Required) The provider from which want to get the revenue.                                                 |
+| `from`     | `int`    |       0       | (Optional) The start time from where to start calculating revenue. Must be unix time, expressed in seconds. |
+| `to`       | `int`    | Current time  | (Optional) The time where count must be stopped. Must be unix time, expressed in seconds.                   |
+
+
+### 7. Retrieves the count of new clients for a provider in a certain time range
+
+#### GET /providers/countNewClients
+
+### Request Parameters
+
+| Name       | Type     | Default value | Description                                                                                                 |
+|------------|----------|:-------------:|-------------------------------------------------------------------------------------------------------------|
+| `chainId`  | `int`    |       -       | (Required) The chain ID from where clients will be count.                                                   |
+| `provider` | `string` |       -       | (Required) The provider from which want count new clients.                                                  |
+| `from`     | `int`    |       0       | (Optional) The start time from where to start calculating revenue. Must be unix time, expressed in seconds. |
+| `to`       | `int`    | Current time  | (Optional) The time where count must be stopped. Must be unix time, expressed in seconds.                   |
+
+
+### 8. Retrieves the count of active clients for a provider in a certain time range
+
+#### GET /providers/countActiveClients
+
+### Request Parameters
+
+| Name       | Type     | Default value | Description                                                                                                 |
+|------------|----------|:-------------:|-------------------------------------------------------------------------------------------------------------|
+| `chainId`  | `int`    |       -       | (Required) The chain ID from where clients will be count.                                                   |
+| `provider` | `string` |       -       | (Required) The provider from which want count active clients.                                               |
+| `from`     | `int`    |       0       | (Optional) The start time from where to start calculating revenue. Must be unix time, expressed in seconds. |
+| `to`       | `int`    | Current time  | (Optional) The time where count must be stopped. Must be unix time, expressed in seconds.                   |
