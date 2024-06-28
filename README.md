@@ -102,3 +102,9 @@ Pagination can be performed by passing page and pageSize params on the request. 
 ```bash
 curl -G -i 'http://localhost:5000/offers?' --data-urlencode 'chainId=11155111' --data-urlencode 'page=1' --data-urlencode 'pageSize=10'
 ```
+
+### Detailed information
+For more information, refer to the [API documentation](API.md)
+
+# Customization
+Find detailed instructions on customizing this example to suit your needs in the [CUSTOMIZATION.md](CUSTOMIZATION.md)
