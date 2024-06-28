@@ -57,6 +57,17 @@ async function manageDealUpdated(event: any, marketplace: Marketplace, blockChai
   await DealsController.upsertDeal(DealsController.formatDeal(deal), chainId)
 }
 
+async function manageOfferUpdated(event: any, marketplace: Marketplace, blockChain: Blockchain, chainId: number) {
+  const blockTimestamp = await blockChain.getBlockTimestamp(event.blockNumber)
+  await EventsController.upsertEvent(EventsController.formatEvent(event), chainId, Number(blockTimestamp.timestamp))
+  const deal = await marketplace.getOfferById({
+    marketplaceId: process.env.MARKETPLACE_ID,
+    offerId: event._offerId
+  })
+
+  await DealsController.upsertDeal(DealsController.formatDeal(deal), chainId)
+}
+
 async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, marketplace: Marketplace, chainId: number) {
   const lastReadBlock = await lastReadBlockCollection.findOne({chainId: chainId})
   const blockToRead = await blockChain.getBlockNumber()
@@ -79,6 +90,25 @@ async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, m
     toBlock: blockToRead
   })
 
+  const offerCreated = await eventsHandler.getMarketplacePastEvents({
+    eventName: "OfferCreated",
+    fromBlock: BigInt(lastReadBlock!.block) + 1n,
+    toBlock: blockToRead
+  })
+
+  const offerUpdated = await eventsHandler.getMarketplacePastEvents({
+    eventName: "OfferUpdated",
+    fromBlock: BigInt(lastReadBlock!.block) + 1n,
+    toBlock: blockToRead
+  })
+
+  //todo: check if offer should be deleted or not
+  /*const offerDeleted = await eventsHandler.getMarketplacePastEvents({
+    eventName: "OfferDeleted",
+    fromBlock: BigInt(lastReadBlock!.block) + 1n,
+    toBlock: blockToRead
+  })*/
+
   for (const event of dealAccepted) {
     await manageDealUpdated(event, marketplace, blockChain, chainId)
   }
@@ -89,6 +119,14 @@ async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, m
 
   for (const event of addedBalance) {
     await manageDealUpdated(event, marketplace, blockChain, chainId)
+  }
+
+  for (const event of offerCreated) {
+    await manageOfferUpdated(event, marketplace, blockChain, chainId)
+  }
+
+  for (const event of offerUpdated) {
+    await manageOfferUpdated(event, marketplace, blockChain, chainId)
   }
 
   await lastReadBlockCollection.updateOne({block: lastReadBlock!.block, chainId: chainId}, {$set: {block: blockToRead}}, {upsert: true})
@@ -113,7 +151,7 @@ start()
     console.log("Past events gotten")
   })
 
-/*
+
 console.log("Start getting new events")
 
 setInterval(async () => {
@@ -126,4 +164,4 @@ setInterval(async () => {
   } catch (e) {
     console.log("Error", e)
   }
-}, 60000)*/
+}, 60000)
