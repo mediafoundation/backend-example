@@ -228,7 +228,7 @@ export class ProvidersController {
 
       attributes: [
         "client",
-        [sequelize.fn("MIN", sequelize.col("billingStart")), "billingStart"]
+        [sequelize.fn("MIN", sequelize.col("createdAt")), "createdAt"]
       ],
       group: ["Deal.client"],
       raw: true
@@ -238,7 +238,7 @@ export class ProvidersController {
 
     // Filter the results within the specified period
     const filteredClients =  latestBillings.filter(record => {
-      return record.billingStart >= fromDate && record.billingStart <= toDate
+      return record.createdAt >= fromDate && record.createdAt <= toDate
     })
 
     return filteredClients.length
