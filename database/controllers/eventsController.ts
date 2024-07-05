@@ -12,15 +12,28 @@ interface DailyRevenue {
 export class EventsController {
   static async upsertEvent(event: EventFormatted, chainId: number, blockTimestamp: number) {
     // Make sure event belongs to marketplace
-    if(event.args._marketplaceId && event.args._marketplaceId != process.env.MARKETPLACE_ID) {
+    if(event.args && event.args._marketplaceId && event.args._marketplaceId != process.env.MARKETPLACE_ID) {
       throw new Error(`Event does not belong to marketplace ${process.env.MARKETPLACE_ID}`)
     }
 
     //Get deal-event provider
-    const deal = event.args._dealId ? await DealsController.getDealByIdAndChain( event.args._dealId , chainId) : null
+    const deal = event.args && event.args._dealId ? await DealsController.getDealByIdAndChain( event.args._dealId , chainId) : null
 
-    //Get block-event timestamp
-    await eventsCollection.insertOne({...event, provider: deal?.deal.provider, timestamp: blockTimestamp, chainId: chainId})
+    const filter = {
+      transactionHash: event.transactionHash
+    }
+
+    const update = {
+      $set: {
+        ...event,
+        provider: deal?.deal.provider,
+        timestamp: blockTimestamp,
+        chainId: chainId,
+        transactionHash: event.transactionHash,
+      }
+    }
+
+    await eventsCollection.updateOne(filter, update, {upsert: true})
   }
 
   static async getEvents(filter: Filter<Document> = {}): Promise<WithId<Events>[]> {
@@ -31,17 +44,20 @@ export class EventsController {
     const result: any = {
       args: event.args,
       address: event.address,
+      transactionHash: event.transactionHash,
       blockNumber: event.blockNumber.toString(),
       eventName: event.eventName
     }
 
-    for (const key of Object.keys(result.args)) {
-      if(typeof result.args[key] === "bigint"){
-        result.args[key] = result.args[key].toString()
-      }
+    if(event.args) {
+      for (const key of Object.keys(result.args)) {
+        if(typeof result.args[key] === "bigint"){
+          result.args[key] = result.args[key].toString()
+        }
 
-      else if(typeof result.args[key] === "object") {
-        result.args[key] = this.formatEvent(result.args[key])
+        else if(typeof result.args[key] === "object") {
+          result.args[key] = this.formatEvent(result.args[key])
+        }
       }
     }
 
@@ -233,7 +249,7 @@ export class EventsController {
     })
   }*/
 
-  static calculateDealFutureRevenue(events: Events[], deal: DealAttributes, fromTimestamp: number, toTimestamp: number) {
+  /*static calculateDealFutureRevenue(events: Events[], deal: DealAttributes, fromTimestamp: number, toTimestamp: number) {
     let totalDealRevenue = BigInt(0)
     for (let i = 0; i < events.length; i++){
       //Calculate earn if no singlePeriodOnly
@@ -273,16 +289,16 @@ export class EventsController {
     }
 
     return totalDealRevenue
-  }
+  }*/
 
-  static calculateDealCollectedRevenue(events: Events[]) {
+  /*static calculateDealCollectedRevenue(events: Events[]) {
     let totalDealRevenue = 0n
     for (const event of events) {
       totalDealRevenue += BigInt(event.args._paymentToProvider)
     }
 
     return totalDealRevenue
-  }
+  }*/
 
   static deleteUselessEvents<T>(events: T[], comparator: (a: T, b: string) => boolean) {
 

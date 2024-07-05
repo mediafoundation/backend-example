@@ -25,8 +25,8 @@ const resetSequelizeDB = async () => {
 const resetMongoDB = async () => {
   await connectToMongodb()
 
-  /*await eventsCollection.drop()
-  await lastReadBlockCollection.drop()*/
+  await eventsCollection.drop()
+  await lastReadBlockCollection.drop()
 }
 
 const createRelationsBetweenTables = async () => {
