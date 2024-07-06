@@ -3,7 +3,7 @@
  * @description This file contains the main API endpoints for the application.
  */
 
-import {validChains} from "media-sdk"
+import {Marketplace, Resources, Sdk, validChains} from "media-sdk"
 import express from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
@@ -339,6 +339,160 @@ app.get("/providers/countActiveClients", async (req, res) => {
   try {
     const result = await ProvidersController.getProviderActiveClients(provider as string, chainId, fromTimestamp, toTimestamp)
     res.json(result)
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({error: e})
+  }
+})
+
+/**
+ * @route GET /upsertOffer
+ * @description This endpoint is used to update or insert an offer in the database.
+ */
+app.get("/upsertOffer", async (req, res) => {
+  const {chainIdQuery, offerIdQuery} = req.query
+
+  const chainId = chainIdQuery ? chainIdQuery.toString() : ""
+  const offerId = offerIdQuery ? offerIdQuery.toString() : ""
+
+  const chains = Object.keys(validChains)
+
+  if(!chains.includes(chainId)) {
+    res.status(500).json({error: "Invalid chain"})
+    return
+  }
+
+  try {
+    const sdk = new Sdk({chain: validChains[chainId as unknown as keyof typeof validChains]})
+
+    const marketplace = new Marketplace(sdk)
+
+    const offer = await marketplace.getOfferById({
+      marketplaceId: process.env.MARKETPLACE_ID,
+      offerId: offerId
+    })
+
+    const formattedOffer = OffersController.formatOffer(offer)
+
+    const providerData = await marketplace.getProvider({
+      marketplaceId: Number(process.env.MARKETPLACE_ID),
+      provider: formattedOffer.provider
+    })
+
+    await OffersController.upsertOffer(formattedOffer, Number(chainId), providerData.metadata, providerData.publicKey)
+
+    res.status(200).json({message: "Offer Updated"})
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({error: e})
+  }
+})
+
+/**
+ * @route GET /upsertDeal
+ * @description This endpoint is used to update or insert a deal in the database.
+ */
+app.get("/upsertDeal", async (req, res) => {
+  const {chainIdQuery, dealIdQuery} = req.query
+
+  const chainId = chainIdQuery ? chainIdQuery.toString() : ""
+  const dealId = dealIdQuery ? Number(dealIdQuery) : 0
+
+  const chains = Object.keys(validChains)
+
+  if(!chains.includes(chainId)) {
+    res.status(500).json({error: "Invalid chain"})
+    return
+  }
+
+  try {
+    const sdk = new Sdk({chain: validChains[chainId as unknown as keyof typeof validChains]})
+
+    const marketplace = new Marketplace(sdk)
+
+    console.log(marketplace)
+
+    const deal = await marketplace.getDealById({
+      marketplaceId: process.env.MARKETPLACE_ID,
+      dealId: dealId
+    })
+
+    await DealsController.upsertDeal(DealsController.formatDeal(deal), Number(chainId))
+
+    res.status(200).json({message: "Deal updated"})
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({error: e})
+  }
+})
+
+/**
+ * @route GET /upsertResource
+ * @description This endpoint is used to update or insert a resource in the database.
+ */
+app.get("/upsertResource", async (req, res) => {
+  const {addressQuery, resourceIdQuery, chainIdQuery} = req.query
+
+  const address = addressQuery ? addressQuery.toString() : ""
+  const resourceId = resourceIdQuery ? Number(resourceIdQuery) : 0
+  const chainId = chainIdQuery ? chainIdQuery.toString() : ""
+
+  const chains = Object.keys(validChains)
+
+  if(!chains.includes(chainId)) {
+    res.status(500).json({error: "Invalid chain"})
+    return
+  }
+
+  try {
+    const sdk = new Sdk({chain: validChains[chainId as unknown as keyof typeof validChains]})
+
+    const resources = new Resources(sdk)
+
+    const resource = await resources.getResource({
+      id: resourceId,
+      address: address
+    })
+
+    await ResourcesController.upsertResource(ResourcesController.formatResource(resource), Number(chainId))
+
+    res.status(200).json({message: "Resource Updated"})
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({error: e})
+  }
+})
+
+/**
+ * @route GET /upsertProvider
+ * @description This endpoint is used to update or insert a provider in the database.
+ */
+app.get("/upsertProvider", async (req, res) => {
+  const {providerQuery, chainIdQuery} = req.query
+
+  const provider = providerQuery ? providerQuery.toString() : ""
+  const chainId = chainIdQuery ? chainIdQuery.toString() : ""
+
+  const chains = Object.keys(validChains)
+
+  if(!chains.includes(chainId)) {
+    res.status(500).json({error: "Invalid chain"})
+    return
+  }
+
+  try {
+    const sdk = new Sdk({chain: validChains[chainId as unknown as keyof typeof validChains]})
+
+    const marketplace = new Marketplace(sdk)
+
+    const providerData = await marketplace.getProvider({
+      marketplaceId: Number(process.env.MARKETPLACE_ID),
+      provider: provider
+    })
+
+    await ProvidersController.upsertProvider(provider, Number(chainId), undefined, providerData.metadata, providerData.publicKey)
+
+    res.status(200).json({message: "Provider Updated"})
   } catch (e) {
     console.log(e)
     res.status(500).json({error: e})
