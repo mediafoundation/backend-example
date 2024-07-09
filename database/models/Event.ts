@@ -6,5 +6,6 @@ export interface Events {
   chainId: number,
   eventName: string,
   provider: string | undefined,
+  client: string | undefined,
   timestamp: number
 }

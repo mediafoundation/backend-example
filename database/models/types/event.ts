@@ -5,6 +5,6 @@ export type EventFormatted = {
   address: string,
   blockNumber: number,
   transactionHash: string,
-  args?: { [index: string]: any },
+  args: { [index: string]: any },
   eventName: string,
 }
