@@ -193,7 +193,7 @@ export class ProvidersController {
             client: client,
             [Op.and]: [
               sequelize.where(
-                sequelize.literal(`(CAST("Deal"."blockedBalance" AS DECIMAL) / CAST("Deal"."pricePerSecond" AS DECIMAL)) + CAST("Deal"."billingStart" AS DECIMAL)"`),
+                sequelize.literal(`(CAST("Deal"."blockedBalance" AS DECIMAL) / CAST("Deal"."pricePerSecond" AS DECIMAL)) + CAST("Deal"."billingStart" AS DECIMAL)`),
                 {
                   [Op.gte]: fromDate
                 }
