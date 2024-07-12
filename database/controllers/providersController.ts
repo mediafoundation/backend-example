@@ -4,7 +4,7 @@ import {ChainProvider} from "../models/manyToMany/ChainProvider"
 import {ProviderAssociationCount} from "../models/types/provider"
 import {ProviderClient} from "../models/manyToMany/ProviderClient"
 import {ChainClient} from "../models/manyToMany/ChainClient"
-import {Op, providersCollection, sequelize} from "../database"
+import {eventsCollection, Op, providersCollection, sequelize} from "../database"
 import {Deal} from "../models/deals/Deal"
 
 export class ProvidersController {
@@ -242,5 +242,15 @@ export class ProvidersController {
     })
 
     return filteredClients.length
+  }
+
+  static async getProviderStartTime(provider: string, chainId: number): Promise<number> {
+    const result = await eventsCollection.findOne({
+      provider: provider,
+      chainId: chainId,
+      eventName: "ProviderRegistered"
+    })
+    console.log(result, provider, chainId)
+    return result?.timestamp || 0
   }
 }

@@ -158,15 +158,18 @@ app.get("/providers", async(req, res) => {
       const offersCount = await ProvidersController.countOffers(provider.account, chainId)
       const clientCount = await ProvidersController.countClients(provider.account, chainId)
       let providerMetadata: { [index: number]: any } | WithId<Document> | null = {}
+      let registryTime: { [index: number]: any } | number = {}
 
       if(chainId) {
         providerMetadata = await ProvidersController.getMetadata(provider.account, chainId)
+        registryTime = await ProvidersController.getProviderStartTime(provider.account, chainId)
       }
 
       else {
         const chains = provider.Chains
         for (const chain of chains!) {
           providerMetadata[chain] = await ProvidersController.getMetadata(provider.account, Number(chain))
+          registryTime[chain] = await ProvidersController.getProviderStartTime(provider.account, Number(chain))
         }
       }
 
@@ -176,7 +179,8 @@ app.get("/providers", async(req, res) => {
         "deals": dealsCount,
         "offers": offersCount,
         "clients": clientCount,
-        "metadata": providerMetadata
+        "metadata": providerMetadata,
+        "registerTime": registryTime
       }
 
       result.push(providerResult)
@@ -409,8 +413,6 @@ app.get("/upsertDeal", async (req, res) => {
     const sdk = new Sdk({chain: validChains[chainId as unknown as keyof typeof validChains]})
 
     const marketplace = new Marketplace(sdk)
-
-    console.log(marketplace)
 
     const deal = await marketplace.getDealById({
       marketplaceId: process.env.MARKETPLACE_ID,
