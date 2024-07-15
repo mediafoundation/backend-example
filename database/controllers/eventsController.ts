@@ -64,15 +64,6 @@ export class EventsController {
     return result
   }
 
-  static async getClientsLog(client: string, chainId: number): Promise<WithId<Events>[]> {
-    const filter = {
-      client: client,
-      chainId: chainId
-    }
-
-    return await eventsCollection.find(filter).toArray()
-  }
-
   static async getProvidersLog(provider: string, chainId: number): Promise<WithId<Events>[]> {
     const filter = {
       provider: provider,
