@@ -501,6 +501,33 @@ app.get("/upsertProvider", async (req, res) => {
   }
 })
 
+/**
+ * @route GET /account/events
+ * @description Retrieves event logs for a specific account and chain ID.
+ * @param {string} account - The account identifier from the query parameters.
+ * @param {number | undefined} chainId - The chain ID from the query parameters, parsed to a number if provided.
+ * @returns {JSON} - The events associated with the given account and chainId or an error message in case of failure.
+ */
+app.get("/account/events", async (req, res) => {
+  const account = req.query.account
+  const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
+  const page = req.query.page ? Number(req.query.page) : undefined
+  const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
+    
+  if(!account || !chainId) {
+    res.status(500).json({error: "No account provided or chainId provided"})
+    return
+  }
+    
+  try {
+    const events = await EventsController.getAccountEvents(account.toString(), chainId, page, pageSize)
+    res.json(events)
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({error: e})
+  }
+})
+
 // Start the server
 const port = 5000
 export const server = app.listen(port, () => console.log(`Server is running on port ${port}`))
