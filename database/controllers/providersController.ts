@@ -4,13 +4,19 @@ import {ChainProvider} from "../models/manyToMany/ChainProvider"
 import {ProviderAssociationCount} from "../models/types/provider"
 import {ProviderClient} from "../models/manyToMany/ProviderClient"
 import {ChainClient} from "../models/manyToMany/ChainClient"
-import {providersCollection} from "../database"
+import {eventsCollection, Op, providersCollection, sequelize} from "../database"
+import {Deal} from "../models/deals/Deal"
 
 export class ProvidersController {
-  static async getProviders(chainId: number | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined= undefined, account: string | undefined = undefined) {
+  static async getProviders(chainId: number | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined = undefined, account: string | undefined = undefined) {
     const whereClause = chainId ? {chainId: chainId} : {}
     const filter = account ? {account: account} : {}
     const offset = page && pageSize ? (page - 1) * pageSize : undefined
+
+    const limitQuery = offset ? {
+      limit: pageSize,
+      offset: offset
+    } : {}
     const providers = await Provider.findAll({
       where: filter,
       include: [
@@ -23,8 +29,7 @@ export class ProvidersController {
           attributes: ["chainId"]
         },
       ],
-      offset: offset,
-      limit: pageSize,
+      ...limitQuery
     })
 
     const mappedProviders = providers.map((provider) => provider.toJSON())
@@ -96,7 +101,7 @@ export class ProvidersController {
 
   static async countDeals(provider: string, chainId: number | undefined = undefined) {
     let result: ProviderAssociationCount | number = {}
-    const providerFromDb = await Provider.findOne({where: {account: provider}})
+    const providerFromDb = await Provider.findOne({rejectOnEmpty: false, where: {account: provider}})
 
     if(!providerFromDb) {
       throw new Error("Provider not found")
@@ -119,7 +124,7 @@ export class ProvidersController {
 
   static async countOffers(provider: string, chainId: number | undefined = undefined) {
     let result: ProviderAssociationCount | number = {}
-    const providerFromDb = await Provider.findOne({where: {account: provider}})
+    const providerFromDb = await Provider.findOne({rejectOnEmpty: false, where: {account: provider}})
 
     if(!providerFromDb) {
       throw new Error("Provider not found")
@@ -142,7 +147,7 @@ export class ProvidersController {
 
   static async countClients(provider: string, chainId: number | undefined = undefined) {
     let result: ProviderAssociationCount | number = {}
-    const providerFromDb = await Provider.findOne({where: {account: provider}})
+    const providerFromDb = await Provider.findOne({rejectOnEmpty: false, where: {account: provider}})
 
     if(!providerFromDb) {
       throw new Error("Provider not found")
@@ -164,5 +169,88 @@ export class ProvidersController {
     }
 
     return result
+  }
+
+  static async getProviderActiveClients(provider: string, chainId: number | undefined = undefined, fromDate: number = 0, toDate: number = Math.floor(Date.now() / 1000)) {
+    const providerFromDb = await Provider.findOne({rejectOnEmpty: false, where: {account: provider}})
+
+    if(!providerFromDb) {
+      throw new Error("Provider not found")
+    }
+
+    const chains = chainId ? [chainId] : (await Chain.findAll({attributes: {include: ["chainId"]}})).map(chain => chain.chainId)
+
+    const result: ProviderAssociationCount = {}
+
+    for (const chain of chains) {
+      const clientsOnChain = await ChainClient.findAll({where: {chainId: chain}})
+      const clients = (await providerFromDb!.getClients({where: {account: clientsOnChain.map(chainClient => chainClient.client)}})).map(client => client.account)
+
+      for (const client of clients) {
+        const clientsDeals = await Deal.count({
+          group: "client",
+          where: {
+            client: client,
+            [Op.and]: [
+              sequelize.where(
+                sequelize.literal(`(CAST("Deal"."blockedBalance" AS DECIMAL) / CAST("Deal"."pricePerSecond" AS DECIMAL)) + CAST("Deal"."billingStart" AS DECIMAL)`),
+                {
+                  [Op.gte]: fromDate
+                }
+              )
+            ],
+            billingStart: {
+              [Op.lte]: toDate
+            }
+          }
+        })
+
+        if(clientsDeals[0].count == 0 && clientsDeals[0].count == 0){
+          const index = clients.indexOf(client)
+          if (index > -1) {
+            clients.splice(index, 1)
+          }
+        }
+
+      }
+
+      result[chain] = clients.length
+    }
+    return result
+  }
+
+  static async getProviderNewClients(provider: string, chainId: number, fromDate: number = 0, toDate: number = Math.floor(Date.now() / 1000)) {
+    const latestBillings = await Deal.findAll({
+      where: {
+        provider: provider,
+        chainId: chainId
+      },
+
+      attributes: [
+        "client",
+        [sequelize.fn("MIN", sequelize.col("createdAt")), "createdAt"]
+      ],
+      group: ["Deal.client"],
+      raw: true
+    })
+
+    console.log("Latest billings", latestBillings)
+
+    // Filter the results within the specified period
+    const filteredClients =  latestBillings.filter(record => {
+      return record.createdAt >= fromDate && record.createdAt <= toDate
+    })
+
+    return filteredClients.length
+  }
+
+  static async getProviderStartTime(provider: string, chainId: number): Promise<number> {
+    const result = await eventsCollection.findOne({
+      provider: provider,
+      chainId: chainId,
+      eventName: "ProviderRegistered"
+    })
+    console.log(result, provider, chainId)
+    return result?.timestamp || 0
   }
 }

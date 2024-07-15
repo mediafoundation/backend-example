@@ -3,8 +3,8 @@ import {ObjectId} from "mongodb"
 export type EventFormatted = {
   _id: ObjectId,
   address: string,
-  data: string,
   blockNumber: number,
-  args: NonNullable<any>,
+  transactionHash: string,
+  args: { [index: string]: any },
   eventName: string,
 }
