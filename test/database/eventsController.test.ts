@@ -118,6 +118,7 @@ async function populateDealEvent(dealEvent: any, provider: string, amount: numbe
     await DealsController.upsertDeal(DealsController.formatDeal(copyDeal), chainId)
 
     const copyEvent = structuredClone(dealEvent)
+    copyEvent.transactionHash = i.toString()
     copyEvent["args"]["_dealId"] = BigInt(i)
 
     await EventsController.upsertEvent(EventsController.formatEvent(copyEvent), chainId, blockTimestamp)
@@ -338,5 +339,25 @@ describe("Events Controller", () => {
     // From 15/06/2024 10hs to 22/06/2024 10hs
     const result = await EventsController.calculateProviderRevenue("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 1, 1718456400, 1719061200)
     console.log(result)
+  })
+
+  test("Get account events with default page and page size", async () => {
+    await populateDealEvent(dealCreatedMockEvent, "Provider", 200, 1, 10000)
+
+    const result = await EventsController.getAccountEvents("Provider", 1)
+    expect(result.length).toBe(100)
+  })
+
+  test("Get account event with given page and page size", async () => {
+    await populateDealEvent(dealCollectedMockEvent, "Provider", 200, 1, 10000)
+
+    let result = await EventsController.getAccountEvents("Provider", 1, 1, 75)
+    expect(result.length).toBe(75)
+
+    result = await EventsController.getAccountEvents("Provider", 1, 2, 75)
+    expect(result.length).toBe(75)
+
+    result = await EventsController.getAccountEvents("Provider", 1, 3, 75)
+    expect(result.length).toBe(50)
   })
 })

@@ -262,4 +262,19 @@ export class EventsController {
     return { active: isActive, endTimestamp: endTimestamp }
   }
 
+  static async getAccountEvents(account: string, chainId: number, page: number = 1, pageSize: number = 100): Promise<WithId<Events>[]> {
+    const skip = (page - 1) * pageSize
+    return await eventsCollection.find({
+      $or: [
+        {client: account},
+        {provider: account}
+      ],
+      chainId: chainId
+    })
+      .sort({timestamp: -1})
+      .skip(skip)
+      .limit(pageSize)
+      .toArray()
+  }
+
 }
