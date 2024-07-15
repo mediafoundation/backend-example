@@ -261,6 +261,13 @@ export class EventsController {
         {provider: account}
       ],
       chainId: chainId
+    }, {
+      projection: {
+        args: 1,
+        eventName: 1,
+        chainId: 1,
+        timestamp: 1
+      }
     })
       .sort({timestamp: -1})
       .skip(skip)
