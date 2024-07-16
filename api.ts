@@ -148,7 +148,7 @@ app.get("/providers", async(req, res) => {
 
     const page = req.query.page ? Number(req.query.page) : undefined
     const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
-    const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
+    const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
     const account = req.query.account
 
     const providers = await ProvidersController.getProviders(chainId, page, pageSize, account as string | undefined)
@@ -168,8 +168,8 @@ app.get("/providers", async(req, res) => {
       else {
         const chains = provider.Chains
         for (const chain of chains!) {
-          providerMetadata[chain] = await ProvidersController.getMetadata(provider.account, Number(chain))
-          registryTime[chain] = await ProvidersController.getProviderStartTime(provider.account, Number(chain))
+          providerMetadata[chain] = await ProvidersController.getMetadata(provider.account, [Number(chain)])
+          registryTime[chain] = (await ProvidersController.getProviderStartTime(provider.account, [Number(chain)]))[chain]
         }
       }
 

@@ -8,8 +8,10 @@ import {eventsCollection, Op, providersCollection, sequelize} from "../database"
 import {Deal} from "../models/deals/Deal"
 
 export class ProvidersController {
-  static async getProviders(chainId: number | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined = undefined, account: string | undefined = undefined) {
-    const whereClause = chainId ? {chainId: chainId} : {}
+  static async getProviders(chainId: number[] | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined = undefined, account: string | undefined = undefined) {
+    const whereClause = chainId ? {chainId: {
+      [Op.in]: chainId
+    }} : {}
     const filter = account ? {account: account} : {}
     const offset = page && pageSize ? (page - 1) * pageSize : undefined
 
@@ -41,8 +43,8 @@ export class ProvidersController {
     return mappedProviders
   }
 
-  static async getMetadata(provider: string, chainId: number) {
-    return await providersCollection.findOne({provider: provider, chainId: chainId})
+  static async getMetadata(provider: string, chainId: number[]) {
+    return await providersCollection.findOne({provider: provider, chainId: {$in: chainId}})
   }
 
   static async upsertProvider(provider: string, chainId: number, client: string | undefined = undefined, providerMetadata: string, publicKey: string) {
@@ -99,7 +101,7 @@ export class ProvidersController {
     }
   }
 
-  static async countDeals(provider: string, chainId: number | undefined = undefined) {
+  static async countDeals(provider: string, chainId: number[] | undefined = undefined) {
     let result: ProviderAssociationCount | number = {}
     const providerFromDb = await Provider.findOne({rejectOnEmpty: false, where: {account: provider}})
 
@@ -116,13 +118,15 @@ export class ProvidersController {
     }
 
     else {
-      result = await providerFromDb!.countDeals({where: {chainId: chainId}})
+      result = await providerFromDb!.countDeals({where: {chainId: {
+        [Op.in]: chainId
+      }}})
     }
 
     return result
   }
 
-  static async countOffers(provider: string, chainId: number | undefined = undefined) {
+  static async countOffers(provider: string, chainId: number[] | undefined = undefined) {
     let result: ProviderAssociationCount | number = {}
     const providerFromDb = await Provider.findOne({rejectOnEmpty: false, where: {account: provider}})
 
@@ -139,13 +143,15 @@ export class ProvidersController {
     }
 
     else {
-      result = await providerFromDb!.countOffers({where: {chainId: chainId}})
+      result = await providerFromDb!.countOffers({where: {chainId: {
+        [Op.in]: chainId
+      }}})
     }
 
     return result
   }
 
-  static async countClients(provider: string, chainId: number | undefined = undefined) {
+  static async countClients(provider: string, chainId: number[] | undefined = undefined) {
     let result: ProviderAssociationCount | number = {}
     const providerFromDb = await Provider.findOne({rejectOnEmpty: false, where: {account: provider}})
 
@@ -164,7 +170,9 @@ export class ProvidersController {
     }
 
     else {
-      const clientsOnChain = await ChainClient.findAll({where: {chainId: chainId}})
+      const clientsOnChain = await ChainClient.findAll({where: {chainId: {
+        [Op.in]: chainId
+      }}})
       result = await providerFromDb!.countClients({where: {account: clientsOnChain.map(chainClient => chainClient.client)}})
     }
 
@@ -234,7 +242,7 @@ export class ProvidersController {
       raw: true
     })
 
-    console.log("Latest billings", latestBillings)
+    //console.log("Latest billings", latestBillings)
 
     // Filter the results within the specified period
     const filteredClients =  latestBillings.filter(record => {
@@ -244,13 +252,21 @@ export class ProvidersController {
     return filteredClients.length
   }
 
-  static async getProviderStartTime(provider: string, chainId: number): Promise<number> {
-    const result = await eventsCollection.findOne({
-      provider: provider,
-      chainId: chainId,
-      eventName: "ProviderRegistered"
-    })
+  static async getProviderStartTime(provider: string, chainId: number[]): Promise<{ [index: number]: number }> {
+    const result: {[index: number]: number} = {}
+    for (const chain of chainId) {
+      const providerData = await eventsCollection.findOne({
+        provider: provider,
+        chainId: chain,
+        eventName: "ProviderRegistered"
+      })
+      console.log(providerData, chain)
+      if(result) {
+        result[chain] = providerData?.timestamp || 0
+      }
+    }
+
     console.log(result, provider, chainId)
-    return result?.timestamp || 0
+    return result
   }
 }
