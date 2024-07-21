@@ -199,12 +199,12 @@ app.get("/providers", async(req, res) => {
  */
 app.get("/providers/countNewDeals", async (req, res) => {
   const provider = req.query.provider
-  const chainId = req.query.chainId
+  const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
   const fromDate = req.query.from ? Number(req.query.from) : undefined
   const toDate = req.query.to ? Number(req.query.to) : undefined
 
   try {
-    const amount = await EventsController.calculateProviderNewDeals(provider!.toString(), Number(chainId), fromDate, toDate)
+    const amount = await EventsController.calculateProviderNewDeals(provider!.toString(), chainId, fromDate, toDate)
 
     res.json({
       "dealsCount": amount
