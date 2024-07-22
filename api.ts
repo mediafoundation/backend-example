@@ -7,8 +7,8 @@ import {Marketplace, Resources, Sdk, validChains} from "media-sdk"
 import express from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
-import { DealsController } from "./database/controllers/dealsController"
-import { ResourcesController } from "./database/controllers/resourcesController"
+import {DealsController} from "./database/controllers/dealsController"
+import {ResourcesController} from "./database/controllers/resourcesController"
 import {OffersController} from "./database/controllers/offersController"
 import {parseFilter} from "./utils/filter"
 import {createRelationsBetweenTables} from "./database/utils"
@@ -223,29 +223,32 @@ app.get("/providers/countNewDeals", async (req, res) => {
 app.get("/providers/totalRevenue", async (req, res) => {
   try {
     const provider = req.query.provider
-    const chainId = req.query.chainId
+    const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
 
-    if(!provider || !chainId) {
-      res.status(500).json({error: "No provider or chainId provided"})
+    if(!provider || !chainId || !Array.isArray(JSON.parse(req.query.chainId as string))) {
+      res.status(500).json({error: "No provider or valid chainId provided"})
       return
     }
     else {
-      const queryResult = await EventsController.calculateProviderRevenue(provider.toString(), Number(chainId))
-      const dailyRevenue = queryResult.dailyRevenue
+      const response: {[index: number]: any} = {}
+      for (const chain of chainId) {
+        const queryResult = await EventsController.calculateProviderRevenue(provider.toString(), Number(chain))
+        const dailyRevenue = queryResult.dailyRevenue
 
-      const formattedData: { [key: string]: string } = {}
+        const formattedData: { [key: string]: string } = {}
 
-      for (const key in dailyRevenue) {
-        const timestamp = Number(key)
-        const bigNumber = dailyRevenue[key]
-        formattedData[timestamp] = bigNumber.toString()
-      }
+        for (const key in dailyRevenue) {
+          const timestamp = Number(key)
+          const bigNumber = dailyRevenue[key]
+          formattedData[timestamp] = bigNumber.toString()
+        }
 
-      const response = {
-        dailyRevenue: formattedData,
-        totalRevenue: queryResult.totalRevenue.toString(),
-        collectedRevenue: queryResult.collectedRevenue.toString(),
-        uncollectedRevenue: queryResult.uncollectedRevenue.toString()
+        response[Number(chain)] = {
+          dailyRevenue: formattedData,
+          totalRevenue: queryResult.totalRevenue.toString(),
+          collectedRevenue: queryResult.collectedRevenue.toString(),
+          uncollectedRevenue: queryResult.uncollectedRevenue.toString()
+        }
       }
       res.json(response)
     }
