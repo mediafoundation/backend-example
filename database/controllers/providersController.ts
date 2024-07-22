@@ -227,11 +227,13 @@ export class ProvidersController {
     return result
   }
 
-  static async getProviderNewClients(provider: string, chainId: number, fromDate: number = 0, toDate: number = Math.floor(Date.now() / 1000)) {
+  static async getProviderNewClients(provider: string, chainId: number[], fromDate: number = 0, toDate: number = Math.floor(Date.now() / 1000)) {
     const latestBillings = await Deal.findAll({
       where: {
         provider: provider,
-        chainId: chainId
+        chainId: {
+          [Op.in]: chainId
+        }
       },
 
       attributes: [

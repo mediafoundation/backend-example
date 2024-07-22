@@ -264,17 +264,17 @@ app.get("/providers/totalRevenue", async (req, res) => {
  */
 app.get("/providers/countNewClients", async (req, res) => {
   const provider = req.query.provider
-  const chainId = req.query.chainId
+  const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
   const fromTimestamp = req.query.from ? Number(req.query.from) : undefined
   const toTimestamp = req.query.to ? Number(req.query.to) : undefined
 
-  if(!provider || !chainId) {
+  if(!provider || !chainId || !Array.isArray(JSON.parse(req.query.chainId as string))) {
     res.status(500).json({error: "No provider or chainId provided"})
     return
   }
 
   try {
-    const result = await ProvidersController.getProviderNewClients(provider as string, Number(chainId), fromTimestamp, toTimestamp)
+    const result = await ProvidersController.getProviderNewClients(provider as string, chainId, fromTimestamp, toTimestamp)
     res.json({
       "clients": result
     })
