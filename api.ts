@@ -291,7 +291,7 @@ app.get("/providers/countNewClients", async (req, res) => {
  */
 app.get("/providers/countActiveClients", async (req, res) => {
   const provider = req.query.provider
-  const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
+  const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
   const fromTimestamp = req.query.from ? Number(req.query.from) : undefined
   const toTimestamp = req.query.to ? Number(req.query.to) : undefined
 

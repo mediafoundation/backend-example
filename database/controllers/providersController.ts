@@ -179,14 +179,14 @@ export class ProvidersController {
     return result
   }
 
-  static async getProviderActiveClients(provider: string, chainId: number | undefined = undefined, fromDate: number = 0, toDate: number = Math.floor(Date.now() / 1000)) {
+  static async getProviderActiveClients(provider: string, chainId: number[] | undefined = undefined, fromDate: number = 0, toDate: number = Math.floor(Date.now() / 1000)) {
     const providerFromDb = await Provider.findOne({rejectOnEmpty: false, where: {account: provider}})
 
     if(!providerFromDb) {
       throw new Error("Provider not found")
     }
 
-    const chains = chainId ? [chainId] : (await Chain.findAll({attributes: {include: ["chainId"]}})).map(chain => chain.chainId)
+    const chains = chainId ? chainId : (await Chain.findAll({attributes: {include: ["chainId"]}})).map(chain => chain.chainId)
 
     const result: ProviderAssociationCount = {}
 
