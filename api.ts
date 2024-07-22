@@ -7,8 +7,8 @@ import {Marketplace, Resources, Sdk, validChains} from "media-sdk"
 import express from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
-import { DealsController } from "./database/controllers/dealsController"
-import { ResourcesController } from "./database/controllers/resourcesController"
+import {DealsController} from "./database/controllers/dealsController"
+import {ResourcesController} from "./database/controllers/resourcesController"
 import {OffersController} from "./database/controllers/offersController"
 import {parseFilter} from "./utils/filter"
 import {createRelationsBetweenTables} from "./database/utils"
@@ -148,7 +148,7 @@ app.get("/providers", async(req, res) => {
 
     const page = req.query.page ? Number(req.query.page) : undefined
     const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
-    const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
+    const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
     const account = req.query.account
 
     const providers = await ProvidersController.getProviders(chainId, page, pageSize, account as string | undefined)
@@ -168,8 +168,8 @@ app.get("/providers", async(req, res) => {
       else {
         const chains = provider.Chains
         for (const chain of chains!) {
-          providerMetadata[chain] = await ProvidersController.getMetadata(provider.account, Number(chain))
-          registryTime[chain] = await ProvidersController.getProviderStartTime(provider.account, Number(chain))
+          providerMetadata[chain] = await ProvidersController.getMetadata(provider.account, [Number(chain)])
+          registryTime[chain] = (await ProvidersController.getProviderStartTime(provider.account, [Number(chain)]))[chain]
         }
       }
 
@@ -199,12 +199,12 @@ app.get("/providers", async(req, res) => {
  */
 app.get("/providers/countNewDeals", async (req, res) => {
   const provider = req.query.provider
-  const chainId = req.query.chainId
+  const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
   const fromDate = req.query.from ? Number(req.query.from) : undefined
   const toDate = req.query.to ? Number(req.query.to) : undefined
 
   try {
-    const amount = await EventsController.calculateProviderNewDeals(provider!.toString(), Number(chainId), fromDate, toDate)
+    const amount = await EventsController.calculateProviderNewDeals(provider!.toString(), chainId, fromDate, toDate)
 
     res.json({
       "dealsCount": amount
@@ -223,73 +223,33 @@ app.get("/providers/countNewDeals", async (req, res) => {
 app.get("/providers/totalRevenue", async (req, res) => {
   try {
     const provider = req.query.provider
-    const chainId = req.query.chainId
+    const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
 
-    if(!provider || !chainId) {
-      res.status(500).json({error: "No provider or chainId provided"})
+    if(!provider || !chainId || !Array.isArray(JSON.parse(req.query.chainId as string))) {
+      res.status(500).json({error: "No provider or valid chainId provided"})
       return
     }
     else {
-      const queryResult = await EventsController.calculateProviderRevenue(provider.toString(), Number(chainId))
-      const dailyRevenue = queryResult.dailyRevenue
+      const response: {[index: number]: any} = {}
+      for (const chain of chainId) {
+        const queryResult = await EventsController.calculateProviderRevenue(provider.toString(), Number(chain))
+        const dailyRevenue = queryResult.dailyRevenue
 
-      const formattedData: { [key: string]: string } = {}
+        const formattedData: { [key: string]: string } = {}
 
-      for (const key in dailyRevenue) {
-        const timestamp = Number(key)
-        const bigNumber = dailyRevenue[key]
-        formattedData[timestamp] = bigNumber.toString()
+        for (const key in dailyRevenue) {
+          const timestamp = Number(key)
+          const bigNumber = dailyRevenue[key]
+          formattedData[timestamp] = bigNumber.toString()
+        }
+
+        response[Number(chain)] = {
+          dailyRevenue: formattedData,
+          totalRevenue: queryResult.totalRevenue.toString(),
+          collectedRevenue: queryResult.collectedRevenue.toString(),
+          uncollectedRevenue: queryResult.uncollectedRevenue.toString()
+        }
       }
-
-      const response = {
-        dailyRevenue: formattedData,
-        totalRevenue: queryResult.totalRevenue.toString(),
-        collectedRevenue: queryResult.collectedRevenue.toString(),
-        uncollectedRevenue: queryResult.uncollectedRevenue.toString()
-      }
-      res.json(response)
-    }
-  } catch (e) {
-    console.log(e)
-    res.status(500).json({error: e})
-  }
-})
-
-/**
- * @route GET /providers/partialRevenue
- * @description Retrieves the partial revenue for a provider.
- */
-app.get("/providers/partialRevenue", async (req, res) => {
-  try {
-    const provider = req.query.provider
-    const chainId = req.query.chainId
-    const fromTimestamp = req.query.from ? Number(req.query.from) : undefined
-    const toTimestamp = req.query.to ? Number(req.query.to) : undefined
-
-    if(!provider || !chainId) {
-      res.status(500).json({error: "No provider or chainId provided"})
-      return
-    }
-    else {
-      const queryResult = await EventsController.calculateProviderRevenue(provider.toString(), Number(chainId), fromTimestamp, toTimestamp)
-
-      const dailyRevenue = queryResult.dailyRevenue
-
-      const formattedData: { [key: string]: string } = {}
-
-      for (const key in dailyRevenue) {
-        const timestamp = Number(key)
-        const bigNumber = dailyRevenue[key]
-        formattedData[timestamp] = bigNumber.toString()
-      }
-
-      const response = {
-        dailyRevenue: formattedData,
-        totalRevenue: queryResult.totalRevenue.toString(),
-        collectedRevenue: queryResult.collectedRevenue.toString(),
-        uncollectedRevenue: queryResult.uncollectedRevenue.toString()
-      }
-
       res.json(response)
     }
   } catch (e) {
@@ -304,17 +264,17 @@ app.get("/providers/partialRevenue", async (req, res) => {
  */
 app.get("/providers/countNewClients", async (req, res) => {
   const provider = req.query.provider
-  const chainId = req.query.chainId
+  const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
   const fromTimestamp = req.query.from ? Number(req.query.from) : undefined
   const toTimestamp = req.query.to ? Number(req.query.to) : undefined
 
-  if(!provider || !chainId) {
+  if(!provider || !chainId || !Array.isArray(JSON.parse(req.query.chainId as string))) {
     res.status(500).json({error: "No provider or chainId provided"})
     return
   }
 
   try {
-    const result = await ProvidersController.getProviderNewClients(provider as string, Number(chainId), fromTimestamp, toTimestamp)
+    const result = await ProvidersController.getProviderNewClients(provider as string, chainId, fromTimestamp, toTimestamp)
     res.json({
       "clients": result
     })
@@ -331,7 +291,7 @@ app.get("/providers/countNewClients", async (req, res) => {
  */
 app.get("/providers/countActiveClients", async (req, res) => {
   const provider = req.query.provider
-  const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
+  const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
   const fromTimestamp = req.query.from ? Number(req.query.from) : undefined
   const toTimestamp = req.query.to ? Number(req.query.to) : undefined
 

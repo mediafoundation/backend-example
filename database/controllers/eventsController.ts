@@ -166,14 +166,15 @@ export class EventsController {
     }
   }
 
-  static async calculateProviderNewDeals(provider: string, chainId: number, fromDate: number = 0, toDate: number = Date.now() / 1000): Promise<number> {
+  static async calculateProviderNewDeals(provider: string, chainId: number[] | undefined, fromDate: number = 0, toDate: number = Date.now() / 1000): Promise<number> {
+    const inClause = chainId ? { $in: chainId } : { $exists: true }
     return eventsCollection.countDocuments({
       provider: provider,
       timestamp: {
         $gte: fromDate,
         $lte: toDate
       },
-      chainId: chainId,
+      chainId: inClause,
       eventName: "DealCreated"
     })
   }
