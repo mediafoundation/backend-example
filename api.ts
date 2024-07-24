@@ -15,6 +15,7 @@ import {createRelationsBetweenTables} from "./database/utils"
 import {ProvidersController} from "./database/controllers/providersController"
 import {EventsController} from "./database/controllers/eventsController"
 import {Document, WithId} from "mongodb"
+import {ProvidersMetadata} from "./database/models/Providers/ProvidersMetadata"
 
 // Initialize express app
 export const app = express()
@@ -157,7 +158,7 @@ app.get("/providers", async(req, res) => {
       const dealsCount = await ProvidersController.countDeals(provider.account, chainId)
       const offersCount = await ProvidersController.countOffers(provider.account, chainId)
       const clientCount = await ProvidersController.countClients(provider.account, chainId)
-      let providerMetadata: { [index: number]: any } | WithId<Document> | null = {}
+      let providerMetadata: { [index: number]: any } | ProvidersMetadata | null = {}
       let registryTime: { [index: number]: any } | number = {}
 
       if(chainId) {
