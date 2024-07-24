@@ -52,7 +52,8 @@ export class ProvidersController {
         chainId: {
           [Op.in]: chainId
         }
-      }
+      },
+      raw: true
     })
   }
 
