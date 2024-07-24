@@ -1,16 +1,16 @@
-import {DataTypes, ForeignKey, Model} from "sequelize"
+import {CreationOptional, DataTypes, ForeignKey, InferCreationAttributes, Model} from "sequelize"
 import {Provider} from "./Provider"
 import {sequelize} from "../../database"
 
-export type ProvidersMetadataType = {
-  id: number,
+interface ProvidersMetadataType {
+  id?: number
   provider: ForeignKey<Provider["account"]>,
   metadata: string
   chainId: number
 }
 
-export class ProvidersMetadata extends Model<ProvidersMetadataType, ProvidersMetadataType> {
-  declare id: number
+export class ProvidersMetadata extends Model<ProvidersMetadataType, InferCreationAttributes<ProvidersMetadata>> {
+  declare id: CreationOptional<number>
   declare provider: ForeignKey<Provider["account"]>
   declare metadata: string
   declare chainId: number
@@ -18,10 +18,16 @@ export class ProvidersMetadata extends Model<ProvidersMetadataType, ProvidersMet
 
 ProvidersMetadata.init({
   id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
-  metadata: DataTypes.STRING,
+  metadata: DataTypes.TEXT,
   chainId: DataTypes.INTEGER
 }, {
   sequelize,
   timestamps: false,
-  freezeTableName: true
+  freezeTableName: true,
+  indexes: [
+    {
+      unique: true,
+      fields: ["provider", "chainId"]
+    }
+  ]
 })

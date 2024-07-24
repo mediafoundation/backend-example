@@ -9,6 +9,7 @@ import {Deal} from "../../database/models/deals/Deal"
 import {Offer} from "../../database/models/offers/Offer"
 import {ChainClient} from "../../database/models/manyToMany/ChainClient"
 import {closeMongoDB, sequelize} from "../../database/database"
+import {ProvidersMetadata} from "../../database/models/Providers/ProvidersMetadata"
 
 const mockDeal = {
   id: 1n,
@@ -88,6 +89,7 @@ beforeAll(async () => {
 
 afterEach(async () => {
   await Provider.sync({force: true})
+  await ProvidersMetadata.sync({force: true})
   await ChainProvider.sync({force: true})
   await ChainClient.sync({force: true})
   await Deal.sync({force: true})
@@ -103,16 +105,24 @@ describe("Providers Controller", () => {
 
   test("Upsert provider", async () => {
     const metadata = JSON.stringify({"metadata": "someExample"})
+    const secondMetadata = JSON.stringify({"metadata": "someExample2"})
     let result = await ProvidersController.upsertProvider("Account 1", 1, undefined, metadata, "pubKey")
+    let metadataResult = await ProvidersController.getMetadata("Account 1", [1])
 
     expect(result.instance).not.toBeNull()
     expect(result.instance.account).toBe("Account 1")
     expect(result.created).toBe(true)
+    expect(metadataResult).not.toBeNull()
+    expect(metadataResult!.metadata).toBe(metadata)
 
-    result = await ProvidersController.upsertProvider("Account 1", 1, undefined, metadata, "pubKey")
+    result = await ProvidersController.upsertProvider("Account 1", 1, undefined, secondMetadata, "pubKey")
+    metadataResult = await ProvidersController.getMetadata("Account 1", [1])
     expect(result.instance).not.toBeNull()
     expect(result.instance.account).toBe("Account 1")
     expect(result.created).toBe(false)
+    expect(metadataResult).not.toBeNull()
+    expect(metadataResult!.metadata).toBe(secondMetadata)
+    expect(await ProvidersMetadata.count()).toBe(1)
   })
 
   test("Get provider", async () => {

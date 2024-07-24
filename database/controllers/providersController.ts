@@ -69,7 +69,7 @@ export class ProvidersController {
       }
     })
 
-    const query = {provider: provider, chainId: chainId}
+    /*const query = {provider: provider, chainId: chainId}
     const update = {$set: {
       provider: provider,
       chainId: chainId,
@@ -77,7 +77,9 @@ export class ProvidersController {
     }}
     const options = {upsert: true}
 
-    await providersCollection.updateOne(query, update, options)
+    await providersCollection.updateOne(query, update, options)*/
+
+    await ProvidersMetadata.upsert({provider: provider, chainId: chainId, metadata: providerMetadata})
 
     await ChainProvider.findOrCreate({
       where: {
