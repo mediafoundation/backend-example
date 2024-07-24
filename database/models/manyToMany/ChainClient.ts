@@ -1,6 +1,6 @@
 import {CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model} from "sequelize"
 import {Chain} from "../Chain"
-import {Client} from "../Client"
+import {Client} from "../Clients/Client"
 import {sequelize} from "../../database"
 
 export class ChainClient extends Model<InferAttributes<ChainClient>, InferCreationAttributes<ChainClient>> {

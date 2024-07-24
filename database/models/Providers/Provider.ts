@@ -6,9 +6,9 @@ import {
   Model,
   NonAttribute
 } from "sequelize"
-import {sequelize} from "../database"
-import {Chain} from "./Chain"
-import {Client} from "./Client"
+import {sequelize} from "../../database"
+import {Chain} from "../Chain"
+import {Client} from "../Clients/Client"
 
 interface ProviderAttributes {
   account: string,

@@ -11,8 +11,8 @@ import {DECIMALS_DIGITS, sequelize} from "../../database"
 import {DealMetadata} from "./DealsMetadata"
 import {NodeLocation} from "../NodeLocation"
 import {Resource} from "../Resource"
-import {Client} from "../Client"
-import {Provider} from "../Provider"
+import {Client} from "../Clients/Client"
+import {Provider} from "../Providers/Provider"
 import {Chain} from "../Chain"
 
 export type DealAttributes = {

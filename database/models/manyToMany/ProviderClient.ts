@@ -1,6 +1,6 @@
 import {CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model} from "sequelize"
-import {Client} from "../Client"
-import {Provider} from "../Provider"
+import {Client} from "../Clients/Client"
+import {Provider} from "../Providers/Provider"
 import {sequelize} from "../../database"
 
 export class ProviderClient extends Model<InferAttributes<ProviderClient>, InferCreationAttributes<ProviderClient>> {

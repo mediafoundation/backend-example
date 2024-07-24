@@ -1,7 +1,7 @@
 import {CreationOptional, DataTypes, ForeignKey, InferAttributes, InferCreationAttributes, Model} from "sequelize"
 import {Chain} from "../Chain"
 import {sequelize} from "../../database"
-import {Provider} from "../Provider"
+import {Provider} from "../Providers/Provider"
 
 export class ChainProvider extends Model<InferAttributes<ChainProvider>, InferCreationAttributes<ChainProvider>> {
   declare id: CreationOptional<number>
