@@ -1,4 +1,4 @@
-import {Provider} from "../models/Provider"
+import {Provider} from "../models/Providers/Provider"
 import {Chain} from "../models/Chain"
 import {ChainProvider} from "../models/manyToMany/ChainProvider"
 import {ProviderAssociationCount} from "../models/types/provider"
@@ -6,6 +6,7 @@ import {ProviderClient} from "../models/manyToMany/ProviderClient"
 import {ChainClient} from "../models/manyToMany/ChainClient"
 import {eventsCollection, Op, providersCollection, sequelize} from "../database"
 import {Deal} from "../models/deals/Deal"
+import {ProvidersMetadata} from "../models/Providers/ProvidersMetadata"
 
 export class ProvidersController {
   static async getProviders(chainId: number[] | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined = undefined, account: string | undefined = undefined) {
@@ -15,7 +16,7 @@ export class ProvidersController {
     const filter = account ? {account: account} : {}
     const offset = page && pageSize ? (page - 1) * pageSize : undefined
 
-    const limitQuery = offset ? {
+    const limitQuery = offset != undefined ? {
       limit: pageSize,
       offset: offset
     } : {}
@@ -43,8 +44,16 @@ export class ProvidersController {
     return mappedProviders
   }
 
-  static async getMetadata(provider: string, chainId: number[]) {
-    return await providersCollection.findOne({provider: provider, chainId: {$in: chainId}})
+  static async getMetadata(provider: string, chainId: number[]): Promise<ProvidersMetadata | null> {
+    //return await providersCollection.findOne({provider: provider, chainId: {$in: chainId}})
+    return await ProvidersMetadata.findOne({
+      where: {
+        provider: provider,
+        chainId: {
+          [Op.in]: chainId
+        }
+      }
+    })
   }
 
   static async upsertProvider(provider: string, chainId: number, client: string | undefined = undefined, providerMetadata: string, publicKey: string) {
@@ -201,7 +210,7 @@ export class ProvidersController {
             client: client,
             [Op.and]: [
               sequelize.where(
-                sequelize.literal(`(CAST("Deal"."blockedBalance" AS DECIMAL) / CAST("Deal"."pricePerSecond" AS DECIMAL)) + CAST("Deal"."billingStart" AS DECIMAL)`),
+                sequelize.literal("(CAST(\"Deal\".\"blockedBalance\" AS DECIMAL) / CAST(\"Deal\".\"pricePerSecond\" AS DECIMAL)) + CAST(\"Deal\".\"billingStart\" AS DECIMAL)"),
                 {
                   [Op.gte]: fromDate
                 }

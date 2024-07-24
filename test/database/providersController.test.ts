@@ -1,7 +1,7 @@
 import {resetSequelizeDB} from "../../database/utils"
 import {ProvidersController} from "../../database/controllers/providersController"
 import {Chain} from "../../database/models/Chain"
-import {Provider} from "../../database/models/Provider"
+import {Provider} from "../../database/models/Providers/Provider"
 import {ChainProvider} from "../../database/models/manyToMany/ChainProvider"
 import {DealsController} from "../../database/controllers/dealsController"
 import {OffersController} from "../../database/controllers/offersController"
@@ -132,7 +132,7 @@ describe("Providers Controller", () => {
     await ProvidersController.upsertProvider("Account 1", 1, undefined, metadata, "pubKey")
     await ProvidersController.upsertProvider("Account 1", 0, undefined, metadata, "pubKey")
 
-    const result = await ProvidersController.getProviders(1)
+    const result = await ProvidersController.getProviders([1])
     expect(result.length).toBe(1)
     expect(result[0].account).toBe("Account 1")
     //expect(result[0].Chains).toStrictEqual([1])
@@ -158,14 +158,14 @@ describe("Providers Controller", () => {
       await ProvidersController.upsertProvider(`Account: ${i}`, 1, undefined, metadata, "pubKey")
     }
 
-    const firstPageProviders = await ProvidersController.getProviders(1, 1, 20)
+    const firstPageProviders = await ProvidersController.getProviders([1], 1, 20)
 
     expect(firstPageProviders.length).toStrictEqual(20)
     expect(firstPageProviders[0].account).toStrictEqual("Account: 0")
     expect(firstPageProviders[13].account).toStrictEqual("Account: 13")
     expect(firstPageProviders[19].account).toStrictEqual("Account: 19")
 
-    const thirdPageProviders = await ProvidersController.getProviders(1, 3, 10)
+    const thirdPageProviders = await ProvidersController.getProviders([1], 3, 10)
 
     expect(thirdPageProviders.length).toStrictEqual(10)
     expect(thirdPageProviders[0].account).toStrictEqual("Account: 20")
@@ -226,7 +226,7 @@ describe("Providers Controller", () => {
       1: 2
     })
 
-    const clientsOnChain = await ProvidersController.countClients("Provider 1", 1)
+    const clientsOnChain = await ProvidersController.countClients("Provider 1", [1])
     expect(clientsOnChain).toBe(2)
   })
 
@@ -238,7 +238,7 @@ describe("Providers Controller", () => {
     await populateDeals(10, "Provider 1", "Client 1", 1)
     await populateDeals(5, "Provider 1", "Client 2", 1)
 
-    const result = await ProvidersController.getProviderNewClients("Provider 1", 1)
+    const result = await ProvidersController.getProviderNewClients("Provider 1", [1])
     console.log(result)
   })
 
