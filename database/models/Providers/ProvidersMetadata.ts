@@ -2,9 +2,9 @@ import {CreationOptional, DataTypes, ForeignKey, InferCreationAttributes, Model}
 import {Provider} from "./Provider"
 import {sequelize} from "../../database"
 
-interface ProvidersMetadataType {
+type ProvidersMetadataType = {
   id?: number
-  provider: ForeignKey<Provider["account"]>,
+  provider: string,
   metadata: string
   chainId: number
 }
@@ -17,7 +17,14 @@ export class ProvidersMetadata extends Model<ProvidersMetadataType, InferCreatio
 }
 
 ProvidersMetadata.init({
-  id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
+  id: {type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
+  provider: {
+    type: DataTypes.STRING,
+    references: {
+      model: Provider,
+      key: "account"
+    }
+  },
   metadata: DataTypes.TEXT,
   chainId: DataTypes.INTEGER
 }, {
