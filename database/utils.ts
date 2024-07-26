@@ -1,10 +1,10 @@
-import {Client} from "./models/Client"
+import {Client} from "./models/Clients/Client"
 import {Resource} from "./models/Resource"
 import {Deal} from "./models/deals/Deal"
 import {connectToMongodb, eventsCollection, lastReadBlockCollection, providersCollection, sequelize} from "./database"
 import {NodeLocation} from "./models/NodeLocation"
 import {BandwidthLimit} from "./models/BandwidthLimit"
-import {Provider} from "./models/Provider"
+import {Provider} from "./models/Providers/Provider"
 import {DealMetadata} from "./models/deals/DealsMetadata"
 import {Offer} from "./models/offers/Offer"
 import {OfferMetadata} from "./models/offers/OffersMetadata"
@@ -14,6 +14,8 @@ import {ChainProvider} from "./models/manyToMany/ChainProvider"
 import {ProviderClient} from "./models/manyToMany/ProviderClient"
 import {DealNodeLocation} from "./models/manyToMany/DealNodeLocation"
 import {OfferNodeLocation} from "./models/manyToMany/OfferNodeLocation"
+import {ProvidersMetadata} from "./models/Providers/ProvidersMetadata"
+import {ClientsMetadata} from "./models/Clients/ClientsMetadata"
 
 const resetSequelizeDB = async () => {
   await createRelationsBetweenTables()
@@ -60,11 +62,21 @@ const createRelationsBetweenTables = async () => {
     foreignKey: "provider"
   })
 
+  Provider.hasMany(ProvidersMetadata, {
+    sourceKey: "account",
+    foreignKey: "provider"
+  })
+
   Client.belongsToMany(Chain, {
     through: ChainClient,
     foreignKey: "client",
     otherKey: "chainId",
     timestamps: false
+  })
+
+  Client.hasMany(ClientsMetadata, {
+    sourceKey: "account",
+    foreignKey: "client"
   })
 
   Deal.belongsTo(Chain, {

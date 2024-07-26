@@ -4,7 +4,7 @@ import {
   InferCreationAttributes,
   Model
 } from "sequelize"
-import {sequelize} from "../database"
+import {sequelize} from "../../database"
 
 export class Client extends Model<InferAttributes<Client>, InferCreationAttributes<Client>> {
   declare account: string

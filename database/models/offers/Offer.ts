@@ -8,7 +8,7 @@ import {
   Model
 } from "sequelize"
 import {sequelize} from "../../database"
-import {Provider} from "../Provider"
+import {Provider} from "../Providers/Provider"
 import {OfferMetadata} from "./OffersMetadata"
 import {NodeLocation} from "../NodeLocation"
 import {Chain} from "../Chain"
