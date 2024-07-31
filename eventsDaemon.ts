@@ -8,8 +8,8 @@ import {OffersController} from "./database/controllers/offersController"
 const BATCH_SIZE = 1000n
 
 const marketplaceGenesisBlock: {[index: number]: bigint} = {
-  11155111: 5284652n,
-  84532: 6059860n
+  11155111: 6375173n,
+  84532: 13084726n
 }
 
 function delay(ms: number) {
@@ -29,6 +29,8 @@ async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchai
 
       //events.push(...await eventsHandler.getResourcesPastEvents({eventName: undefined, fromBlock: blockToRead, toBlock: blockToRead + BATCH_SIZE}))
       events.push(...await eventsHandler.getMarketplacePastEvents({eventName: undefined, fromBlock: blockToRead, toBlock: blockToRead + BATCH_SIZE}))
+
+      console.log("EventS", events)
 
       for (const event of events) {
         const blockTimestamp = await blockChain.getBlockTimestamp(event.blockNumber)
@@ -67,7 +69,7 @@ async function manageDealUpdated(event: any, marketplace: Marketplace, blockChai
   const blockTimestamp = await blockChain.getBlockTimestamp(event.blockNumber)
   await EventsController.upsertEvent(EventsController.formatEvent(event), chainId, Number(blockTimestamp.timestamp))
   const deal = await marketplace.getDealById({
-    marketplaceId: process.env.MARKETPLACE_ID,
+    marketplaceId: Number(process.env.MARKETPLACE_ID),
     dealId: event._dealId
   })
 
@@ -78,7 +80,7 @@ async function manageOfferUpdated(event: any, marketplace: Marketplace, blockCha
   const blockTimestamp = await blockChain.getBlockTimestamp(event.blockNumber)
   await EventsController.upsertEvent(EventsController.formatEvent(event), chainId, Number(blockTimestamp.timestamp))
   const offer = await marketplace.getOfferById({
-    marketplaceId: process.env.MARKETPLACE_ID,
+    marketplaceId: Number(process.env.MARKETPLACE_ID),
     offerId: event._offerId
   })
 
