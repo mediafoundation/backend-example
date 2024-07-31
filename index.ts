@@ -21,7 +21,7 @@ const init = async (chain: any) => {
   await Chain.findOrCreate({where: {chainId: chain.id}, defaults: {chainId: chain.id, name: chain.name}})
   
   const offers = await marketplaceViewer.getAllOffersPaginating({
-    marketplaceId: process.env.MARKETPLACE_ID,
+    marketplaceId: process.env.MARKETPLACE_ID!,
     start: 0,
     steps: 10
   })
@@ -55,7 +55,7 @@ const init = async (chain: any) => {
     const resources = await resourcesInstance.getAllResourcesPaginating({address: providerAddress})
     
     const deals = await marketplaceViewer.getAllDealsPaginating({
-      marketplaceId: process.env.MARKETPLACE_ID,
+      marketplaceId: process.env.MARKETPLACE_ID!,
       address: providerAddress,
       isProvider: true
     })
