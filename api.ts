@@ -14,7 +14,6 @@ import {parseFilter} from "./utils/filter"
 import {createRelationsBetweenTables} from "./database/utils"
 import {ProvidersController} from "./database/controllers/providersController"
 import {EventsController} from "./database/controllers/eventsController"
-import {Document, WithId} from "mongodb"
 import {ProvidersMetadata} from "./database/models/Providers/ProvidersMetadata"
 
 // Initialize express app
@@ -333,8 +332,8 @@ app.get("/upsertOffer", async (req, res) => {
     const marketplace = new Marketplace(sdk)
 
     const offer = await marketplace.getOfferById({
-      marketplaceId: process.env.MARKETPLACE_ID,
-      offerId: offerId
+      marketplaceId: Number(process.env.MARKETPLACE_ID),
+      offerId: Number(offerId)
     })
 
     const formattedOffer = OffersController.formatOffer(offer)
@@ -376,8 +375,8 @@ app.get("/upsertDeal", async (req, res) => {
     const marketplace = new Marketplace(sdk)
 
     const deal = await marketplace.getDealById({
-      marketplaceId: process.env.MARKETPLACE_ID,
-      dealId: dealId
+      marketplaceId: Number(process.env.MARKETPLACE_ID),
+      dealId: Number(dealId)
     })
 
     await DealsController.upsertDeal(DealsController.formatDeal(deal), Number(chainId))
