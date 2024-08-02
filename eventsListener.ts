@@ -3,7 +3,7 @@ import {EventsHandler, Sdk, validChains} from "media-sdk"
 
 const chains: any[] = Object.values(validChains)
 for (const chain of chains) {
-  const sdk = new Sdk({chain: chain, transport: wssNetworks[chain.name]})
+  const sdk = new Sdk({chain: chain, transport: (wssNetworks[chain.id])})
   const eventsListener = new EventsHandler(sdk)
 
   eventsListener.listenForMarketplaceEvent({
