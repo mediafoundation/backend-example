@@ -30,8 +30,6 @@ async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchai
       //events.push(...await eventsHandler.getResourcesPastEvents({eventName: undefined, fromBlock: blockToRead, toBlock: blockToRead + BATCH_SIZE}))
       events.push(...await eventsHandler.getMarketplacePastEvents({eventName: undefined, fromBlock: blockToRead, toBlock: blockToRead + BATCH_SIZE}))
 
-      console.log("EventS", events)
-
       for (const event of events) {
         const blockTimestamp = await blockChain.getBlockTimestamp(event.blockNumber)
         await EventsController.upsertEvent(EventsController.formatEvent(event), chainId, Number(blockTimestamp.timestamp))
