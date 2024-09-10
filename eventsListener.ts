@@ -1,9 +1,12 @@
 import {wssNetworks} from "./networks"
-import {EventsHandler, Sdk, validChains} from "media-sdk"
+import {Blockchain, EventsHandler, Marketplace, Sdk, validChains, webSocket} from "media-sdk"
+import {manageDealUpdated, manageOfferUpdated} from "./eventsDaemon"
 
 const chains: any[] = Object.values(validChains)
 for (const chain of chains) {
-  const sdk = new Sdk({chain: chain, transport: (wssNetworks[chain.id])})
+  const sdk = new Sdk({chain: chain, transport: [webSocket(wssNetworks[chain.id][0])]})
+  const blockchain = new Blockchain(sdk)
+  const marketplace = new Marketplace(sdk)
   const eventsListener = new EventsHandler(sdk)
 
   eventsListener.listenForMarketplaceEvent({
@@ -11,8 +14,8 @@ for (const chain of chains) {
     onError: (error: any) => {
       console.log(error)
     },
-    callback: (event: any) => {
-      console.log(event)
+    callback: async (event: any) => {
+      await manageDealUpdated(event, marketplace, blockchain, chain.id)
     }
   })
     .then(() => {
@@ -23,8 +26,8 @@ for (const chain of chains) {
     onError: (error: any) => {
       console.log(error)
     },
-    callback: (event: any) => {
-      console.log(event)
+    callback: async (event: any) => {
+      await manageDealUpdated(event, marketplace, blockchain, chain.id)
     }
   })
     .then(() => {
@@ -35,8 +38,8 @@ for (const chain of chains) {
     onError: (error: any) => {
       console.log(error)
     },
-    callback: (event: any) => {
-      console.log(event)
+    callback: async (event: any) => {
+      await manageDealUpdated(event, marketplace, blockchain, chain.id)
     }
   })
     .then(() => {
@@ -47,8 +50,8 @@ for (const chain of chains) {
     onError: (error: any) => {
       console.log(error)
     },
-    callback: (event: any) => {
-      console.log(event)
+    callback: async (event: any) => {
+      await manageDealUpdated(event, marketplace, blockchain, chain.id)
     }
   })
     .then(() => {})
@@ -58,7 +61,7 @@ for (const chain of chains) {
     onError: (error: any) => {
       console.log(error)
     },
-    callback: (event: any) => {
+    callback: async (event: any) => {
       console.log(event)
     }
   })
@@ -69,8 +72,8 @@ for (const chain of chains) {
     onError: (error: any) => {
       console.log(error)
     },
-    callback: (event: any) => {
-      console.log(event)
+    callback: async(event: any) => {
+      await manageOfferUpdated(event, marketplace, blockchain, chain.id)
     }
   })
     .then(() => {})
@@ -80,8 +83,8 @@ for (const chain of chains) {
     onError: (error: any) => {
       console.log(error)
     },
-    callback: (event: any) => {
-      console.log(event)
+    callback: async(event: any) => {
+      await manageOfferUpdated(event, marketplace, blockchain, chain.id)
     }
   })
     .then(() => {})

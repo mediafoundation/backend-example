@@ -63,7 +63,7 @@ async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchai
   console.log("Finish getting past events on chain:", chainId)
 }
 
-async function manageDealUpdated(event: any, marketplace: Marketplace, blockChain: Blockchain, chainId: number) {
+export async function manageDealUpdated(event: any, marketplace: Marketplace, blockChain: Blockchain, chainId: number) {
   const blockTimestamp = await blockChain.getBlockTimestamp(event.blockNumber)
   await EventsController.upsertEvent(EventsController.formatEvent(event), chainId, Number(blockTimestamp.timestamp))
   const deal = await marketplace.getDealById({
@@ -74,7 +74,7 @@ async function manageDealUpdated(event: any, marketplace: Marketplace, blockChai
   await DealsController.upsertDeal(DealsController.formatDeal(deal), chainId)
 }
 
-async function manageOfferUpdated(event: any, marketplace: Marketplace, blockChain: Blockchain, chainId: number) {
+export async function manageOfferUpdated(event: any, marketplace: Marketplace, blockChain: Blockchain, chainId: number) {
   const blockTimestamp = await blockChain.getBlockTimestamp(event.blockNumber)
   await EventsController.upsertEvent(EventsController.formatEvent(event), chainId, Number(blockTimestamp.timestamp))
   const offer = await marketplace.getOfferById({
