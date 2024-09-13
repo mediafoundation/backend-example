@@ -1,4 +1,4 @@
-import {Sdk, MarketplaceViewer, Resources, validChains, Marketplace} from "media-sdk"
+import {Sdk, MarketplaceViewer, Resources, validChains, Marketplace, http} from "media-sdk"
 import {DealsController} from "./database/controllers/dealsController"
 import {ResourcesController} from "./database/controllers/resourcesController"
 import {resetSequelizeDB} from "./database/utils"
@@ -6,11 +6,13 @@ import {z} from "zod"
 import {OffersController} from "./database/controllers/offersController"
 import {Chain} from "./database/models/Chain"
 import {closeMongoDB, sequelize} from "./database/database"
+import {httpNetworks} from "./networks"
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("dotenv").config()
 
 const init = async (chain: any) => {
-  const sdkInstance = new Sdk({chain: chain})
+  const transports = httpNetworks ? httpNetworks[chain.name].map(transport => http(transport)) : undefined
+  const sdkInstance = new Sdk({chain: chain, transport: transports})
   
   const marketplaceViewer: MarketplaceViewer = new MarketplaceViewer(sdkInstance)
   const resourcesInstance: Resources = new Resources(sdkInstance)

@@ -3,7 +3,7 @@
  * @description This file contains the main API endpoints for the application.
  */
 
-import {Marketplace, Resources, Sdk, validChains} from "media-sdk"
+import {http, Marketplace, Resources, Sdk, validChains} from "media-sdk"
 import express from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
@@ -15,6 +15,7 @@ import {createRelationsBetweenTables} from "./database/utils"
 import {ProvidersController} from "./database/controllers/providersController"
 import {EventsController} from "./database/controllers/eventsController"
 import {ProvidersMetadata} from "./database/models/Providers/ProvidersMetadata"
+import {httpNetworks} from "./networks"
 
 // Initialize express app
 export const app = express()
@@ -327,7 +328,9 @@ app.get("/upsertOffer", async (req, res) => {
   }
 
   try {
-    const sdk = new Sdk({chain: validChains[chainId as unknown as keyof typeof validChains]})
+    const chain = validChains[chainId as unknown as keyof typeof validChains]
+    const transports = httpNetworks ? httpNetworks[chain.name].map(transport => http(transport)) : undefined
+    const sdk = new Sdk({chain: chain, transport: transports})
 
     const marketplace = new Marketplace(sdk)
 
@@ -370,7 +373,9 @@ app.get("/upsertDeal", async (req, res) => {
   }
 
   try {
-    const sdk = new Sdk({chain: validChains[chainId as unknown as keyof typeof validChains]})
+    const chain = validChains[chainId as unknown as keyof typeof validChains]
+    const transports = httpNetworks ? httpNetworks[chain.name].map(transport => http(transport)) : undefined
+    const sdk = new Sdk({chain: chain, transport: transports})
 
     const marketplace = new Marketplace(sdk)
 
@@ -407,7 +412,9 @@ app.get("/upsertResource", async (req, res) => {
   }
 
   try {
-    const sdk = new Sdk({chain: validChains[chainId as unknown as keyof typeof validChains]})
+    const chain = validChains[chainId as unknown as keyof typeof validChains]
+    const transports = httpNetworks ? httpNetworks[chain.name].map(transport => http(transport)) : undefined
+    const sdk = new Sdk({chain: chain, transport: transports})
 
     const resources = new Resources(sdk)
 
@@ -443,7 +450,9 @@ app.get("/upsertProvider", async (req, res) => {
   }
 
   try {
-    const sdk = new Sdk({chain: validChains[chainId as unknown as keyof typeof validChains]})
+    const chain = validChains[chainId as unknown as keyof typeof validChains]
+    const transports = httpNetworks ? httpNetworks[chain.name].map(transport => http(transport)) : undefined
+    const sdk = new Sdk({chain: chain, transport: transports})
 
     const marketplace = new Marketplace(sdk)
 
