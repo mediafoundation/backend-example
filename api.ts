@@ -315,20 +315,20 @@ app.get("/providers/countActiveClients", async (req, res) => {
  * @description This endpoint is used to update or insert an offer in the database.
  */
 app.get("/upsertOffer", async (req, res) => {
-  const {chainIdQuery, offerIdQuery} = req.query
+  const {chainId, offerId} = req.query
 
-  const chainId = chainIdQuery ? chainIdQuery.toString() : ""
-  const offerId = offerIdQuery ? offerIdQuery.toString() : ""
+  const chainIdFormatted = chainId ? chainId.toString() : ""
+  const offerIdFormatted = offerId ? offerId.toString() : ""
 
   const chains = Object.keys(validChains)
 
-  if(!chains.includes(chainId)) {
+  if(!chains.includes(chainIdFormatted)) {
     res.status(500).json({error: "Invalid chain"})
     return
   }
 
   try {
-    const chain = validChains[chainId as unknown as keyof typeof validChains]
+    const chain = validChains[chainIdFormatted as unknown as keyof typeof validChains]
     const transports = httpNetworks ? httpNetworks[chain.name].map(transport => http(transport)) : undefined
     const sdk = new Sdk({chain: chain, transport: transports})
 
@@ -336,7 +336,7 @@ app.get("/upsertOffer", async (req, res) => {
 
     const offer = await marketplace.getOfferById({
       marketplaceId: Number(process.env.MARKETPLACE_ID),
-      offerId: Number(offerId)
+      offerId: Number(offerIdFormatted)
     })
 
     const formattedOffer = OffersController.formatOffer(offer)
@@ -346,7 +346,7 @@ app.get("/upsertOffer", async (req, res) => {
       provider: formattedOffer.provider
     })
 
-    await OffersController.upsertOffer(formattedOffer, Number(chainId), providerData.metadata, providerData.publicKey)
+    await OffersController.upsertOffer(formattedOffer, Number(chainIdFormatted), providerData.metadata, providerData.publicKey)
 
     res.status(200).json({message: "Offer Updated"})
   } catch (e) {
@@ -360,20 +360,20 @@ app.get("/upsertOffer", async (req, res) => {
  * @description This endpoint is used to update or insert a deal in the database.
  */
 app.get("/upsertDeal", async (req, res) => {
-  const {chainIdQuery, dealIdQuery} = req.query
+  const {chainId, dealId} = req.query
 
-  const chainId = chainIdQuery ? chainIdQuery.toString() : ""
-  const dealId = dealIdQuery ? Number(dealIdQuery) : 0
+  const chainIdFormatted = chainId ? chainId.toString() : ""
+  const dealIdFormatted = dealId ? Number(dealId) : 0
 
   const chains = Object.keys(validChains)
 
-  if(!chains.includes(chainId)) {
+  if(!chains.includes(chainIdFormatted)) {
     res.status(500).json({error: "Invalid chain"})
     return
   }
 
   try {
-    const chain = validChains[chainId as unknown as keyof typeof validChains]
+    const chain = validChains[chainIdFormatted as unknown as keyof typeof validChains]
     const transports = httpNetworks ? httpNetworks[chain.name].map(transport => http(transport)) : undefined
     const sdk = new Sdk({chain: chain, transport: transports})
 
@@ -381,10 +381,10 @@ app.get("/upsertDeal", async (req, res) => {
 
     const deal = await marketplace.getDealById({
       marketplaceId: Number(process.env.MARKETPLACE_ID),
-      dealId: Number(dealId)
+      dealId: Number(dealIdFormatted)
     })
 
-    await DealsController.upsertDeal(DealsController.formatDeal(deal), Number(chainId))
+    await DealsController.upsertDeal(DealsController.formatDeal(deal), Number(chainIdFormatted))
 
     res.status(200).json({message: "Deal updated"})
   } catch (e) {
@@ -398,32 +398,32 @@ app.get("/upsertDeal", async (req, res) => {
  * @description This endpoint is used to update or insert a resource in the database.
  */
 app.get("/upsertResource", async (req, res) => {
-  const {addressQuery, resourceIdQuery, chainIdQuery} = req.query
+  const {address, resourceId, chainId} = req.query
 
-  const address = addressQuery ? addressQuery.toString() : ""
-  const resourceId = resourceIdQuery ? Number(resourceIdQuery) : 0
-  const chainId = chainIdQuery ? chainIdQuery.toString() : ""
+  const addressFormatted = address ? address.toString() : ""
+  const resourceIdFormatted = resourceId ? Number(resourceId) : 0
+  const chainIdFormatted = chainId ? chainId.toString() : ""
 
   const chains = Object.keys(validChains)
 
-  if(!chains.includes(chainId)) {
+  if(!chains.includes(chainIdFormatted)) {
     res.status(500).json({error: "Invalid chain"})
     return
   }
 
   try {
-    const chain = validChains[chainId as unknown as keyof typeof validChains]
+    const chain = validChains[chainIdFormatted as unknown as keyof typeof validChains]
     const transports = httpNetworks ? httpNetworks[chain.name].map(transport => http(transport)) : undefined
     const sdk = new Sdk({chain: chain, transport: transports})
 
     const resources = new Resources(sdk)
 
     const resource = await resources.getResource({
-      id: resourceId,
-      address: address
+      id: resourceIdFormatted,
+      address: addressFormatted
     })
 
-    await ResourcesController.upsertResource(ResourcesController.formatResource(resource), Number(chainId))
+    await ResourcesController.upsertResource(ResourcesController.formatResource(resource), Number(chainIdFormatted))
 
     res.status(200).json({message: "Resource Updated"})
   } catch (e) {
@@ -437,20 +437,20 @@ app.get("/upsertResource", async (req, res) => {
  * @description This endpoint is used to update or insert a provider in the database.
  */
 app.get("/upsertProvider", async (req, res) => {
-  const {providerQuery, chainIdQuery} = req.query
+  const {provider, chainId} = req.query
 
-  const provider = providerQuery ? providerQuery.toString() : ""
-  const chainId = chainIdQuery ? chainIdQuery.toString() : ""
+  const providerFormatted = provider ? provider.toString() : ""
+  const chainIdFormatted = chainId ? chainId.toString() : ""
 
   const chains = Object.keys(validChains)
 
-  if(!chains.includes(chainId)) {
+  if(!chains.includes(chainIdFormatted)) {
     res.status(500).json({error: "Invalid chain"})
     return
   }
 
   try {
-    const chain = validChains[chainId as unknown as keyof typeof validChains]
+    const chain = validChains[chainIdFormatted as unknown as keyof typeof validChains]
     const transports = httpNetworks ? httpNetworks[chain.name].map(transport => http(transport)) : undefined
     const sdk = new Sdk({chain: chain, transport: transports})
 
@@ -458,10 +458,10 @@ app.get("/upsertProvider", async (req, res) => {
 
     const providerData = await marketplace.getProvider({
       marketplaceId: Number(process.env.MARKETPLACE_ID),
-      provider: provider
+      provider: providerFormatted
     })
 
-    await ProvidersController.upsertProvider(provider, Number(chainId), undefined, providerData.metadata, providerData.publicKey)
+    await ProvidersController.upsertProvider(providerFormatted, Number(chainIdFormatted), undefined, providerData.metadata, providerData.publicKey)
 
     res.status(200).json({message: "Provider Updated"})
   } catch (e) {
