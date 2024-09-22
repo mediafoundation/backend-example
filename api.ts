@@ -16,6 +16,9 @@ import {ProvidersController} from "./database/controllers/providersController"
 import {EventsController} from "./database/controllers/eventsController"
 import {ProvidersMetadata} from "./database/models/Providers/ProvidersMetadata"
 import {httpNetworks} from "./networks"
+import {ProviderClient} from "./database/models/manyToMany/ProviderClient"
+import {ChainClient} from "./database/models/manyToMany/ChainClient"
+import {Deal} from "./database/models/deals/Deal"
 
 // Initialize express app
 export const app = express()
@@ -308,6 +311,58 @@ app.get("/providers/countActiveClients", async (req, res) => {
     console.log(e)
     res.status(500).json({error: e})
   }
+})
+
+app.get("/providerClient", async (req, res) => {
+  const {provider, client} = req.query
+
+  const formattedProvider = provider ? provider.toString() : ""
+  const formattedClient = client ? client.toString() : ""
+
+  const clientDeals: {[index: number]: { deals: Deal[], dealsCount: number }} = {}
+
+  try {
+
+    //Check if client and provider association exists
+    await ProviderClient.findOne({
+      where: {
+        provider: formattedProvider,
+        client: formattedClient
+      },
+      rejectOnEmpty: true,
+    })
+
+    const chainClient = await ChainClient.findAll({
+      where: {
+        client: formattedClient
+      },
+      raw: true
+    })
+
+    for (const chain of chainClient) {
+      const deals = await Deal.findAll({
+        where: {
+          chainId: chain.chainId,
+          client: formattedClient
+        },
+        raw: true
+      })
+      clientDeals[chain.chainId] = {
+        deals: deals,
+        dealsCount: deals.length
+      }
+    }
+
+    res.json({
+      provider: provider,
+      dealDetails: clientDeals
+    })
+  } catch (e) {
+    console.log("Error", e)
+    res.json(e)
+  }
+
+
 })
 
 /**
