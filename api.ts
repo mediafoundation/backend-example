@@ -19,6 +19,8 @@ import {httpNetworks} from "./networks"
 import {ProviderClient} from "./database/models/manyToMany/ProviderClient"
 import {ChainClient} from "./database/models/manyToMany/ChainClient"
 import {Deal} from "./database/models/deals/Deal"
+import {ChainProvider} from "./database/models/manyToMany/ChainProvider"
+import {Op} from "sequelize"
 
 // Initialize express app
 export const app = express()
@@ -363,6 +365,80 @@ app.get("/providerClient", async (req, res) => {
   }
 
 
+})
+
+app.get("/allProvidersClients", async (req, res) => {
+  const {provider} = req.query
+
+  const formattedProvider = provider ? provider.toString() : ""
+
+  const response: {
+    [index: string]: { //ChainId
+      [index: string]: { //Client
+        deals: Deal[],
+        dealsCount: number
+      }
+    }
+  } = {}
+
+  try {
+
+    //Check if client and provider association exists
+    const providerClients = await ProviderClient.findAll({
+      where: {
+        provider: formattedProvider
+      },
+      raw: true
+    })
+
+    const clients = providerClients.map(providerClient => providerClient.client)
+
+    const providerChain = await ChainProvider.findAll({
+      where: {
+        provider: formattedProvider
+      },
+      raw: true
+    })
+
+    for (const chain of providerChain) {
+      const deals = await Deal.findAll({
+        where: {
+          chainId: chain.chainId,
+          client: {
+            [Op.in]: clients
+          }
+        },
+        raw: true
+      })
+
+      const rawClient = deals.map(deal => deal.client)
+
+      const client = [...new Set(rawClient)]
+      console.log(client, chain.chainId)
+
+      const clientsDeals: {[index: string]: {
+          deals: Deal[],
+          dealsCount: number
+      }} = {}
+
+      for (const clientElement of client) {
+        const clientDeals = deals.filter(deal => deal.client === clientElement)
+        clientsDeals[clientElement] = {
+          deals: clientDeals,
+          dealsCount: clientDeals.length
+        }
+      }
+      response[chain.chainId] = clientsDeals
+    }
+
+    res.json({
+      provider: provider,
+      dealDetails: response
+    })
+  } catch (e) {
+    console.log("Error", e)
+    res.json(e)
+  }
 })
 
 /**
