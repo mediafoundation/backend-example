@@ -4,7 +4,7 @@ import {ChainProvider} from "../models/manyToMany/ChainProvider"
 import {ProviderAssociationCount} from "../models/types/provider"
 import {ProviderClient} from "../models/manyToMany/ProviderClient"
 import {ChainClient} from "../models/manyToMany/ChainClient"
-import {eventsCollection, Op, providersCollection, sequelize} from "../database"
+import {eventsCollection, Op, sequelize} from "../database"
 import {Deal} from "../models/deals/Deal"
 import {ProvidersMetadata} from "../models/Providers/ProvidersMetadata"
 

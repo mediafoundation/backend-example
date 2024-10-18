@@ -276,6 +276,29 @@ export class DealsController {
     await deal.destroy()
     return deal
   }
+  
+  /**
+ * Get the client associated with a deal.
+ * @param dealId - The ID of the deal.
+ * @param chainId - The ID of the chain where the deal is.
+ * @returns Promise<string | null> - The deal's client if found, otherwise null.
+ */
+  static async getDealClient(dealId: number, chainId: number): Promise<string | null> {
+    const deal = await Deal.findOne({
+      where: {
+        dealId: dealId,
+        chainId: chainId
+      }
+    })
+
+    if(!deal) {
+      return null
+    }
+
+    else {
+      return deal.dataValues.client
+    }
+  }
 
   /**
    * Format deal
