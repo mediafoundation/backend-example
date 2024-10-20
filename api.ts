@@ -21,6 +21,7 @@ import {ChainClient} from "./database/models/manyToMany/ChainClient"
 import {Deal} from "./database/models/deals/Deal"
 import {ChainProvider} from "./database/models/manyToMany/ChainProvider"
 import {Op} from "sequelize"
+import {RatingController} from "./database/controllers/ratingController"
 
 // Initialize express app
 export const app = express()
@@ -625,6 +626,18 @@ app.get("/account/events", async (req, res) => {
   } catch (e) {
     console.log(e)
     res.status(500).json({error: e})
+  }
+})
+
+app.post("/rateProvider", async (req, res) => {
+  const {provider, chainId, dealId, rating} = req.body
+
+  try {
+    await RatingController.rateProvider(provider, chainId, dealId, rating)
+    res.status(200).json({message: "Rating added"})
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({error: "Something went wrong"})
   }
 })
 

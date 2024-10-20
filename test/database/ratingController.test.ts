@@ -77,4 +77,17 @@ describe("Rating Controller", () => {
     await expect(RatingController.rateProvider(mockDeal.provider, 1, 1, 6)).rejects.toThrow("Validation error: Validation max on rating failed")
     await expect(RatingController.rateProvider(mockDeal.provider, 1, 1, 0)).rejects.toThrow("Validation error: Validation min on rating failed")
   })
+  
+  it("Get provider rating", async () => {
+    for (let i = 0; i < 3; i++) {
+      await RatingController.rateProvider(mockDeal.provider, 1, i, 4)
+    }
+
+    const rating = await RatingController.getAverageRating(mockDeal.provider, [1, 2, 3, 4])
+
+    expect(rating[1]).toBe(4)
+    expect(rating[2]).toBe(4)
+    expect(rating[3]).toBeNull()
+    expect(rating[4]).toBeNull()
+  }, 10000)
 })

@@ -15,6 +15,13 @@ export class RatingController {
     }
   }
   
+  /**
+ * Retrieves the average rating for a provider across multiple chain IDs.
+ * 
+ * @param {string} provider - The provider for which to get the average rating.
+ * @param {number[]} chainIds - An array of chain IDs to consider for the average rating.
+ * @returns {Promise<{ [chainId: number]: number | null }>} - A promise that resolves to an object mapping each chain ID to its average rating or null if no ratings are found.
+ */
   static async getAverageRating(provider: string, chainIds: number[]): Promise<{ [chainId: number]: number | null }> {
     const ratings = await Rating.findAll({
       where: {
@@ -42,7 +49,8 @@ export class RatingController {
       })
     )
 
-    chainIds.forEach(chainId => {
+    const chainIdSet = new Set(chainIds)
+    chainIdSet.forEach(chainId => {
       if (!averageRatings[chainId]) {
         averageRatings[chainId] = null
       }

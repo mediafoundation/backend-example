@@ -4,6 +4,7 @@ import {app, server} from "../api"
 import {DealsController} from "../database/controllers/dealsController"
 import {OffersController} from "../database/controllers/offersController"
 import {ProvidersController} from "../database/controllers/providersController"
+import {RatingController} from "../database/controllers/ratingController"
 
 jest.mock("../database/controllers/resourcesController", () => ({
   ResourcesController: {
@@ -24,6 +25,8 @@ jest.mock("../database/controllers/offersController", () => ({
 }))
 
 jest.mock("../database/controllers/providersController")
+
+jest.mock("../database/controllers/ratingController")
 
 afterAll((done) => {
   server.close(done)
@@ -166,5 +169,38 @@ describe("Test api", () => {
     })
     expect(ProvidersController.getProviders).toHaveBeenCalledWith(undefined, undefined, undefined, undefined)
     expect(consoleSpy).toHaveBeenCalled()
+  })
+
+  describe("/rateProvider", () => {
+    test("rate a provider", async () => {
+      (RatingController.rateProvider as jest.Mock).mockImplementation(() => Promise.resolve())
+
+      const response = await request(app).post("/rateProvider").send({
+        provider: "provider",
+        dealId: 1,
+        chainId: 1,
+        rating: 5
+      })
+
+      expect(response.status).toBe(200)
+      expect(response.body.message).toBe("Rating added")
+      expect(RatingController.rateProvider).toHaveBeenCalledWith("provider", 1, 1, 5)
+    })
+    
+    test("force error send 500", async () => {
+      (RatingController.rateProvider as jest.Mock).mockRejectedValue(new Error("Something went wrong"))
+      const consoleSpy = jest.spyOn(console, "log")
+        
+      const response = await request(app).post("/rateProvider").send({
+        provider: "provider",
+        dealId: 1,
+        chainId: 1,
+        rating: 5
+      })
+        
+      expect(response.status).toBe(500)
+      expect(response.body).toEqual({error: "Something went wrong"})
+      expect(consoleSpy).toHaveBeenCalled()
+    })
   })
 })
