@@ -203,4 +203,24 @@ describe("Test api", () => {
       expect(consoleSpy).toHaveBeenCalled()
     })
   })
+
+  describe("/getRating", () => {
+
+    const mockedRating = {
+      1: 5,
+      2: 1,
+      3: null
+    }
+
+    test("Get rating", async () => {
+      (RatingController.getAverageRating as jest.Mock).mockResolvedValue(mockedRating)
+      const response = await request(app).get("/provider/rating").query({
+        provider: "provider",
+        chainIds: "[1, 2, 3]"
+      })
+      expect(response.status).toBe(200)
+      expect(response.body).toEqual(mockedRating)
+      expect(RatingController.getAverageRating).toHaveBeenCalledWith("provider", [1, 2, 3])
+    })
+  })
 })

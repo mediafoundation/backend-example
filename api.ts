@@ -34,7 +34,6 @@ app.use(cors()) // for enabling CORS
  * @function manageIncomingFilterRequest
  * @description Manage incoming request and parse filters from query parameters
  * @param {object} req - The request object
- * @returns {object} - The parsed filters
  */
 function manageIncomingFilterRequest(req: any) {
   // Parse filters from query parameters
@@ -635,6 +634,19 @@ app.post("/rateProvider", async (req, res) => {
   try {
     await RatingController.rateProvider(provider, chainId, dealId, rating)
     res.status(200).json({message: "Rating added"})
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({error: "Something went wrong"})
+  }
+})
+
+app.get("/provider/rating", async (req, res) => {
+  const {provider, chainIds} = req.query
+  const chainId = chainIds && Array.isArray(JSON.parse(chainIds as string)) ? JSON.parse(chainIds as string).map((value: number) => parseInt(value.toString())) : undefined
+
+  try {
+    const rating = await RatingController.getAverageRating(provider!.toString(), chainId)
+    res.status(200).json(rating)
   } catch (e) {
     console.log(e)
     res.status(500).json({error: "Something went wrong"})
