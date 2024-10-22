@@ -1,13 +1,25 @@
 import {wssNetworks} from "./networks"
 import {Blockchain, EventsHandler, Marketplace, Sdk, validChains, webSocket} from "media-sdk"
-import {manageDealUpdated, manageOfferUpdated} from "./eventsDaemon"
+import EventsUtils from "./utils/events"
 
 const chains: any[] = Object.values(validChains)
 for (const chain of chains) {
-  const sdk = new Sdk({chain: chain, transport: [webSocket(wssNetworks[chain.id][0])]})
+  const sdk = new Sdk({chain: chain, transport: [webSocket(wssNetworks[chain.name][0])]})
   const blockchain = new Blockchain(sdk)
   const marketplace = new Marketplace(sdk)
   const eventsListener = new EventsHandler(sdk)
+
+  /*eventsListener.listenForResourcesEvent({
+    eventName: "AddedResource",
+    onError: (error: any) => {
+      console.log(error)
+    },
+    callback: async (event: any) => {
+      await ResourcesController.upsertResource(ResourcesController.upsertResource())
+    }
+  })
+    .then(() => {
+    })*/
 
   eventsListener.listenForMarketplaceEvent({
     eventName: "DealCreated",
@@ -15,7 +27,7 @@ for (const chain of chains) {
       console.log(error)
     },
     callback: async (event: any) => {
-      await manageDealUpdated(event, marketplace, blockchain, chain.id)
+      await EventsUtils.manageDealUpdated(event, marketplace, blockchain, chain.id)
     }
   })
     .then(() => {
@@ -27,31 +39,19 @@ for (const chain of chains) {
       console.log(error)
     },
     callback: async (event: any) => {
-      await manageDealUpdated(event, marketplace, blockchain, chain.id)
+      await EventsUtils.manageDealUpdated(event, marketplace, blockchain, chain.id)
     }
   })
     .then(() => {
     })
 
   eventsListener.listenForMarketplaceEvent({
-    "eventName": "DealUpdated",
+    eventName: "DealCancelled",
     onError: (error: any) => {
       console.log(error)
     },
     callback: async (event: any) => {
-      await manageDealUpdated(event, marketplace, blockchain, chain.id)
-    }
-  })
-    .then(() => {
-    })
-
-  eventsListener.listenForMarketplaceEvent({
-    eventName: "DealDeleted",
-    onError: (error: any) => {
-      console.log(error)
-    },
-    callback: async (event: any) => {
-      await manageDealUpdated(event, marketplace, blockchain, chain.id)
+      await EventsUtils.manageDealUpdated(event, marketplace, blockchain, chain.id)
     }
   })
     .then(() => {})
@@ -62,7 +62,7 @@ for (const chain of chains) {
       console.log(error)
     },
     callback: async (event: any) => {
-      console.log(event)
+      await EventsUtils.manageOfferUpdated(event, marketplace, blockchain, chain.id)
     }
   })
     .then(() => {})
@@ -73,7 +73,7 @@ for (const chain of chains) {
       console.log(error)
     },
     callback: async(event: any) => {
-      await manageOfferUpdated(event, marketplace, blockchain, chain.id)
+      await EventsUtils.manageOfferUpdated(event, marketplace, blockchain, chain.id)
     }
   })
     .then(() => {})
@@ -84,7 +84,7 @@ for (const chain of chains) {
       console.log(error)
     },
     callback: async(event: any) => {
-      await manageOfferUpdated(event, marketplace, blockchain, chain.id)
+      await EventsUtils.manageOfferUpdated(event, marketplace, blockchain, chain.id)
     }
   })
     .then(() => {})

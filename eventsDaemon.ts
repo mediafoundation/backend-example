@@ -2,8 +2,7 @@ import {Blockchain, EventsHandler, Marketplace, Sdk, validChains} from "media-sd
 import {lastReadBlockCollection} from "./database/database"
 import {EventsController} from "./database/controllers/eventsController"
 import {createRelationsBetweenTables, resetMongoDB} from "./database/utils"
-import {DealsController} from "./database/controllers/dealsController"
-import {OffersController} from "./database/controllers/offersController"
+import EventsUtils from "./utils/events"
 
 const BATCH_SIZE = 1000n
 
@@ -63,34 +62,16 @@ async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchai
   console.log("Finish getting past events on chain:", chainId)
 }
 
-export async function manageDealUpdated(event: any, marketplace: Marketplace, blockChain: Blockchain, chainId: number) {
+/*export async function manageResourceUpdated(event: any, resources: Resources, blockChain: Blockchain, chainId: number) {
   const blockTimestamp = await blockChain.getBlockTimestamp(event.blockNumber)
   await EventsController.upsertEvent(EventsController.formatEvent(event), chainId, Number(blockTimestamp.timestamp))
-  const deal = await marketplace.getDealById({
-    marketplaceId: Number(process.env.MARKETPLACE_ID),
-    dealId: event._dealId
+  const resource = await resources.getResource({
+    id: event._resourceId,
+    address: event._resourceAddress
   })
 
-  await DealsController.upsertDeal(DealsController.formatDeal(deal), chainId)
-}
-
-export async function manageOfferUpdated(event: any, marketplace: Marketplace, blockChain: Blockchain, chainId: number) {
-  const blockTimestamp = await blockChain.getBlockTimestamp(event.blockNumber)
-  await EventsController.upsertEvent(EventsController.formatEvent(event), chainId, Number(blockTimestamp.timestamp))
-  const offer = await marketplace.getOfferById({
-    marketplaceId: Number(process.env.MARKETPLACE_ID),
-    offerId: event._offerId
-  })
-
-  const formattedOffer = OffersController.formatOffer(offer)
-
-  const providerData = await marketplace.getProvider({
-    marketplaceId: Number(process.env.MARKETPLACE_ID),
-    provider: formattedOffer.provider
-  })
-
-  await OffersController.upsertOffer(formattedOffer, chainId, providerData.metadata, providerData.publicKey)
-}
+  await ResourcesController.upsertResource(ResourcesController.formatResource(resource), chainId)
+}*/
 
 async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, marketplace: Marketplace, chainId: number) {
   const lastReadBlock = await lastReadBlockCollection.findOne({chainId: chainId})
@@ -135,23 +116,23 @@ async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, m
     })*/
 
     for (const event of dealAccepted) {
-      await manageDealUpdated(event, marketplace, blockChain, chainId)
+      await EventsUtils.manageDealUpdated(event, marketplace, blockChain, chainId)
     }
 
     for (const event of dealCreated) {
-      await manageDealUpdated(event, marketplace, blockChain, chainId)
+      await EventsUtils.manageDealUpdated(event, marketplace, blockChain, chainId)
     }
 
     for (const event of addedBalance) {
-      await manageDealUpdated(event, marketplace, blockChain, chainId)
+      await EventsUtils.manageDealUpdated(event, marketplace, blockChain, chainId)
     }
 
     for (const event of offerCreated) {
-      await manageOfferUpdated(event, marketplace, blockChain, chainId)
+      await EventsUtils.manageOfferUpdated(event, marketplace, blockChain, chainId)
     }
 
     for (const event of offerUpdated) {
-      await manageOfferUpdated(event, marketplace, blockChain, chainId)
+      await EventsUtils.manageOfferUpdated(event, marketplace, blockChain, chainId)
     }
 
     await lastReadBlockCollection.updateOne({block: lastReadBlock!.block, chainId: chainId}, {$set: {block: blockToRead}}, {upsert: true})
