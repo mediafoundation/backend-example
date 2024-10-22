@@ -21,7 +21,7 @@ export class Rating extends Model<InferAttributes<Rating>, InferCreationAttribut
 
 Rating.init({
   rating: {
-    type: DataTypes.NUMBER,
+    type: DataTypes.BIGINT,
     validate: {
       max: 5,
       min: 1
