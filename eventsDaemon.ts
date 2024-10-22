@@ -168,5 +168,5 @@ start()
       } catch (e) {
         console.log("Error", e)
       }
-    }, 60000)
+    }, 60000 * 5) //Every 5 minutes
   })
