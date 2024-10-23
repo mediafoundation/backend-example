@@ -7,8 +7,8 @@ import EventsUtils from "./utils/events"
 const BATCH_SIZE = 1000n
 
 const marketplaceGenesisBlock: {[index: number]: bigint} = {
-  11155111: 6375173n,
-  84532: 13084726n
+  11155111: 6817833n,
+  84532: 16170075n
 }
 
 function delay(ms: number) {
