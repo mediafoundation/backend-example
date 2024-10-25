@@ -27,7 +27,10 @@ for (const chain of chains) {
       console.log(error)
     },
     callback: async (event: any) => {
-      await EventsUtils.manageDealUpdated(event, marketplace, blockchain, chain.id)
+      console.log(event)
+      for (const eventElement of event) {
+        await EventsUtils.manageDealUpdated(eventElement, marketplace, blockchain, chain.id)
+      }
     }
   })
     .then(() => {
@@ -39,7 +42,10 @@ for (const chain of chains) {
       console.log(error)
     },
     callback: async (event: any) => {
-      await EventsUtils.manageDealUpdated(event, marketplace, blockchain, chain.id)
+      console.log(event)
+      for (const eventElement of event) {
+        await EventsUtils.manageDealUpdated(eventElement, marketplace, blockchain, chain.id)
+      }
     }
   })
     .then(() => {
@@ -51,7 +57,10 @@ for (const chain of chains) {
       console.log(error)
     },
     callback: async (event: any) => {
-      await EventsUtils.manageDealUpdated(event, marketplace, blockchain, chain.id)
+      console.log(event)
+      for (const eventElement of event) {
+        await EventsUtils.manageDealUpdated(eventElement, marketplace, blockchain, chain.id)
+      }
     }
   })
     .then(() => {})
@@ -62,7 +71,10 @@ for (const chain of chains) {
       console.log(error)
     },
     callback: async (event: any) => {
-      await EventsUtils.manageOfferUpdated(event, marketplace, blockchain, chain.id)
+      console.log(event)
+      for (const eventElement of event) {
+        await EventsUtils.manageOfferUpdated(eventElement, marketplace, blockchain, chain.id)
+      }
     }
   })
     .then(() => {})
@@ -73,7 +85,10 @@ for (const chain of chains) {
       console.log(error)
     },
     callback: async(event: any) => {
-      await EventsUtils.manageOfferUpdated(event, marketplace, blockchain, chain.id)
+      console.log(event)
+      for (const eventElement of event) {
+        await EventsUtils.manageOfferUpdated(eventElement, marketplace, blockchain, chain.id)
+      }
     }
   })
     .then(() => {})
@@ -84,7 +99,10 @@ for (const chain of chains) {
       console.log(error)
     },
     callback: async(event: any) => {
-      await EventsUtils.manageOfferUpdated(event, marketplace, blockchain, chain.id)
+      console.log(event)
+      for (const eventElement of event) {
+        await EventsUtils.manageOfferUpdated(eventElement, marketplace, blockchain, chain.id)
+      }
     }
   })
     .then(() => {})

@@ -217,7 +217,6 @@ export class DealsController {
       include: [
         {
           model: Chain,
-          as: "Chain",
           where: {
             chainId: chainId
           }

@@ -116,22 +116,27 @@ async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, m
     })*/
 
     for (const event of dealAccepted) {
+      console.log("DealAccepted", event)
       await EventsUtils.manageDealUpdated(event, marketplace, blockChain, chainId)
     }
 
     for (const event of dealCreated) {
+      console.log("DealCreated", event)
       await EventsUtils.manageDealUpdated(event, marketplace, blockChain, chainId)
     }
 
     for (const event of addedBalance) {
+      console.log("AddedBalance", event)
       await EventsUtils.manageDealUpdated(event, marketplace, blockChain, chainId)
     }
 
     for (const event of offerCreated) {
+      console.log("OfferCreated", event)
       await EventsUtils.manageOfferUpdated(event, marketplace, blockChain, chainId)
     }
 
     for (const event of offerUpdated) {
+      console.log("OfferUpdated", event)
       await EventsUtils.manageOfferUpdated(event, marketplace, blockChain, chainId)
     }
 
