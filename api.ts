@@ -163,6 +163,7 @@ app.get("/providers", async(req, res) => {
       const dealsCount = await ProvidersController.countDeals(provider.account, chainId)
       const offersCount = await ProvidersController.countOffers(provider.account, chainId)
       const clientCount = await ProvidersController.countClients(provider.account, chainId)
+      const providerRating = await RatingController.getAverageRating(provider.account, chainId)
       let providerMetadata: { [index: number]: any } | ProvidersMetadata | null = {}
       let registryTime: { [index: number]: any } | number = {}
 
@@ -186,7 +187,8 @@ app.get("/providers", async(req, res) => {
         "offers": offersCount,
         "clients": clientCount,
         "metadata": providerMetadata,
-        "registerTime": registryTime
+        "registerTime": registryTime,
+        "rating": providerRating
       }
 
       result.push(providerResult)
