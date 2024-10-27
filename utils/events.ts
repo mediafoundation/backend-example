@@ -9,7 +9,7 @@ export default class EventsUtils {
     await EventsController.upsertEvent(EventsController.formatEvent(event), chainId, Number(blockTimestamp.timestamp))
     const offer = await marketplace.getOfferById({
       marketplaceId: Number(process.env.MARKETPLACE_ID),
-      offerId: event._offerId
+      offerId: event.args._offerId
     })
 
     const formattedOffer = OffersController.formatOffer(offer)
@@ -27,7 +27,7 @@ export default class EventsUtils {
     await EventsController.upsertEvent(EventsController.formatEvent(event), chainId, Number(blockTimestamp.timestamp))
     const deal = await marketplace.getDealById({
       marketplaceId: Number(process.env.MARKETPLACE_ID),
-      dealId: event._dealId
+      dealId: event.args._dealId
     })
 
     await DealsController.upsertDeal(DealsController.formatDeal(deal), chainId)

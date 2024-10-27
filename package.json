@@ -42,7 +42,7 @@
   "scripts": {
     "test": "npm run build && NODE_ENV=test jest",
     "build": "rm -r ./dist && tsc && cp .env ./dist/.env",
-    "init": "npm run build && node lib/index.js",
+    "init": "npm run build && node dist/index.js",
     "startApi": "node ./dist/api.js",
     "startEventsDaemon": "node ./dist/eventsDaemon.js",
     "startEventsListener": "node ./dist/eventsListener.js"
