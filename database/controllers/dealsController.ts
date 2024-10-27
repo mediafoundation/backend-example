@@ -212,16 +212,17 @@ export class DealsController {
     const deal = await Deal.findOne({
       where: {
         dealId: dealId,
+        chainId: chainId
       },
       
-      include: [
+      /*include: [
         {
           model: Chain,
           where: {
             chainId: chainId
           }
         }
-      ]
+      ]*/
     })
     if (!deal) {
       return null
