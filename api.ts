@@ -232,6 +232,8 @@ app.get("/providers/totalRevenue", async (req, res) => {
   try {
     const provider = req.query.provider
     const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
+    const from: number | undefined = req.query.from ? Number(req.query.from) : undefined
+    const to: number | undefined = req.query.to ? Number(req.query.to) : undefined
 
     if(!provider || !chainId || !Array.isArray(JSON.parse(req.query.chainId as string))) {
       res.status(500).json({error: "No provider or valid chainId provided"})
@@ -240,7 +242,7 @@ app.get("/providers/totalRevenue", async (req, res) => {
     else {
       const response: {[index: number]: any} = {}
       for (const chain of chainId) {
-        const queryResult = await EventsController.calculateProviderRevenue(provider.toString(), Number(chain))
+        const queryResult = await EventsController.calculateProviderRevenue(provider.toString(), Number(chain), from, to)
         const dailyRevenue = queryResult.dailyRevenue
 
         const formattedData: { [key: string]: string } = {}
@@ -317,6 +319,15 @@ app.get("/providers/countActiveClients", async (req, res) => {
   }
 })
 
+/**
+ * @route GET /providerClient
+ * @description Retrieves deal details for a specific provider and client.
+ * @param {object} req - The request object containing query parameters.
+ * @param {string} req.query.provider - The provider identifier.
+ * @param {string} req.query.client - The client identifier.
+ * @param {object} res - The response object.
+ * @returns {JSON} - The deal details associated with the given provider and client or an error message in case of failure.
+ */
 app.get("/providerClient", async (req, res) => {
   const {provider, client} = req.query
 
@@ -326,8 +337,7 @@ app.get("/providerClient", async (req, res) => {
   const clientDeals: {[index: number]: { deals: Deal[], dealsCount: number }} = {}
 
   try {
-
-    //Check if client and provider association exists
+    // Check if client and provider association exists
     await ProviderClient.findOne({
       where: {
         provider: formattedProvider,
@@ -365,10 +375,16 @@ app.get("/providerClient", async (req, res) => {
     console.log("Error", e)
     res.json(e)
   }
-
-
 })
 
+/**
+ * @route GET /allProvidersClients
+ * @description Retrieves all clients and their deals for a specific provider across all chains.
+ * @param {object} req - The request object containing query parameters.
+ * @param {string} req.query.provider - The provider identifier.
+ * @param {object} res - The response object.
+ * @returns {JSON} - The clients and their deals associated with the given provider or an error message in case of failure.
+ */
 app.get("/allProvidersClients", async (req, res) => {
   const {provider} = req.query
 
@@ -385,7 +401,7 @@ app.get("/allProvidersClients", async (req, res) => {
 
   try {
 
-    //Check if client and provider association exists
+    // Check if client and provider association exists
     const providerClients = await ProviderClient.findAll({
       where: {
         provider: formattedProvider
@@ -421,7 +437,8 @@ app.get("/allProvidersClients", async (req, res) => {
       const clientsDeals: {[index: string]: {
           deals: Deal[],
           dealsCount: number
-      }} = {}
+        }
+      } = {}
 
       for (const clientElement of client) {
         const clientDeals = deals.filter(deal => deal.client === clientElement)
