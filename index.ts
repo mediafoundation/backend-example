@@ -54,22 +54,26 @@ const init = async (chain: any) => {
   // Loop on provider addresses and get its resources and deals
   
   for (const providerAddress of providerAddresses) {
-    const resources = await resourcesInstance.getAllResourcesPaginating({address: providerAddress})
-    
+    try {
+      const resources = await resourcesInstance.getAllResourcesPaginating({address: providerAddress})
+
+      for (const resource of resources) {
+        try {
+          const formattedResource = ResourcesController.formatResource(resource)
+          await ResourcesController.upsertResource(formattedResource, chain.id)
+        } catch (e) {
+          console.log("Error for resource", resource.id, e)
+        }
+      }
+    } catch (e) {
+      console.log("Error getting resources", e)
+    }
+
     const deals = await marketplaceViewer.getAllDealsPaginating({
       marketplaceId: process.env.MARKETPLACE_ID!,
       address: providerAddress,
       isProvider: true
     })
-    
-    for (const resource of resources) {
-      try {
-        const formattedResource = ResourcesController.formatResource(resource)
-        await ResourcesController.upsertResource(formattedResource, chain.id)
-      } catch (e) {
-        console.log("Error for resource", resource.id, e)
-      }
-    }
     
     for (const deal of deals) {
       try {
