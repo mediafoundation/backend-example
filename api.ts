@@ -155,7 +155,7 @@ app.get("/providers", async(req, res) => {
     const page = req.query.page ? Number(req.query.page) : undefined
     const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
     const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
-    const account = req.query.account
+    const account = req.query.provider
 
     const providers = await ProvidersController.getProviders(chainId, page, pageSize, account as string | undefined)
 
