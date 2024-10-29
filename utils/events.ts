@@ -1,7 +1,7 @@
-import {Blockchain, Marketplace} from "../../media-sdk"
 import {EventsController} from "../database/controllers/eventsController"
 import {OffersController} from "../database/controllers/offersController"
 import {DealsController} from "../database/controllers/dealsController"
+import {Blockchain, Marketplace} from "media-sdk"
 
 export default class EventsUtils {
   static async manageOfferUpdated(event: any, marketplace: Marketplace, blockChain: Blockchain, chainId: number) {
