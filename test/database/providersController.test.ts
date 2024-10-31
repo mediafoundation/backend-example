@@ -148,12 +148,6 @@ describe("Providers Controller", () => {
       await Offer.sync({force: true})
     })
 
-    /*afterEach(async () => {
-      await Provider.sync({force: true})
-      await Chain.sync({force: true})
-      await Rating.sync({force: true})
-    })*/
-
     test("should return all providers when no filters are applied", async () => {
       const result = await ProvidersController.getProviders({})
       expect(result.length).toBe(5)
@@ -162,12 +156,19 @@ describe("Providers Controller", () => {
     test("should filter providers by chainId", async () => {
       await Provider.create({account: "Account 6", publicKey: "PublicKey 6"})
       await Chain.create({chainId: 2, name: "Chain name for 2"})
+      await Rating.create({
+        provider: "Account 6",
+        rating: 5,
+        client: "Account 3",
+        chainId: 2
+      })
       await ChainProvider.create({
         provider: "Account 6",
         chainId: 2
       })
       const result = await ProvidersController.getProviders({chainId: [2]})
       expect(result.length).toBe(1)
+      expect(result[0].Ratings![0].chainId).toBe(2)
     })
 
     test("should filter providers by account", async () => {

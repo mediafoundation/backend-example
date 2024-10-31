@@ -25,14 +25,26 @@ export class ProvidersController {
     account=undefined,
     minRating=undefined
   }: ProviderFilters) {
-    const whereClause = chainId ? {chainId: {
-      [Op.in]: chainId
-    }} : {}
-    const ratingFilter = minRating ? {
+    const ratingFilter: {
+      rating?: {
+        [Op.gte]: number
+      },
+      chainId? : {
+        [Op.in]: number[] | number
+      }
+    } = minRating ? {
       rating: {
         [Op.gte]: minRating
       }
     } : {}
+    const whereClause = chainId ? {chainId: {
+      [Op.in]: chainId
+    }} : {}
+    if(chainId) {
+      ratingFilter.chainId = {
+        [Op.in]: chainId
+      }
+    }
     const filter = account ? {account: account} : {}
     const offset = page && pageSize ? (page - 1) * pageSize : undefined
 
@@ -57,7 +69,7 @@ export class ProvidersController {
           model: Rating,
           where: ratingFilter,
           attributes: ["rating", "chainId"],
-          required: !!minRating
+          required: !!minRating,
         }
       ],
       ...limitQuery
