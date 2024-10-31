@@ -9,8 +9,22 @@ import {Deal} from "../models/deals/Deal"
 import {ProvidersMetadata} from "../models/Providers/ProvidersMetadata"
 import {Rating} from "../models/Rating"
 
+interface ProviderFilters {
+  chainId?: number[] | undefined
+  page?: number | undefined
+  pageSize?: number | undefined
+  account?: string | undefined
+  minRating?: number | undefined
+}
+
 export class ProvidersController {
-  static async getProviders(chainId: number[] | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined = undefined, account: string | undefined = undefined, minRating: number | undefined = undefined) {
+  static async getProviders({
+    chainId=undefined,
+    page=undefined,
+    pageSize=undefined,
+    account=undefined,
+    minRating=undefined
+  }: ProviderFilters) {
     const whereClause = chainId ? {chainId: {
       [Op.in]: chainId
     }} : {}
@@ -35,14 +49,15 @@ export class ProvidersController {
           through: {
             attributes: []
           },
-          attributes: ["chainId"]
+          attributes: ["chainId"],
+          required: !!chainId
         },
 
         {
           model: Rating,
           where: ratingFilter,
-          attributes: ["rating"],
-          required: false
+          attributes: ["rating", "chainId"],
+          required: !!minRating
         }
       ],
       ...limitQuery

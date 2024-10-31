@@ -158,7 +158,7 @@ app.get("/providers", async(req, res) => {
     const account = req.query.provider
     const rating = req.query.rating ? Number(req.query.rating) : undefined
 
-    const providers = await ProvidersController.getProviders(chainId, page, pageSize, account as string | undefined, rating)
+    const providers = await ProvidersController.getProviders({chainId : chainId, page : page, pageSize : pageSize, account : account as string | undefined, minRating : rating})
 
     for (const provider of providers) {
       const dealsCount = await ProvidersController.countDeals(provider.account, chainId)
