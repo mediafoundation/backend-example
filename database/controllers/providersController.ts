@@ -19,28 +19,47 @@ interface ProviderFilters {
 
 export class ProvidersController {
   static async getProviders({
-    chainId=undefined,
-    page=undefined,
-    pageSize=undefined,
-    account=undefined,
-    minRating=undefined
+    chainId = undefined,
+    page = undefined,
+    pageSize = undefined,
+    account = undefined,
+    minRating = undefined
   }: ProviderFilters) {
     const ratingFilter: {
-      rating?: {
-        [Op.gte]: number
-      },
-      chainId? : {
+      chainId?: {
         [Op.in]: number[] | number
+      },
+      [Op.and]?: any[]
+    } = {
+      [Op.and]: []
+    }
+
+    if (minRating) {
+      if (chainId) {
+        ratingFilter[Op.and]!.push(
+          sequelize.literal(`(
+        SELECT AVG("rating")
+        FROM "Rating"
+        WHERE "Rating"."provider" = "Provider"."account"
+        AND "Rating"."chainId" = "Chain"."chainId"
+      ) >= ${minRating}`)
+        )
+      } else {
+        ratingFilter[Op.and]!.push(
+          sequelize.literal(`(
+        SELECT AVG("rating")
+        FROM "Rating"
+        WHERE "Rating"."provider" = "Provider"."account"
+      ) >= ${minRating}`)
+        )
       }
-    } = minRating ? {
-      rating: {
-        [Op.gte]: minRating
+    }
+    const whereClause = chainId ? {
+      chainId: {
+        [Op.in]: chainId
       }
     } : {}
-    const whereClause = chainId ? {chainId: {
-      [Op.in]: chainId
-    }} : {}
-    if(chainId) {
+    if (chainId) {
       ratingFilter.chainId = {
         [Op.in]: chainId
       }
@@ -132,7 +151,7 @@ export class ProvidersController {
       }
     })
 
-    if(client) {
+    if (client) {
       await ProviderClient.findOrCreate(
         {
           where: {
@@ -157,22 +176,24 @@ export class ProvidersController {
     let result: ProviderAssociationCount | number = {}
     const providerFromDb = await Provider.findOne({rejectOnEmpty: false, where: {account: provider}})
 
-    if(!providerFromDb) {
+    if (!providerFromDb) {
       throw new Error("Provider not found")
     }
 
-    if(chainId === undefined) {
+    if (chainId === undefined) {
       const chains = await Chain.findAll({attributes: {include: ["chainId"]}})
 
       for (const chain of chains) {
         result[chain.chainId] = await providerFromDb!.countDeals({where: {chainId: chain.chainId}})
       }
-    }
-
-    else {
-      result = await providerFromDb!.countDeals({where: {chainId: {
-        [Op.in]: chainId
-      }}})
+    } else {
+      result = await providerFromDb!.countDeals({
+        where: {
+          chainId: {
+            [Op.in]: chainId
+          }
+        }
+      })
     }
 
     return result
@@ -182,22 +203,24 @@ export class ProvidersController {
     let result: ProviderAssociationCount | number = {}
     const providerFromDb = await Provider.findOne({rejectOnEmpty: false, where: {account: provider}})
 
-    if(!providerFromDb) {
+    if (!providerFromDb) {
       throw new Error("Provider not found")
     }
 
-    if(chainId === undefined) {
+    if (chainId === undefined) {
       const chains = await Chain.findAll({attributes: {include: ["chainId"]}})
 
       for (const chain of chains) {
         result[chain.chainId] = await providerFromDb!.countOffers({where: {chainId: chain.chainId}})
       }
-    }
-
-    else {
-      result = await providerFromDb!.countOffers({where: {chainId: {
-        [Op.in]: chainId
-      }}})
+    } else {
+      result = await providerFromDb!.countOffers({
+        where: {
+          chainId: {
+            [Op.in]: chainId
+          }
+        }
+      })
     }
 
     return result
@@ -207,11 +230,11 @@ export class ProvidersController {
     let result: ProviderAssociationCount | number = {}
     const providerFromDb = await Provider.findOne({rejectOnEmpty: false, where: {account: provider}})
 
-    if(!providerFromDb) {
+    if (!providerFromDb) {
       throw new Error("Provider not found")
     }
 
-    if(chainId === undefined) {
+    if (chainId === undefined) {
       const chains = await Chain.findAll({attributes: {include: ["chainId"]}})
 
       for (const chain of chains) {
@@ -219,12 +242,14 @@ export class ProvidersController {
         const clientsOnChain = await ChainClient.findAll({where: {chainId: chain.chainId}})
         result[chain.chainId] = await providerFromDb!.countClients({where: {account: clientsOnChain.map(chainClient => chainClient.client)}})
       }
-    }
-
-    else {
-      const clientsOnChain = await ChainClient.findAll({where: {chainId: {
-        [Op.in]: chainId
-      }}})
+    } else {
+      const clientsOnChain = await ChainClient.findAll({
+        where: {
+          chainId: {
+            [Op.in]: chainId
+          }
+        }
+      })
       result = await providerFromDb!.countClients({where: {account: clientsOnChain.map(chainClient => chainClient.client)}})
     }
 
@@ -234,7 +259,7 @@ export class ProvidersController {
   static async getProviderActiveClients(provider: string, chainId: number[] | undefined = undefined, fromDate: number = 0, toDate: number = Math.floor(Date.now() / 1000)) {
     const providerFromDb = await Provider.findOne({rejectOnEmpty: false, where: {account: provider}})
 
-    if(!providerFromDb) {
+    if (!providerFromDb) {
       throw new Error("Provider not found")
     }
 
@@ -265,7 +290,7 @@ export class ProvidersController {
           }
         })
 
-        if(clientsDeals.length > 0 && clientsDeals[0].count == 0){
+        if (clientsDeals.length > 0 && clientsDeals[0].count == 0) {
           const index = clients.indexOf(client)
           if (index > -1) {
             clients.splice(index, 1)
@@ -299,7 +324,7 @@ export class ProvidersController {
     //console.log("Latest billings", latestBillings)
 
     // Filter the results within the specified period
-    const filteredClients =  latestBillings.filter(record => {
+    const filteredClients = latestBillings.filter(record => {
       return record.createdAt >= fromDate && record.createdAt <= toDate
     })
 
@@ -307,7 +332,7 @@ export class ProvidersController {
   }
 
   static async getProviderStartTime(provider: string, chainId: number[]): Promise<{ [index: number]: number }> {
-    const result: {[index: number]: number} = {}
+    const result: { [index: number]: number } = {}
     for (const chain of chainId) {
       const providerData = await eventsCollection.findOne({
         provider: provider,
@@ -315,7 +340,7 @@ export class ProvidersController {
         eventName: "ProviderRegistered"
       })
       console.log(providerData, chain)
-      if(result) {
+      if (result) {
         result[chain] = providerData?.timestamp || 0
       }
     }

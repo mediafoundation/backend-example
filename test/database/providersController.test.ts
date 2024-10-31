@@ -129,13 +129,14 @@ describe("Providers Controller", () => {
           client: `Account ${i}`,
           chainId: 0
         })
-
-        await Rating.create({
-          provider: `Account ${i}`,
-          rating: i + 1,
-          client: `Account ${i}`,
-          chainId: 1
-        })
+        if(i < 4) {
+          await Rating.create({
+            provider: `Account ${i}`,
+            rating: i + 2,
+            client: `Account ${i}`,
+            chainId: 1
+          })
+        }
       }
     })
 
@@ -158,7 +159,7 @@ describe("Providers Controller", () => {
       await Chain.create({chainId: 2, name: "Chain name for 2"})
       await Rating.create({
         provider: "Account 6",
-        rating: 5,
+        rating: 2,
         client: "Account 3",
         chainId: 2
       })
@@ -179,6 +180,9 @@ describe("Providers Controller", () => {
 
     test("should filter providers by minRating", async () => {
       const result = await ProvidersController.getProviders({minRating: 3})
+      console.log(result.map(r => r.Ratings))
+      console.log((await ProvidersController.getProviders({})).map(r => r.Ratings))
+      console.log((await ProvidersController.getProviders({})).map(r => r.account))
       expect(result.length).toBe(3)
       //expect().toBeGreaterThanOrEqual(3)
       result[0].Ratings!.map(rating => {
