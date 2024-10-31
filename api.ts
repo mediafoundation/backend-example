@@ -164,13 +164,14 @@ app.get("/providers", async(req, res) => {
       const dealsCount = await ProvidersController.countDeals(provider.account, chainId)
       const offersCount = await ProvidersController.countOffers(provider.account, chainId)
       const clientCount = await ProvidersController.countClients(provider.account, chainId)
-      //const providerRating = await RatingController.getAverageRating(provider.account, chainId)
+      let providerRating = {}
       let providerMetadata: { [index: number]: any } | ProvidersMetadata | null = {}
       let registryTime: { [index: number]: any } | number = {}
 
       if(chainId) {
         providerMetadata = await ProvidersController.getMetadata(provider.account, chainId)
         registryTime = await ProvidersController.getProviderStartTime(provider.account, chainId)
+        providerRating = await RatingController.getAverageRating(provider.account, chainId)
       }
 
       else {
@@ -178,6 +179,7 @@ app.get("/providers", async(req, res) => {
         for (const chain of chains!) {
           providerMetadata[chain] = await ProvidersController.getMetadata(provider.account, [Number(chain)])
           registryTime[chain] = (await ProvidersController.getProviderStartTime(provider.account, [Number(chain)]))[chain]
+          providerRating = await RatingController.getAverageRating(provider.account, chains!)
         }
       }
 
@@ -189,7 +191,7 @@ app.get("/providers", async(req, res) => {
         "clients": clientCount,
         "metadata": providerMetadata,
         "registerTime": registryTime,
-        //"rating": provider.
+        "rating": providerRating
       }
 
       result.push(providerResult)
