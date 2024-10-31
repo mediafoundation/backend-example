@@ -7,12 +7,18 @@ import {ChainClient} from "../models/manyToMany/ChainClient"
 import {eventsCollection, Op, sequelize} from "../database"
 import {Deal} from "../models/deals/Deal"
 import {ProvidersMetadata} from "../models/Providers/ProvidersMetadata"
+import {Rating} from "../models/Rating"
 
 export class ProvidersController {
-  static async getProviders(chainId: number[] | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined = undefined, account: string | undefined = undefined) {
+  static async getProviders(chainId: number[] | undefined = undefined, page: number | undefined= undefined, pageSize: number | undefined = undefined, account: string | undefined = undefined, minRating: number | undefined = undefined) {
     const whereClause = chainId ? {chainId: {
       [Op.in]: chainId
     }} : {}
+    const ratingFilter = minRating ? {
+      rating: {
+        [Op.gte]: minRating
+      }
+    } : {}
     const filter = account ? {account: account} : {}
     const offset = page && pageSize ? (page - 1) * pageSize : undefined
 
@@ -31,6 +37,13 @@ export class ProvidersController {
           },
           attributes: ["chainId"]
         },
+
+        {
+          model: Rating,
+          where: ratingFilter,
+          attributes: ["rating"],
+          required: false
+        }
       ],
       ...limitQuery
     })

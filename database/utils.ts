@@ -63,6 +63,11 @@ const createRelationsBetweenTables = async () => {
     foreignKey: "provider"
   })
 
+  Provider.hasMany(Rating, {
+    sourceKey: "account",
+    foreignKey: "provider"
+  })
+
   Provider.hasMany(ProvidersMetadata, {
     sourceKey: "account",
     foreignKey: "provider"

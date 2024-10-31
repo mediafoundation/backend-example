@@ -156,8 +156,9 @@ app.get("/providers", async(req, res) => {
     const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
     const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
     const account = req.query.provider
+    const rating = req.query.rating ? Number(req.query.rating) : undefined
 
-    const providers = await ProvidersController.getProviders(chainId, page, pageSize, account as string | undefined)
+    const providers = await ProvidersController.getProviders(chainId, page, pageSize, account as string | undefined, rating)
 
     for (const provider of providers) {
       const dealsCount = await ProvidersController.countDeals(provider.account, chainId)
@@ -188,7 +189,7 @@ app.get("/providers", async(req, res) => {
         "clients": clientCount,
         "metadata": providerMetadata,
         "registerTime": registryTime,
-        //"rating": providerRating
+        //"rating": provider.
       }
 
       result.push(providerResult)
