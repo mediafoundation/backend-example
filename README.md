@@ -6,6 +6,9 @@ git clone https://github.com/mediafoundation/backend-example.git
 
 cp .env.example .env
 
+#optional
+cp networks.example.ts networks.ts
+
 npm install
 ```
 
@@ -20,6 +23,23 @@ dbPassword=DB_PASSWORD
 dbHost=DB_HOST
 dbPort=3306
 dbDialect=DB_DIALECT
+```
+
+### networks (optional)
+
+If non provided, default rpc from media-sdk will be used
+
+```bash
+# Replace all fields with your own values in networks.ts file
+export const wssNetworks: {[index: string] : string[]} = {
+  "NETWORK_1_NAME": ["WSS_RPC_URL"],
+  "NETWORK_2_NAME": ["WSS_RPC_URL"],
+}
+
+export const httpNetworks : {[index: string] : string[]}= {
+  "NETWORK_1_NAME": ["WSS_RPC_URL"],
+  "NETWORK_2_NAME": ["WSS_RPC_URL"],
+}
 ```
 
 ## Usage

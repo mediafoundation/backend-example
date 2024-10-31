@@ -7,6 +7,8 @@ yarn.lock
 
 .env
 
-lib/.env
+dist/.env
 
-lib/**/*
+dist/**/*
+
+networks.ts

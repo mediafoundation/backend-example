@@ -3,7 +3,7 @@
  * @description This file contains the main API endpoints for the application.
  */
 
-import {Marketplace, Resources, Sdk, validChains} from "media-sdk"
+import {http, Marketplace, Resources, Sdk, validChains} from "media-sdk"
 import express from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
@@ -14,8 +14,14 @@ import {parseFilter} from "./utils/filter"
 import {createRelationsBetweenTables} from "./database/utils"
 import {ProvidersController} from "./database/controllers/providersController"
 import {EventsController} from "./database/controllers/eventsController"
-import {Document, WithId} from "mongodb"
 import {ProvidersMetadata} from "./database/models/Providers/ProvidersMetadata"
+import {httpNetworks} from "./networks"
+import {ProviderClient} from "./database/models/manyToMany/ProviderClient"
+import {ChainClient} from "./database/models/manyToMany/ChainClient"
+import {Deal} from "./database/models/deals/Deal"
+import {ChainProvider} from "./database/models/manyToMany/ChainProvider"
+import {Op} from "sequelize"
+import {RatingController} from "./database/controllers/ratingController"
 
 // Initialize express app
 export const app = express()
@@ -28,7 +34,6 @@ app.use(cors()) // for enabling CORS
  * @function manageIncomingFilterRequest
  * @description Manage incoming request and parse filters from query parameters
  * @param {object} req - The request object
- * @returns {object} - The parsed filters
  */
 function manageIncomingFilterRequest(req: any) {
   // Parse filters from query parameters
@@ -150,14 +155,16 @@ app.get("/providers", async(req, res) => {
     const page = req.query.page ? Number(req.query.page) : undefined
     const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
     const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
-    const account = req.query.account
+    const account = req.query.provider
+    const rating = req.query.rating ? Number(req.query.rating) : undefined
 
-    const providers = await ProvidersController.getProviders(chainId, page, pageSize, account as string | undefined)
+    const providers = await ProvidersController.getProviders(chainId, page, pageSize, account as string | undefined, rating)
 
     for (const provider of providers) {
       const dealsCount = await ProvidersController.countDeals(provider.account, chainId)
       const offersCount = await ProvidersController.countOffers(provider.account, chainId)
       const clientCount = await ProvidersController.countClients(provider.account, chainId)
+      //const providerRating = await RatingController.getAverageRating(provider.account, chainId)
       let providerMetadata: { [index: number]: any } | ProvidersMetadata | null = {}
       let registryTime: { [index: number]: any } | number = {}
 
@@ -181,7 +188,8 @@ app.get("/providers", async(req, res) => {
         "offers": offersCount,
         "clients": clientCount,
         "metadata": providerMetadata,
-        "registerTime": registryTime
+        "registerTime": registryTime,
+        //"rating": provider.
       }
 
       result.push(providerResult)
@@ -225,6 +233,8 @@ app.get("/providers/totalRevenue", async (req, res) => {
   try {
     const provider = req.query.provider
     const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
+    const from: number | undefined = req.query.from ? Number(req.query.from) : undefined
+    const to: number | undefined = req.query.to ? Number(req.query.to) : undefined
 
     if(!provider || !chainId || !Array.isArray(JSON.parse(req.query.chainId as string))) {
       res.status(500).json({error: "No provider or valid chainId provided"})
@@ -233,7 +243,7 @@ app.get("/providers/totalRevenue", async (req, res) => {
     else {
       const response: {[index: number]: any} = {}
       for (const chain of chainId) {
-        const queryResult = await EventsController.calculateProviderRevenue(provider.toString(), Number(chain))
+        const queryResult = await EventsController.calculateProviderRevenue(provider.toString(), Number(chain), from, to)
         const dailyRevenue = queryResult.dailyRevenue
 
         const formattedData: { [key: string]: string } = {}
@@ -311,30 +321,173 @@ app.get("/providers/countActiveClients", async (req, res) => {
 })
 
 /**
+ * @route GET /providerClient
+ * @description Retrieves deal details for a specific provider and client.
+ * @param {object} req - The request object containing query parameters.
+ * @param {string} req.query.provider - The provider identifier.
+ * @param {string} req.query.client - The client identifier.
+ * @param {object} res - The response object.
+ * @returns {JSON} - The deal details associated with the given provider and client or an error message in case of failure.
+ */
+app.get("/providerClient", async (req, res) => {
+  const {provider, client} = req.query
+
+  const formattedProvider = provider ? provider.toString() : ""
+  const formattedClient = client ? client.toString() : ""
+
+  const clientDeals: {[index: number]: { deals: Deal[], dealsCount: number }} = {}
+
+  try {
+    // Check if client and provider association exists
+    await ProviderClient.findOne({
+      where: {
+        provider: formattedProvider,
+        client: formattedClient
+      },
+      rejectOnEmpty: true,
+    })
+
+    const chainClient = await ChainClient.findAll({
+      where: {
+        client: formattedClient
+      },
+      raw: true
+    })
+
+    for (const chain of chainClient) {
+      const deals = await Deal.findAll({
+        where: {
+          chainId: chain.chainId,
+          client: formattedClient
+        },
+        raw: true
+      })
+      clientDeals[chain.chainId] = {
+        deals: deals,
+        dealsCount: deals.length
+      }
+    }
+
+    res.json({
+      provider: provider,
+      dealDetails: clientDeals
+    })
+  } catch (e) {
+    console.log("Error", e)
+    res.json(e)
+  }
+})
+
+/**
+ * @route GET /allProvidersClients
+ * @description Retrieves all clients and their deals for a specific provider across all chains.
+ * @param {object} req - The request object containing query parameters.
+ * @param {string} req.query.provider - The provider identifier.
+ * @param {object} res - The response object.
+ * @returns {JSON} - The clients and their deals associated with the given provider or an error message in case of failure.
+ */
+app.get("/allProvidersClients", async (req, res) => {
+  const {provider} = req.query
+
+  const formattedProvider = provider ? provider.toString() : ""
+
+  const response: {
+    [index: string]: { //ChainId
+      [index: string]: { //Client
+        deals: Deal[],
+        dealsCount: number
+      }
+    }
+  } = {}
+
+  try {
+
+    // Check if client and provider association exists
+    const providerClients = await ProviderClient.findAll({
+      where: {
+        provider: formattedProvider
+      },
+      raw: true
+    })
+
+    const clients = providerClients.map(providerClient => providerClient.client)
+
+    const providerChain = await ChainProvider.findAll({
+      where: {
+        provider: formattedProvider
+      },
+      raw: true
+    })
+
+    for (const chain of providerChain) {
+      const deals = await Deal.findAll({
+        where: {
+          chainId: chain.chainId,
+          client: {
+            [Op.in]: clients
+          }
+        },
+        raw: true
+      })
+
+      const rawClient = deals.map(deal => deal.client)
+
+      const client = [...new Set(rawClient)]
+      console.log(client, chain.chainId)
+
+      const clientsDeals: {[index: string]: {
+          deals: Deal[],
+          dealsCount: number
+        }
+      } = {}
+
+      for (const clientElement of client) {
+        const clientDeals = deals.filter(deal => deal.client === clientElement)
+        clientsDeals[clientElement] = {
+          deals: clientDeals,
+          dealsCount: clientDeals.length
+        }
+      }
+      response[chain.chainId] = clientsDeals
+    }
+
+    res.json({
+      provider: provider,
+      dealDetails: response
+    })
+  } catch (e) {
+    console.log("Error", e)
+    res.json(e)
+  }
+})
+
+/**
  * @route GET /upsertOffer
  * @description This endpoint is used to update or insert an offer in the database.
  */
 app.get("/upsertOffer", async (req, res) => {
-  const {chainIdQuery, offerIdQuery} = req.query
+  const {chainId, offerId} = req.query
 
-  const chainId = chainIdQuery ? chainIdQuery.toString() : ""
-  const offerId = offerIdQuery ? offerIdQuery.toString() : ""
+  const chainIdFormatted = chainId ? chainId.toString() : ""
+  const offerIdFormatted = offerId ? offerId.toString() : ""
 
   const chains = Object.keys(validChains)
 
-  if(!chains.includes(chainId)) {
+  if(!chains.includes(chainIdFormatted)) {
     res.status(500).json({error: "Invalid chain"})
     return
   }
 
   try {
-    const sdk = new Sdk({chain: validChains[chainId as unknown as keyof typeof validChains]})
+    const chain = validChains[chainIdFormatted as unknown as keyof typeof validChains]
+    const transports = httpNetworks ? httpNetworks[chain.name].map(transport => http(transport)) : undefined
+    const sdk = new Sdk({chain: chain, transport: transports})
 
     const marketplace = new Marketplace(sdk)
 
     const offer = await marketplace.getOfferById({
-      marketplaceId: process.env.MARKETPLACE_ID,
-      offerId: offerId
+      marketplaceId: Number(process.env.MARKETPLACE_ID),
+      offerId: Number(offerIdFormatted)
     })
 
     const formattedOffer = OffersController.formatOffer(offer)
@@ -344,7 +497,7 @@ app.get("/upsertOffer", async (req, res) => {
       provider: formattedOffer.provider
     })
 
-    await OffersController.upsertOffer(formattedOffer, Number(chainId), providerData.metadata, providerData.publicKey)
+    await OffersController.upsertOffer(formattedOffer, Number(chainIdFormatted), providerData.metadata, providerData.publicKey)
 
     res.status(200).json({message: "Offer Updated"})
   } catch (e) {
@@ -358,29 +511,31 @@ app.get("/upsertOffer", async (req, res) => {
  * @description This endpoint is used to update or insert a deal in the database.
  */
 app.get("/upsertDeal", async (req, res) => {
-  const {chainIdQuery, dealIdQuery} = req.query
+  const {chainId, dealId} = req.query
 
-  const chainId = chainIdQuery ? chainIdQuery.toString() : ""
-  const dealId = dealIdQuery ? Number(dealIdQuery) : 0
+  const chainIdFormatted = chainId ? chainId.toString() : ""
+  const dealIdFormatted = dealId ? Number(dealId) : 0
 
   const chains = Object.keys(validChains)
 
-  if(!chains.includes(chainId)) {
+  if(!chains.includes(chainIdFormatted)) {
     res.status(500).json({error: "Invalid chain"})
     return
   }
 
   try {
-    const sdk = new Sdk({chain: validChains[chainId as unknown as keyof typeof validChains]})
+    const chain = validChains[chainIdFormatted as unknown as keyof typeof validChains]
+    const transports = httpNetworks ? httpNetworks[chain.name].map(transport => http(transport)) : undefined
+    const sdk = new Sdk({chain: chain, transport: transports})
 
     const marketplace = new Marketplace(sdk)
 
     const deal = await marketplace.getDealById({
-      marketplaceId: process.env.MARKETPLACE_ID,
-      dealId: dealId
+      marketplaceId: Number(process.env.MARKETPLACE_ID),
+      dealId: Number(dealIdFormatted)
     })
 
-    await DealsController.upsertDeal(DealsController.formatDeal(deal), Number(chainId))
+    await DealsController.upsertDeal(DealsController.formatDeal(deal), Number(chainIdFormatted))
 
     res.status(200).json({message: "Deal updated"})
   } catch (e) {
@@ -394,30 +549,32 @@ app.get("/upsertDeal", async (req, res) => {
  * @description This endpoint is used to update or insert a resource in the database.
  */
 app.get("/upsertResource", async (req, res) => {
-  const {addressQuery, resourceIdQuery, chainIdQuery} = req.query
+  const {address, resourceId, chainId} = req.query
 
-  const address = addressQuery ? addressQuery.toString() : ""
-  const resourceId = resourceIdQuery ? Number(resourceIdQuery) : 0
-  const chainId = chainIdQuery ? chainIdQuery.toString() : ""
+  const addressFormatted = address ? address.toString() : ""
+  const resourceIdFormatted = resourceId ? Number(resourceId) : 0
+  const chainIdFormatted = chainId ? chainId.toString() : ""
 
   const chains = Object.keys(validChains)
 
-  if(!chains.includes(chainId)) {
+  if(!chains.includes(chainIdFormatted)) {
     res.status(500).json({error: "Invalid chain"})
     return
   }
 
   try {
-    const sdk = new Sdk({chain: validChains[chainId as unknown as keyof typeof validChains]})
+    const chain = validChains[chainIdFormatted as unknown as keyof typeof validChains]
+    const transports = httpNetworks ? httpNetworks[chain.name].map(transport => http(transport)) : undefined
+    const sdk = new Sdk({chain: chain, transport: transports})
 
     const resources = new Resources(sdk)
 
     const resource = await resources.getResource({
-      id: resourceId,
-      address: address
+      id: resourceIdFormatted,
+      address: addressFormatted
     })
 
-    await ResourcesController.upsertResource(ResourcesController.formatResource(resource), Number(chainId))
+    await ResourcesController.upsertResource(ResourcesController.formatResource(resource), Number(chainIdFormatted))
 
     res.status(200).json({message: "Resource Updated"})
   } catch (e) {
@@ -431,29 +588,31 @@ app.get("/upsertResource", async (req, res) => {
  * @description This endpoint is used to update or insert a provider in the database.
  */
 app.get("/upsertProvider", async (req, res) => {
-  const {providerQuery, chainIdQuery} = req.query
+  const {provider, chainId} = req.query
 
-  const provider = providerQuery ? providerQuery.toString() : ""
-  const chainId = chainIdQuery ? chainIdQuery.toString() : ""
+  const providerFormatted = provider ? provider.toString() : ""
+  const chainIdFormatted = chainId ? chainId.toString() : ""
 
   const chains = Object.keys(validChains)
 
-  if(!chains.includes(chainId)) {
+  if(!chains.includes(chainIdFormatted)) {
     res.status(500).json({error: "Invalid chain"})
     return
   }
 
   try {
-    const sdk = new Sdk({chain: validChains[chainId as unknown as keyof typeof validChains]})
+    const chain = validChains[chainIdFormatted as unknown as keyof typeof validChains]
+    const transports = httpNetworks ? httpNetworks[chain.name].map(transport => http(transport)) : undefined
+    const sdk = new Sdk({chain: chain, transport: transports})
 
     const marketplace = new Marketplace(sdk)
 
     const providerData = await marketplace.getProvider({
       marketplaceId: Number(process.env.MARKETPLACE_ID),
-      provider: provider
+      provider: providerFormatted
     })
 
-    await ProvidersController.upsertProvider(provider, Number(chainId), undefined, providerData.metadata, providerData.publicKey)
+    await ProvidersController.upsertProvider(providerFormatted, Number(chainIdFormatted), undefined, providerData.metadata, providerData.publicKey)
 
     res.status(200).json({message: "Provider Updated"})
   } catch (e) {
@@ -486,6 +645,31 @@ app.get("/account/events", async (req, res) => {
   } catch (e) {
     console.log(e)
     res.status(500).json({error: e})
+  }
+})
+
+app.post("/rateProvider", async (req, res) => {
+  const {provider, chainId, dealId, rating} = req.body
+
+  try {
+    await RatingController.rateProvider(provider, chainId, dealId, rating)
+    res.status(200).json({message: "Rating added"})
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({error: "Something went wrong"})
+  }
+})
+
+app.get("/provider/rating", async (req, res) => {
+  const {provider, chainIds} = req.query
+  const chainId = chainIds && Array.isArray(JSON.parse(chainIds as string)) ? JSON.parse(chainIds as string).map((value: number) => parseInt(value.toString())) : undefined
+
+  try {
+    const rating = await RatingController.getAverageRating(provider!.toString(), chainId)
+    res.status(200).json(rating)
+  } catch (e) {
+    console.log(e)
+    res.status(500).json({error: "Something went wrong"})
   }
 })
 

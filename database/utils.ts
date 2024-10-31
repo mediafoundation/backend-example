@@ -16,6 +16,7 @@ import {DealNodeLocation} from "./models/manyToMany/DealNodeLocation"
 import {OfferNodeLocation} from "./models/manyToMany/OfferNodeLocation"
 import {ProvidersMetadata} from "./models/Providers/ProvidersMetadata"
 import {ClientsMetadata} from "./models/Clients/ClientsMetadata"
+import {Rating} from "./models/Rating"
 
 const resetSequelizeDB = async () => {
   await createRelationsBetweenTables()
@@ -62,6 +63,11 @@ const createRelationsBetweenTables = async () => {
     foreignKey: "provider"
   })
 
+  Provider.hasMany(Rating, {
+    sourceKey: "account",
+    foreignKey: "provider"
+  })
+
   Provider.hasMany(ProvidersMetadata, {
     sourceKey: "account",
     foreignKey: "provider"
@@ -81,7 +87,6 @@ const createRelationsBetweenTables = async () => {
 
   Deal.belongsTo(Chain, {
     foreignKey: "chainId",
-    as: "Chain"
   })
 
   Deal.belongsTo(Resource, {
@@ -150,6 +155,9 @@ const createRelationsBetweenTables = async () => {
     timestamps: false
   })
 
+  Rating.belongsTo(Provider, { foreignKey: "provider" })
+  Rating.belongsTo(Client, { foreignKey: "client" })
+  Rating.belongsTo(Chain, { foreignKey: "chainId" })
 }
 
 export {resetSequelizeDB, createRelationsBetweenTables, resetMongoDB}

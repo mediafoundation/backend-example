@@ -1,7 +1,7 @@
 import {z} from "zod"
 
 export const OfferMetadataSchema = z.object({
-  type: z.string(),
+  type: z.string().optional(),
   label: z.string(),
   apiEndpoint: z.string(),
   bandwidthLimit: z.object({

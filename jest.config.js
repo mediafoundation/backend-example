@@ -1,9 +1,6 @@
 module.exports = {
   silent: true,
-  preset: "ts-jest",
   testEnvironment: "node",
-  transform: {
-    "^.+\\.ts?$": "ts-jest",
-  },
-  transformIgnorePatterns: ["<rootDir>/node_modules/"],
+  testMatch: ["**/?(*.)+(spec|test).js?(x)"],
+  moduleFileExtensions: ["js", "jsx", "json", "node"],
 }

@@ -2,14 +2,13 @@ import {Blockchain, EventsHandler, Marketplace, Sdk, validChains} from "media-sd
 import {lastReadBlockCollection} from "./database/database"
 import {EventsController} from "./database/controllers/eventsController"
 import {createRelationsBetweenTables, resetMongoDB} from "./database/utils"
-import {DealsController} from "./database/controllers/dealsController"
-import {OffersController} from "./database/controllers/offersController"
+import EventsUtils from "./utils/events"
 
 const BATCH_SIZE = 1000n
 
 const marketplaceGenesisBlock: {[index: number]: bigint} = {
-  11155111: 5284652n,
-  84532: 6059860n
+  11155111: 6817833n,
+  84532: 16170075n
 }
 
 function delay(ms: number) {
@@ -63,34 +62,16 @@ async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchai
   console.log("Finish getting past events on chain:", chainId)
 }
 
-async function manageDealUpdated(event: any, marketplace: Marketplace, blockChain: Blockchain, chainId: number) {
+/*export async function manageResourceUpdated(event: any, resources: Resources, blockChain: Blockchain, chainId: number) {
   const blockTimestamp = await blockChain.getBlockTimestamp(event.blockNumber)
   await EventsController.upsertEvent(EventsController.formatEvent(event), chainId, Number(blockTimestamp.timestamp))
-  const deal = await marketplace.getDealById({
-    marketplaceId: process.env.MARKETPLACE_ID,
-    dealId: event._dealId
+  const resource = await resources.getResource({
+    id: event._resourceId,
+    address: event._resourceAddress
   })
 
-  await DealsController.upsertDeal(DealsController.formatDeal(deal), chainId)
-}
-
-async function manageOfferUpdated(event: any, marketplace: Marketplace, blockChain: Blockchain, chainId: number) {
-  const blockTimestamp = await blockChain.getBlockTimestamp(event.blockNumber)
-  await EventsController.upsertEvent(EventsController.formatEvent(event), chainId, Number(blockTimestamp.timestamp))
-  const offer = await marketplace.getOfferById({
-    marketplaceId: process.env.MARKETPLACE_ID,
-    offerId: event._offerId
-  })
-
-  const formattedOffer = OffersController.formatOffer(offer)
-
-  const providerData = await marketplace.getProvider({
-    marketplaceId: Number(process.env.MARKETPLACE_ID),
-    provider: formattedOffer.provider
-  })
-
-  await OffersController.upsertOffer(formattedOffer, chainId, providerData.metadata, providerData.publicKey)
-}
+  await ResourcesController.upsertResource(ResourcesController.formatResource(resource), chainId)
+}*/
 
 async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, marketplace: Marketplace, chainId: number) {
   const lastReadBlock = await lastReadBlockCollection.findOne({chainId: chainId})
@@ -135,23 +116,28 @@ async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, m
     })*/
 
     for (const event of dealAccepted) {
-      await manageDealUpdated(event, marketplace, blockChain, chainId)
+      console.log("DealAccepted", event)
+      await EventsUtils.manageDealUpdated(event, marketplace, blockChain, chainId)
     }
 
     for (const event of dealCreated) {
-      await manageDealUpdated(event, marketplace, blockChain, chainId)
+      console.log("DealCreated", event)
+      await EventsUtils.manageDealUpdated(event, marketplace, blockChain, chainId)
     }
 
     for (const event of addedBalance) {
-      await manageDealUpdated(event, marketplace, blockChain, chainId)
+      console.log("AddedBalance", event)
+      await EventsUtils.manageDealUpdated(event, marketplace, blockChain, chainId)
     }
 
     for (const event of offerCreated) {
-      await manageOfferUpdated(event, marketplace, blockChain, chainId)
+      console.log("OfferCreated", event)
+      await EventsUtils.manageOfferUpdated(event, marketplace, blockChain, chainId)
     }
 
     for (const event of offerUpdated) {
-      await manageOfferUpdated(event, marketplace, blockChain, chainId)
+      console.log("OfferUpdated", event)
+      await EventsUtils.manageOfferUpdated(event, marketplace, blockChain, chainId)
     }
 
     await lastReadBlockCollection.updateOne({block: lastReadBlock!.block, chainId: chainId}, {$set: {block: blockToRead}}, {upsert: true})
@@ -187,5 +173,5 @@ start()
       } catch (e) {
         console.log("Error", e)
       }
-    }, 60000)
+    }, 60000 * 5) //Every 5 minutes
   })

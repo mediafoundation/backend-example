@@ -1,4 +1,4 @@
-import {Sdk, MarketplaceViewer, Resources, validChains, Marketplace} from "media-sdk"
+import {Sdk, MarketplaceViewer, Resources, validChains, Marketplace, http} from "media-sdk"
 import {DealsController} from "./database/controllers/dealsController"
 import {ResourcesController} from "./database/controllers/resourcesController"
 import {resetSequelizeDB} from "./database/utils"
@@ -6,11 +6,13 @@ import {z} from "zod"
 import {OffersController} from "./database/controllers/offersController"
 import {Chain} from "./database/models/Chain"
 import {closeMongoDB, sequelize} from "./database/database"
+import {httpNetworks} from "./networks"
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("dotenv").config()
 
 const init = async (chain: any) => {
-  const sdkInstance = new Sdk({chain: chain})
+  const transports = httpNetworks ? httpNetworks[chain.name].map(transport => http(transport)) : undefined
+  const sdkInstance = new Sdk({chain: chain, transport: transports})
   
   const marketplaceViewer: MarketplaceViewer = new MarketplaceViewer(sdkInstance)
   const resourcesInstance: Resources = new Resources(sdkInstance)
@@ -21,7 +23,7 @@ const init = async (chain: any) => {
   await Chain.findOrCreate({where: {chainId: chain.id}, defaults: {chainId: chain.id, name: chain.name}})
   
   const offers = await marketplaceViewer.getAllOffersPaginating({
-    marketplaceId: process.env.MARKETPLACE_ID,
+    marketplaceId: process.env.MARKETPLACE_ID!,
     start: 0,
     steps: 10
   })
@@ -52,22 +54,26 @@ const init = async (chain: any) => {
   // Loop on provider addresses and get its resources and deals
   
   for (const providerAddress of providerAddresses) {
-    const resources = await resourcesInstance.getAllResourcesPaginating({address: providerAddress})
-    
+    try {
+      const resources = await resourcesInstance.getAllResourcesPaginating({address: providerAddress})
+
+      for (const resource of resources) {
+        try {
+          const formattedResource = ResourcesController.formatResource(resource)
+          await ResourcesController.upsertResource(formattedResource, chain.id)
+        } catch (e) {
+          console.log("Error for resource", resource.id, e)
+        }
+      }
+    } catch (e) {
+      console.log("Error getting resources", e)
+    }
+
     const deals = await marketplaceViewer.getAllDealsPaginating({
-      marketplaceId: process.env.MARKETPLACE_ID,
+      marketplaceId: process.env.MARKETPLACE_ID!,
       address: providerAddress,
       isProvider: true
     })
-    
-    for (const resource of resources) {
-      try {
-        const formattedResource = ResourcesController.formatResource(resource)
-        await ResourcesController.upsertResource(formattedResource, chain.id)
-      } catch (e) {
-        console.log("Error for resource", resource.id, e)
-      }
-    }
     
     for (const deal of deals) {
       try {
