@@ -1,5 +1,5 @@
 import {Offer} from "../models/offers/Offer"
-import {WhereOptions} from "sequelize"
+import {Op, WhereOptions} from "sequelize"
 import {OfferFormatted, OfferMetadataSchema, OfferRawSchema, OfferTransformed} from "../models/types/offer"
 import {NodeLocation} from "../models/NodeLocation"
 import {BandwidthLimit} from "../models/BandwidthLimit"
@@ -7,6 +7,9 @@ import {OfferMetadata} from "../models/offers/OffersMetadata"
 import {Chain} from "../models/Chain"
 import {ProvidersController} from "./providersController"
 import {OfferNodeLocation} from "../models/manyToMany/OfferNodeLocation"
+import {Provider} from "../models/Providers/Provider"
+import {Rating} from "../models/Rating"
+import {sequelize} from "../database"
 
 /**
  * OffersController class
@@ -85,6 +88,7 @@ export class OffersController{
    * @param metadataFilter - Filter for the metadata
    * @param bandwidthLimitFilter - Filter for the bandwidth limit
    * @param nodeLocationFilter - Filter for the node locations
+   * @param minProviderRating
    * @param page - Page number
    * @param pageSize - Page size
    * @returns Promise<Array<any>>
@@ -95,8 +99,39 @@ export class OffersController{
     metadataFilter: WhereOptions<any> = {},
     bandwidthLimitFilter: WhereOptions<any> = {},
     nodeLocationFilter: WhereOptions<any> = {},
+    minProviderRating?: number,
     page: number | undefined = undefined,
     pageSize: number | undefined= undefined): Promise<Array<any>> {
+
+    const ratingFilter: {
+      chainId?: {
+        [Op.in]: number[] | number
+      },
+      [Op.and]?: any[]
+    } = {
+      [Op.and]: []
+    }
+
+    if (minProviderRating) {
+      if (chainId) {
+        ratingFilter[Op.and]!.push(
+          sequelize.literal(`(
+        SELECT AVG(\`rating\`)
+        FROM \`Rating\`
+        WHERE \`Rating\`.\`provider\` = \`Provider\`.\`account\`
+        AND \`Rating\`.\`chainId\` = \`ChainProvider\`.\`chainId\`
+      ) >= ${minProviderRating}`)
+        )
+      } else {
+        ratingFilter[Op.and]!.push(
+          sequelize.literal(`(
+        SELECT AVG(\`rating\`)
+        FROM \`Rating\`
+        WHERE \`Rating\`.\`provider\` = \`Provider\`.\`account\`
+      ) >= ${minProviderRating}`)
+        )
+      }
+    }
     
     // Calculate the offset
     const offset = page && pageSize ? (page - 1) * pageSize : undefined
@@ -140,6 +175,20 @@ export class OffersController{
             }
           ]
         },
+        {
+          model: Provider,
+          attributes: [],
+          include: [
+            {
+              model: Rating,
+              attributes: [],
+              where: {
+                rating: ratingFilter
+              },
+              required: !!minProviderRating
+            }
+          ]
+        }
       ],
       where: offerFilter,
       offset: offset,

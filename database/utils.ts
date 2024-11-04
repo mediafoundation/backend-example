@@ -140,7 +140,7 @@ const createRelationsBetweenTables = async () => {
 
   Offer.belongsTo(Provider, {
     foreignKey: "provider",
-    as: "Provider"
+    //as: "Provider"
   })
   
   Offer.belongsTo(Chain, {

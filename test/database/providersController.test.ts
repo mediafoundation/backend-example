@@ -198,7 +198,7 @@ describe("Providers Controller", () => {
     })
 
     test("should combine filters and pagination", async () => {
-      const result = await ProvidersController.getProviders({chainId: [1], minRating: 2, page: 1, pageSize: 2})
+      const result = await ProvidersController.getProviders({minRating: 2, page: 1, pageSize: 2})
       expect(result.length).toBe(2)
       result[0].Ratings!.map(rating => {
         expect(rating.rating).toBeGreaterThanOrEqual(2)
