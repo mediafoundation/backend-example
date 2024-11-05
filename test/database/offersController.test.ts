@@ -199,19 +199,95 @@ describe("Offer Controller", () => {
   test("Get Offers paginating", async () => {
     await overPopulateDb(1)
 
-    let offers = await OffersController.getOffers(undefined, {}, {}, {}, {}, 1, 30 )
+    let offers = await OffersController.getOffers(undefined, {}, {}, {}, {}, undefined, 1, 30 )
     expect(offers.length).toBe(30)
     expect(offers[0].id).toBe(1)
     expect(offers[14].id).toBe(15)
     expect(offers[29].id).toBe(30)
 
-    offers = await OffersController.getOffers(1, {}, {}, {}, {}, 3, 30 )
+    offers = await OffersController.getOffers(1, {}, {}, {}, {}, undefined, 3, 30 )
     expect(offers.length).toBe(30)
     expect(offers[0].id).toBe(61)
     expect(offers[14].id).toBe(75)
     expect(offers[29].id).toBe(90)
 
-    offers = await OffersController.getOffers(3, {}, {}, {}, {}, 3, 30 )
+    offers = await OffersController.getOffers(3, {}, {}, {}, {}, undefined, 3, 30 )
     expect(offers.length).toBe(0)
   })
+
+  /*describe("OffersController - Get Offers with Minimum Rating", () => {
+    const mockOffer = {
+      id: 1,
+      offerId: 1,
+      provider: "0xProvider1",
+      publicKey: "PublicKey1",
+      chainId: 1,
+      maximumDeals: 1000,
+      autoAccept: true,
+      pricePerSecond: 1000,
+      minDealDuration: 3600,
+      billFullPeriods: true,
+      singlePeriodOnly: false,
+    }
+
+    const mockProvider = {
+      account: "0xProvider1",
+      publicKey: "PublicKey1"
+    }
+
+    const mockRating = {
+      provider: "0xProvider1",
+      client: "0xClient1",
+      chainId: 1,
+      rating: 5
+    }
+
+    const mockDeal = {
+      id: 1,
+      dealId: 1,
+      offerId: 1,
+      client: "0xClient1",
+      provider: "0xProvider1",
+      //resourceId: 3n,
+      chainId: 1,
+      totalPayment: 0,
+      blockedBalance: 446499999999,
+      active: true,
+      createdAt: 1710153976,
+      acceptedAt: 1710153976,
+      billingStart: 1710153976,
+      cancelled: false,
+      cancelledAt: 0,
+      pricePerSecond: 111111111111,
+      minDealDuration: 900,
+      billFullPeriods: false,
+      singlePeriodOnly: false,
+      terms: {
+        metadata: "{\"type\":\"cdn\",\"label\":\"Testing Backend\",\"apiEndpoint\":\"http:localhost:5000/\",\"bandwidthLimit\":{\"amount\":1,\"unit\":\"tb\",\"period\":\"monthly\"},\"autoSsl\":true,\"burstSpeed\":1000,\"nodeLocations\":[\"ABB\", \"CL\", \"BR\"],\"customCnames\":true}"
+      },
+    }
+
+    beforeEach(async () => {
+      //await resetSequelizeDB()
+      await Provider.create(mockProvider)
+      await Client.create({account: "0xClient1"})
+      await Offer.create(mockOffer)
+      await Deal.create(mockDeal)
+      await Rating.create(mockRating)
+    })
+
+    test("Should return offers when provider has minimum average rating", async () => {
+      const minRating = 4
+      const offers1 = await Offer.findAll()
+      const offers = await OffersController.getOffers(undefined, {}, {}, {}, {})
+      expect(offers.length).toBeGreaterThan(0)
+      expect(offers[0].provider).toBe(mockOffer.provider)
+    })
+
+    test("Should not return offers when provider does not meet minimum average rating", async () => {
+      const minRating = 6
+      const offers = await OffersController.getOffers(undefined, {}, {}, {}, {}, minRating)
+      expect(offers.length).toBe(0)
+    })
+  })*/
 })

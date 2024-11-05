@@ -9,11 +9,13 @@ import {
 import {sequelize} from "../../database"
 import {Chain} from "../Chain"
 import {Client} from "../Clients/Client"
+import {Rating} from "../Rating"
 
 interface ProviderAttributes {
   account: string,
   publicKey: string,
   Chains?: number[]
+  Ratings?: Rating[]
 }
 
 export class Provider extends Model<ProviderAttributes, InferCreationAttributes<Provider>> {

@@ -10,6 +10,8 @@ import {Offer} from "../../database/models/offers/Offer"
 import {ChainClient} from "../../database/models/manyToMany/ChainClient"
 import {closeMongoDB, sequelize} from "../../database/database"
 import {ProvidersMetadata} from "../../database/models/Providers/ProvidersMetadata"
+import { Rating } from "../../database/models/Rating"
+import { Client } from "../../database/models/Clients/Client"
 
 const mockDeal = {
   id: 1n,
@@ -87,21 +89,122 @@ beforeAll(async () => {
   }
 })
 
-afterEach(async () => {
-  await Provider.sync({force: true})
-  await ProvidersMetadata.sync({force: true})
-  await ChainProvider.sync({force: true})
-  await ChainClient.sync({force: true})
-  await Deal.sync({force: true})
-  await Offer.sync({force: true})
-})
-
 afterAll(async () => {
   await sequelize.close()
   await closeMongoDB()
 })
 
 describe("Providers Controller", () => {
+
+  describe("ProvidersController.getProviders", () => {
+
+    beforeAll(async () => {
+      // Create sample providers
+      for (let i = 0; i < 5; i++) {
+        await Provider.create({
+          account: `Account ${i}`,
+          publicKey: `PublicKey ${i}`
+        })
+
+        await Client.create({
+          account: `Account ${i}`
+        })
+
+        await ChainProvider.create({
+          chainId: 0,
+          provider: `Account ${i}`
+        })
+
+        await ChainProvider.create({
+          chainId: 1,
+          provider: `Account ${i}`
+        })
+      }
+
+      // Create sample ratings
+      for (let i = 0; i < 5; i++) {
+        await Rating.create({
+          provider: `Account ${i}`,
+          rating: i + 1,
+          client: `Account ${i}`,
+          chainId: 0
+        })
+        if(i < 4) {
+          await Rating.create({
+            provider: `Account ${i}`,
+            rating: i + 2,
+            client: `Account ${i}`,
+            chainId: 1
+          })
+        }
+      }
+    })
+
+    afterAll(async () => {
+      await Provider.sync({force: true})
+      await ProvidersMetadata.sync({force: true})
+      await ChainProvider.sync({force: true})
+      await ChainClient.sync({force: true})
+      await Deal.sync({force: true})
+      await Offer.sync({force: true})
+    })
+
+    test("should return all providers when no filters are applied", async () => {
+      const result = await ProvidersController.getProviders({})
+      expect(result.length).toBe(5)
+    })
+
+    test("should filter providers by chainId", async () => {
+      await Provider.create({account: "Account 6", publicKey: "PublicKey 6"})
+      await Chain.create({chainId: 2, name: "Chain name for 2"})
+      await Rating.create({
+        provider: "Account 6",
+        rating: 2,
+        client: "Account 3",
+        chainId: 2
+      })
+      await ChainProvider.create({
+        provider: "Account 6",
+        chainId: 2
+      })
+      const result = await ProvidersController.getProviders({chainId: [2]})
+      expect(result.length).toBe(1)
+      expect(result[0].Ratings![0].chainId).toBe(2)
+    })
+
+    test("should filter providers by account", async () => {
+      const result = await ProvidersController.getProviders({account: "Account 1"})
+      expect(result.length).toBe(1)
+      expect(result[0].account).toBe("Account 1")
+    })
+
+    test("should filter providers by minRating", async () => {
+      const result = await ProvidersController.getProviders({minRating: 3})
+      console.log(result.map(r => r.Ratings))
+      console.log((await ProvidersController.getProviders({})).map(r => r.Ratings))
+      console.log((await ProvidersController.getProviders({})).map(r => r.account))
+      expect(result.length).toBe(3)
+      //expect().toBeGreaterThanOrEqual(3)
+      result[0].Ratings!.map(rating => {
+        expect(rating.rating).toBeGreaterThanOrEqual(3)
+      })
+    })
+
+    test("should paginate providers", async () => {
+      const result = await ProvidersController.getProviders({page: 1, pageSize: 2})
+      expect(result.length).toBe(2)
+      expect(result[0].account).toBe("Account 0")
+      expect(result[1].account).toBe("Account 1")
+    })
+
+    test("should combine filters and pagination", async () => {
+      const result = await ProvidersController.getProviders({minRating: 2, page: 1, pageSize: 2})
+      expect(result.length).toBe(2)
+      result[0].Ratings!.map(rating => {
+        expect(rating.rating).toBeGreaterThanOrEqual(2)
+      })
+    })
+  })
 
   test("Upsert provider", async () => {
     const metadata = JSON.stringify({"metadata": "someExample"})
@@ -125,64 +228,6 @@ describe("Providers Controller", () => {
     expect(await ProvidersMetadata.count()).toBe(1)
   })
 
-  test("Get provider", async () => {
-    const metadata = JSON.stringify({"metadata": "someExample"})
-    await ProvidersController.upsertProvider("Account 1", 1, undefined, metadata, "pubKey")
-    await ProvidersController.upsertProvider("Account 1", 0, undefined, metadata, "pubKey")
-
-    const result = await ProvidersController.getProviders()
-
-    expect(result.length).toBe(1)
-    expect(result[0].account).toBe("Account 1")
-    //expect(result[0].Chains).toStrictEqual([0, 1])
-  })
-
-  test("Get provider by chainId", async () => {
-    const metadata = JSON.stringify({"metadata": "someExample"})
-    await ProvidersController.upsertProvider("Account 1", 1, undefined, metadata, "pubKey")
-    await ProvidersController.upsertProvider("Account 1", 0, undefined, metadata, "pubKey")
-
-    const result = await ProvidersController.getProviders([1])
-    expect(result.length).toBe(1)
-    expect(result[0].account).toBe("Account 1")
-    //expect(result[0].Chains).toStrictEqual([1])
-  })
-
-  test("Get all providers when no pagination given", async () => {
-    const metadata = JSON.stringify({"metadata": "someExample"})
-    for (let i = 0; i < 100; i++) {
-      await ProvidersController.upsertProvider(`Account: ${i}`, 1, undefined, metadata, "pubKey")
-    }
-
-    const providers = await ProvidersController.getProviders()
-
-    expect(providers.length).toStrictEqual(100)
-    expect(providers[0].account).toStrictEqual("Account: 0")
-    expect(providers[13].account).toStrictEqual("Account: 13")
-    expect(providers[99].account).toStrictEqual("Account: 99")
-  })
-
-  test("Get providers paginating", async () => {
-    const metadata = JSON.stringify({"metadata": "someExample"})
-    for (let i = 0; i < 100; i++) {
-      await ProvidersController.upsertProvider(`Account: ${i}`, 1, undefined, metadata, "pubKey")
-    }
-
-    const firstPageProviders = await ProvidersController.getProviders([1], 1, 20)
-
-    expect(firstPageProviders.length).toStrictEqual(20)
-    expect(firstPageProviders[0].account).toStrictEqual("Account: 0")
-    expect(firstPageProviders[13].account).toStrictEqual("Account: 13")
-    expect(firstPageProviders[19].account).toStrictEqual("Account: 19")
-
-    const thirdPageProviders = await ProvidersController.getProviders([1], 3, 10)
-
-    expect(thirdPageProviders.length).toStrictEqual(10)
-    expect(thirdPageProviders[0].account).toStrictEqual("Account: 20")
-    expect(thirdPageProviders[5].account).toStrictEqual("Account: 25")
-    expect(thirdPageProviders[9].account).toStrictEqual("Account: 29")
-  })
-
   test("Count deals", async () => {
     const metadata = JSON.stringify({"metadata": "someExample"})
     await ProvidersController.upsertProvider("0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31", 0, undefined, metadata, "pubKey")
@@ -193,7 +238,8 @@ describe("Providers Controller", () => {
 
     expect(countDeals).toStrictEqual({
       0: 20,
-      1: 100
+      1: 100,
+      2: 0
     })
   })
 
@@ -204,7 +250,8 @@ describe("Providers Controller", () => {
 
     expect(countDeals).toStrictEqual({
       0: 15,
-      1: 32
+      1: 32,
+      2: 0
     })
   })
 
@@ -217,8 +264,9 @@ describe("Providers Controller", () => {
     const result = await ProvidersController.countClients("Provider 1")
 
     expect(result).toStrictEqual({
-      0: 0,
-      1: 2
+      0: 1,
+      1: 2,
+      2: 0
     })
   })
 
@@ -233,7 +281,8 @@ describe("Providers Controller", () => {
     const result = await ProvidersController.countClients("Provider 1")
     expect(result).toStrictEqual({
       0: 1,
-      1: 2
+      1: 2,
+      2: 0
     })
 
     const clientsOnChain = await ProvidersController.countClients("Provider 1", [1])

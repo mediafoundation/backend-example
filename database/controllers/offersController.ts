@@ -7,6 +7,9 @@ import {OfferMetadata} from "../models/offers/OffersMetadata"
 import {Chain} from "../models/Chain"
 import {ProvidersController} from "./providersController"
 import {OfferNodeLocation} from "../models/manyToMany/OfferNodeLocation"
+import {Provider} from "../models/Providers/Provider"
+import {Rating} from "../models/Rating"
+import {sequelize} from "../database"
 
 /**
  * OffersController class
@@ -85,6 +88,7 @@ export class OffersController{
    * @param metadataFilter - Filter for the metadata
    * @param bandwidthLimitFilter - Filter for the bandwidth limit
    * @param nodeLocationFilter - Filter for the node locations
+   * @param minProviderRating
    * @param page - Page number
    * @param pageSize - Page size
    * @returns Promise<Array<any>>
@@ -95,68 +99,74 @@ export class OffersController{
     metadataFilter: WhereOptions<any> = {},
     bandwidthLimitFilter: WhereOptions<any> = {},
     nodeLocationFilter: WhereOptions<any> = {},
+    minProviderRating?: number,
     page: number | undefined = undefined,
-    pageSize: number | undefined= undefined): Promise<Array<any>> {
-    
-    // Calculate the offset
+    pageSize: number | undefined = undefined
+  ): Promise<Array<any>> {
     const offset = page && pageSize ? (page - 1) * pageSize : undefined
-    
-    // Find all offers with the given filters
-    const offers = await Offer.findAll({
-      include: [
-        {
-          model: Chain,
-          required: !!chainId,
-          as: "Chain",
-          attributes: [],
-          where: {
-            chainId: chainId ? chainId : null
+
+    const includeOptions: any[] = [
+      {
+        model: Chain,
+        required: !!chainId,
+        as: "Chain",
+        attributes: [],
+        where: chainId ? { chainId } : undefined
+      },
+      {
+        model: NodeLocation,
+        attributes: ["location"],
+        through: { attributes: [] },
+        where: nodeLocationFilter
+      },
+      {
+        model: OfferMetadata,
+        as: "Metadata",
+        where: metadataFilter,
+        attributes: { exclude: ["id", "offerId"] },
+        include: [
+          {
+            model: BandwidthLimit,
+            as: "BandwidthLimit",
+            where: bandwidthLimitFilter,
+            attributes: { exclude: ["dealMetadataId", "offerMetadataId", "id"] }
           }
-        },
-        {
-          model: NodeLocation,
-          attributes: ["location"],
-          through: {
-            attributes: []
-          },
-          where: nodeLocationFilter
-        },
-        
-        {
-          model: OfferMetadata,
-          as: "Metadata",
-          where: metadataFilter,
-          attributes: {
-            exclude: ["id", "offerId"]
-          },
-          include: [
-            {
-              model: BandwidthLimit,
-              as: "BandwidthLimit",
-              where: bandwidthLimitFilter,
-              attributes: {
-                exclude: ["dealMetadataId", "offerMetadataId", "id"]
-              }
-            }
-          ]
-        },
-      ],
+        ]
+      },
+      {
+        model: Provider,
+        attributes: [],
+        required: !!minProviderRating,
+        include: minProviderRating ? [
+          {
+            model: Rating,
+            attributes: [],
+            where: sequelize.literal(`(
+            SELECT AVG(\`rating\`)
+            FROM \`Rating\`
+            WHERE \`Rating\`.\`provider\` = \`Provider\`.\`account\`
+          ) >= ${minProviderRating}`)
+          }
+        ] : []
+      }
+    ]
+
+    console.log("offerFilter", offerFilter, includeOptions)
+
+    const offers = await Offer.findAll({
+      include: includeOptions,
       where: offerFilter,
-      offset: offset,
+      offset,
       limit: pageSize
     })
-    
-    // Map the offers to JSON
-    const mappedOffers = offers.map((offer: any) => {
-      return offer.toJSON()
-    })
-    
-    // Get the node locations for each offer
+
+    const mappedOffers = offers.map((offer: any) => offer.toJSON())
+
     for (let i = 0; i < offers.length; i++) {
-      mappedOffers[i].NodeLocations = await offers[i].getNodeLocations({attributes: ["location"]})
+      mappedOffers[i].NodeLocations = await offers[i].getNodeLocations({ attributes: ["location"] })
       mappedOffers[i].NodeLocations = mappedOffers[i].NodeLocations.map((location: any) => location.location)
     }
-    
+
     return mappedOffers
   }
   
