@@ -136,6 +136,7 @@ export class OffersController{
       {
         model: Provider,
         attributes: [],
+        required: !!minProviderRating,
         include: minProviderRating ? [
           {
             model: Rating,
@@ -149,6 +150,8 @@ export class OffersController{
         ] : []
       }
     ]
+
+    console.log("offerFilter", offerFilter, includeOptions)
 
     const offers = await Offer.findAll({
       include: includeOptions,
