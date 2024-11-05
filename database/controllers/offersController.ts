@@ -1,5 +1,5 @@
 import {Offer} from "../models/offers/Offer"
-import {Op, WhereOptions} from "sequelize"
+import {WhereOptions} from "sequelize"
 import {OfferFormatted, OfferMetadataSchema, OfferRawSchema, OfferTransformed} from "../models/types/offer"
 import {NodeLocation} from "../models/NodeLocation"
 import {BandwidthLimit} from "../models/BandwidthLimit"
@@ -101,111 +101,69 @@ export class OffersController{
     nodeLocationFilter: WhereOptions<any> = {},
     minProviderRating?: number,
     page: number | undefined = undefined,
-    pageSize: number | undefined= undefined): Promise<Array<any>> {
-
-    const ratingFilter: {
-      chainId?: {
-        [Op.in]: number[] | number
-      },
-      [Op.and]?: any[]
-    } = {
-      [Op.and]: []
-    }
-
-    if (minProviderRating) {
-      if (chainId) {
-        ratingFilter[Op.and]!.push(
-          sequelize.literal(`(
-        SELECT AVG(\`rating\`)
-        FROM \`Rating\`
-        WHERE \`Rating\`.\`provider\` = \`Provider\`.\`account\`
-        AND \`Rating\`.\`chainId\` = \`ChainProvider\`.\`chainId\`
-      ) >= ${minProviderRating}`)
-        )
-      } else {
-        ratingFilter[Op.and]!.push(
-          sequelize.literal(`(
-        SELECT AVG(\`rating\`)
-        FROM \`Rating\`
-        WHERE \`Rating\`.\`provider\` = \`Provider\`.\`account\`
-      ) >= ${minProviderRating}`)
-        )
-      }
-    }
-    
-    // Calculate the offset
+    pageSize: number | undefined = undefined
+  ): Promise<Array<any>> {
     const offset = page && pageSize ? (page - 1) * pageSize : undefined
-    
-    // Find all offers with the given filters
-    const offers = await Offer.findAll({
-      include: [
-        {
-          model: Chain,
-          required: !!chainId,
-          as: "Chain",
-          attributes: [],
-          where: {
-            chainId: chainId ? chainId : null
+
+    const includeOptions: any[] = [
+      {
+        model: Chain,
+        required: !!chainId,
+        as: "Chain",
+        attributes: [],
+        where: chainId ? { chainId } : undefined
+      },
+      {
+        model: NodeLocation,
+        attributes: ["location"],
+        through: { attributes: [] },
+        where: nodeLocationFilter
+      },
+      {
+        model: OfferMetadata,
+        as: "Metadata",
+        where: metadataFilter,
+        attributes: { exclude: ["id", "offerId"] },
+        include: [
+          {
+            model: BandwidthLimit,
+            as: "BandwidthLimit",
+            where: bandwidthLimitFilter,
+            attributes: { exclude: ["dealMetadataId", "offerMetadataId", "id"] }
           }
-        },
-        {
-          model: NodeLocation,
-          attributes: ["location"],
-          through: {
-            attributes: []
-          },
-          where: nodeLocationFilter
-        },
-        
-        {
-          model: OfferMetadata,
-          as: "Metadata",
-          where: metadataFilter,
-          attributes: {
-            exclude: ["id", "offerId"]
-          },
-          include: [
-            {
-              model: BandwidthLimit,
-              as: "BandwidthLimit",
-              where: bandwidthLimitFilter,
-              attributes: {
-                exclude: ["dealMetadataId", "offerMetadataId", "id"]
-              }
-            }
-          ]
-        },
-        {
-          model: Provider,
-          attributes: [],
-          include: [
-            {
-              model: Rating,
-              attributes: [],
-              where: {
-                rating: ratingFilter
-              },
-              required: !!minProviderRating
-            }
-          ]
-        }
-      ],
+        ]
+      },
+      {
+        model: Provider,
+        attributes: [],
+        include: minProviderRating ? [
+          {
+            model: Rating,
+            attributes: [],
+            where: sequelize.literal(`(
+            SELECT AVG(\`rating\`)
+            FROM \`Rating\`
+            WHERE \`Rating\`.\`provider\` = \`Provider\`.\`account\`
+          ) >= ${minProviderRating}`)
+          }
+        ] : []
+      }
+    ]
+
+    const offers = await Offer.findAll({
+      include: includeOptions,
       where: offerFilter,
-      offset: offset,
+      offset,
       limit: pageSize
     })
-    
-    // Map the offers to JSON
-    const mappedOffers = offers.map((offer: any) => {
-      return offer.toJSON()
-    })
-    
-    // Get the node locations for each offer
+
+    const mappedOffers = offers.map((offer: any) => offer.toJSON())
+
     for (let i = 0; i < offers.length; i++) {
-      mappedOffers[i].NodeLocations = await offers[i].getNodeLocations({attributes: ["location"]})
+      mappedOffers[i].NodeLocations = await offers[i].getNodeLocations({ attributes: ["location"] })
       mappedOffers[i].NodeLocations = mappedOffers[i].NodeLocations.map((location: any) => location.location)
     }
-    
+
     return mappedOffers
   }
   
