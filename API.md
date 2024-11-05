@@ -38,12 +38,13 @@
 
 #### Request Parameters
 
-| Name       | Type     | Description                                                                                                                                                            |
-|------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `chainId`  | `int`    | (Optional) The chain ID from where offers must be fetched. If not provided, it will bring from all networks.                                                           |
-| `filters`  | `object` | (Optional) The filter object containing all filters that must be applied to the query. For more information, see the [API filters documentation](./README.md#filters). |
-| `page`     | `int`    | (Optional) The page number used in pagination. If not provided, it will bring all elements that matches the filters.                                                   |
-| `pageSize` | `int`    | (Optional) The number of elements contained in each page. If not provided, it will bring all elements that matches the filters.                                        |
+| Name        | Type     | Description                                                                                                                                                            |
+|-------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `chainId`   | `int`    | (Optional) The chain ID from where offers must be fetched. If not provided, it will bring from all networks.                                                           |
+| `filters`   | `object` | (Optional) The filter object containing all filters that must be applied to the query. For more information, see the [API filters documentation](./README.md#filters). |
+| `minRating` | `number` | (Optional) The average min rating that the offer's provider must have. It can be used along side with every other filter                                               |
+| `page`      | `int`    | (Optional) The page number used in pagination. If not provided, it will bring all elements that matches the filters.                                                   |
+| `pageSize`  | `int`    | (Optional) The number of elements contained in each page. If not provided, it will bring all elements that matches the filters.                                        |
 
 ### 3. Retrieves providers based on provided filters, page number and page size.
 

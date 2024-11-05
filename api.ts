@@ -132,10 +132,10 @@ app.get("/deals/:id/chainId/:chainId", async (req, res) => {
  */
 app.get("/offers", async (req, res) => {
   const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
-
+  const minRating = req.query.minRating ? Number(req.query.minRating) : undefined
   const managedFilters = manageIncomingFilterRequest(req)
   try {
-    const offers = await OffersController.getOffers(chainId, managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
+    const offers = await OffersController.getOffers(chainId, managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, minRating, managedFilters.page, managedFilters.pageSize)
     res.json(offers)
   } catch (e) {
     console.log(e)
