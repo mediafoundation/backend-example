@@ -8,7 +8,20 @@ createRelationsBetweenTables()
     console.log("Db Connected")
     const chains: any[] = Object.values(validChains)
     for (const chain of chains) {
-      const sdk = new Sdk({chain: chain, transport: [webSocket(wssNetworks[chain.name][0])]})
+      const sdk = new Sdk({
+        chain: chain, transport: [webSocket(wssNetworks[chain.name][0], {
+          reconnect: {
+            delay: 1000,
+            attempts: 10
+          },
+          keepAlive: {
+            interval: 10000
+          },
+          timeout: 10000,
+          retryCount: 5,
+          retryDelay: 10000
+        })]
+      })
       const blockchain = new Blockchain(sdk)
       const marketplace = new Marketplace(sdk)
       const eventsListener = new EventsHandler(sdk)
@@ -67,7 +80,8 @@ createRelationsBetweenTables()
           }
         }
       })
-        .then(() => {})
+        .then(() => {
+        })
 
       eventsListener.listenForMarketplaceEvent({
         eventName: "OfferCreated",
@@ -81,35 +95,38 @@ createRelationsBetweenTables()
           }
         }
       })
-        .then(() => {})
+        .then(() => {
+        })
 
       eventsListener.listenForMarketplaceEvent({
         eventName: "OfferUpdated",
         onError: (error: any) => {
           console.log(error)
         },
-        callback: async(event: any) => {
+        callback: async (event: any) => {
           console.log(event)
           for (const eventElement of event) {
             await EventsUtils.manageOfferUpdated(eventElement, marketplace, blockchain, chain.id)
           }
         }
       })
-        .then(() => {})
+        .then(() => {
+        })
 
       eventsListener.listenForMarketplaceEvent({
         eventName: "OfferDeleted",
         onError: (error: any) => {
           console.log(error)
         },
-        callback: async(event: any) => {
+        callback: async (event: any) => {
           console.log(event)
           for (const eventElement of event) {
             await EventsUtils.manageOfferUpdated(eventElement, marketplace, blockchain, chain.id)
           }
         }
       })
-        .then(() => {})
+        .then(() => {
+        })
 
 
     }
