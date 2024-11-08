@@ -77,7 +77,7 @@ async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, m
   const lastReadBlock = await lastReadBlockCollection.findOne({chainId: chainId})
   const blockToRead = await blockChain.getBlockNumber()
   console.log(`Getting events on blocks: ${lastReadBlock!.block + 1} - ${blockToRead}`)
-  if(blockToRead >= lastReadBlock!.block) {
+  if(blockToRead >= BigInt(lastReadBlock!.block) + 1n) {
     const dealCreated = await eventsHandler.getMarketplacePastEvents({
       eventName: "DealCreated",
       fromBlock: BigInt(lastReadBlock!.block) + 1n,
