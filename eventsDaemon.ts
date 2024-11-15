@@ -156,7 +156,7 @@ async function start() {
   try {
     const chains: any[] = Object.values(validChains)
     for (const chain of chains) {
-      const sdk = new Sdk({chain: chain, transport: [http(httpNetworks![chain.id][0])]})
+      const sdk = new Sdk({chain: chain, transport: [http(httpNetworks![chain.name][0])]})
       await getPastEvents(new EventsHandler(sdk), new Blockchain(sdk), chain.id)
     }
   } catch (e) {
@@ -172,7 +172,7 @@ start()
       try {
         const chains: any[] = Object.values(validChains)
         for (const chain of chains) {
-          const sdk = new Sdk({chain: chain, transport: [http(httpNetworks![chain.id][0])]})
+          const sdk = new Sdk({chain: chain, transport: [http(httpNetworks![chain.name][0])]})
           await getEvents(new EventsHandler(sdk), new Blockchain(sdk), new Marketplace(sdk), chain.id)
         }
       } catch (e) {
