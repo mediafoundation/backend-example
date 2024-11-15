@@ -22,6 +22,8 @@ async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchai
 
   const currentBlock = await blockChain.getBlockNumber()
 
+  console.log("Current block", currentBlock, "on chain", chainId)
+
   while (blockToRead + BATCH_SIZE < currentBlock) {
     try {
       const events = []
@@ -76,6 +78,8 @@ async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchai
 async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, marketplace: Marketplace, chainId: number) {
   const lastReadBlock = await lastReadBlockCollection.findOne({chainId: chainId})
   const blockToRead = await blockChain.getBlockNumber()
+
+  console.log("Current block", blockToRead, "on chain", chainId)
   console.log(`Getting events on blocks: ${lastReadBlock!.block + 1} - ${blockToRead}`)
   if(blockToRead >= BigInt(lastReadBlock!.block) + 1n) {
     const dealCreated = await eventsHandler.getMarketplacePastEvents({
