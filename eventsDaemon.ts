@@ -1,8 +1,9 @@
-import {Blockchain, EventsHandler, Marketplace, Sdk, validChains} from "media-sdk"
+import {Blockchain, EventsHandler, http, Marketplace, Sdk, validChains} from "media-sdk"
 import {lastReadBlockCollection} from "./database/database"
 import {EventsController} from "./database/controllers/eventsController"
 import {createRelationsBetweenTables, resetMongoDB} from "./database/utils"
 import EventsUtils from "./utils/events"
+import {httpNetworks} from "./networks"
 
 const BATCH_SIZE = 1000n
 
@@ -21,6 +22,8 @@ async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchai
   let blockToRead = lastBlockOnDb ? BigInt(lastBlockOnDb.block) : marketplaceGenesisBlock[chainId]
 
   const currentBlock = await blockChain.getBlockNumber()
+
+  console.log("Current block", currentBlock, "on chain", chainId)
 
   while (blockToRead + BATCH_SIZE < currentBlock) {
     try {
@@ -76,8 +79,10 @@ async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchai
 async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, marketplace: Marketplace, chainId: number) {
   const lastReadBlock = await lastReadBlockCollection.findOne({chainId: chainId})
   const blockToRead = await blockChain.getBlockNumber()
+
+  console.log("Current block", blockToRead, "on chain", chainId)
   console.log(`Getting events on blocks: ${lastReadBlock!.block + 1} - ${blockToRead}`)
-  if(blockToRead >= lastReadBlock!.block) {
+  if(blockToRead >= BigInt(lastReadBlock!.block) + 1n) {
     const dealCreated = await eventsHandler.getMarketplacePastEvents({
       eventName: "DealCreated",
       fromBlock: BigInt(lastReadBlock!.block) + 1n,
@@ -151,7 +156,7 @@ async function start() {
   try {
     const chains: any[] = Object.values(validChains)
     for (const chain of chains) {
-      const sdk = new Sdk({chain: chain})
+      const sdk = new Sdk({chain: chain, transport: [http(httpNetworks![chain.name][0])]})
       await getPastEvents(new EventsHandler(sdk), new Blockchain(sdk), chain.id)
     }
   } catch (e) {
@@ -167,7 +172,7 @@ start()
       try {
         const chains: any[] = Object.values(validChains)
         for (const chain of chains) {
-          const sdk = new Sdk({chain: chain})
+          const sdk = new Sdk({chain: chain, transport: [http(httpNetworks![chain.name][0])]})
           await getEvents(new EventsHandler(sdk), new Blockchain(sdk), new Marketplace(sdk), chain.id)
         }
       } catch (e) {

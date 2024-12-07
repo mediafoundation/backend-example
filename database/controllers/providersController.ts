@@ -38,19 +38,19 @@ export class ProvidersController {
       if (chainId) {
         ratingFilter[Op.and]!.push(
           sequelize.literal(`(
-        SELECT AVG(\`rating\`)
-        FROM \`Rating\`
-        WHERE \`Rating\`.\`provider\` = \`Provider\`.\`account\`
-        AND \`Rating\`.\`chainId\` = \`ChainProvider\`.\`chainId\`
-      ) >= ${minRating}`)
+            SELECT AVG("rating")
+            FROM "Rating"
+            WHERE "Rating"."provider" = "Provider"."account"
+            AND "Rating"."chainId" = "ChainProvider"."chainId"
+          ) >= ${minRating}`)
         )
       } else {
         ratingFilter[Op.and]!.push(
           sequelize.literal(`(
-        SELECT AVG(\`rating\`)
-        FROM \`Rating\`
-        WHERE \`Rating\`.\`provider\` = \`Provider\`.\`account\`
-      ) >= ${minRating}`)
+            SELECT AVG("rating")
+            FROM "Rating"
+            WHERE "Rating"."provider" = "Provider"."account"
+          ) >= ${minRating}`)
         )
       }
     }

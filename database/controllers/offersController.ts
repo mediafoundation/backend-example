@@ -142,10 +142,10 @@ export class OffersController{
             model: Rating,
             attributes: [],
             where: sequelize.literal(`(
-            SELECT AVG(\`rating\`)
-            FROM \`Rating\`
-            WHERE \`Rating\`.\`provider\` = \`Provider\`.\`account\`
-          ) >= ${minProviderRating}`)
+              SELECT AVG("rating")
+              FROM "Rating"
+              WHERE "Rating"."provider" = "Provider"."account"
+            ) >= ${minProviderRating}`)
           }
         ] : []
       }
