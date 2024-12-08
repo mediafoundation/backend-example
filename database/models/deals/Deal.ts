@@ -14,10 +14,12 @@ import {Resource} from "../Resource"
 import {Client} from "../Clients/Client"
 import {Provider} from "../Providers/Provider"
 import {Chain} from "../Chain"
+import {Offer} from "../offers/Offer"
 
 export type DealAttributes = {
   id: number
   dealId: number
+  offerId: ForeignKey<Offer["id"]>
   resourceId: ForeignKey<Resource["id"]> | null
   chainId: ForeignKey<Chain["chainId"]>
   client: ForeignKey<Client["account"]>
@@ -43,6 +45,7 @@ export type DealAttributes = {
 export class Deal extends Model<DealAttributes, InferCreationAttributes<Deal>> {
   declare id: CreationOptional<number>
   declare dealId: number
+  declare offerId: ForeignKey<Offer["id"]>
   declare resourceId: ForeignKey<Resource["id"]> | null
   declare chainId: ForeignKey<Chain["chainId"]>
   declare client: ForeignKey<Client["account"]>
