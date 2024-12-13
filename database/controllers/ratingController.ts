@@ -1,18 +1,12 @@
-import {DealsController} from "./dealsController"
 import {Rating} from "../models/Rating"
 
 export class RatingController {
   static async rateProvider(provider: string, dealId: number, chainId: number, rating: number) {
-    const client = await DealsController.getDealClient(dealId, chainId)
-
-    if(client) {
-      await Rating.upsert({
-        provider: provider,
-        client: client,
-        chainId: chainId,
-        rating: rating
-      })
-    }
+    await Rating.upsert({
+      provider: provider,
+      chainId: chainId,
+      rating: rating
+    })
   }
   
   /**

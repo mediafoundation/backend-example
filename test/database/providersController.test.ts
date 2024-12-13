@@ -126,14 +126,12 @@ describe("Providers Controller", () => {
         await Rating.create({
           provider: `Account ${i}`,
           rating: i + 1,
-          client: `Account ${i}`,
           chainId: 0
         })
         if(i < 4) {
           await Rating.create({
             provider: `Account ${i}`,
             rating: i + 2,
-            client: `Account ${i}`,
             chainId: 1
           })
         }
@@ -160,7 +158,6 @@ describe("Providers Controller", () => {
       await Rating.create({
         provider: "Account 6",
         rating: 2,
-        client: "Account 3",
         chainId: 2
       })
       await ChainProvider.create({

@@ -38,7 +38,7 @@ export class ProvidersController {
       if (chainId) {
         ratingFilter[Op.and]!.push(
           sequelize.literal(`(
-            SELECT AVG("rating")
+            SELECT "rating"
             FROM "Rating"
             WHERE "Rating"."provider" = "Provider"."account"
             AND "Rating"."chainId" = "ChainProvider"."chainId"
@@ -47,7 +47,7 @@ export class ProvidersController {
       } else {
         ratingFilter[Op.and]!.push(
           sequelize.literal(`(
-            SELECT AVG("rating")
+            SELECT "rating"
             FROM "Rating"
             WHERE "Rating"."provider" = "Provider"."account"
           ) >= ${minRating}`)

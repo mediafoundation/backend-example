@@ -1,7 +1,6 @@
 import {resetSequelizeDB} from "../../database/utils"
 import {Chain} from "../../database/models/Chain"
 import {ProvidersController} from "../../database/controllers/providersController"
-import {DealsController} from "../../database/controllers/dealsController"
 import {RatingController} from "../../database/controllers/ratingController"
 import {Rating} from "../../database/models/Rating"
 import {closeMongoDB, sequelize} from "../../database/database"
@@ -40,7 +39,6 @@ beforeAll(async () => {
       name: `Chain name for ${i}`
     })
     await ProvidersController.upsertProvider(mockDeal.provider, i, undefined, JSON.stringify({metadata: "Some metadata"}), "Pub Key")
-    await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), i)
   }
 })
 
