@@ -22,6 +22,7 @@ import {Deal} from "./database/models/deals/Deal"
 import {ChainProvider} from "./database/models/manyToMany/ChainProvider"
 import {Op} from "sequelize"
 import {RatingController} from "./database/controllers/ratingController"
+import {Offer} from "./database/models/offers/Offer"
 
 // Initialize express app
 export const app = express()
@@ -427,8 +428,21 @@ app.get("/allProvidersClients", async (req, res) => {
           chainId: chain.chainId,
           client: {
             [Op.in]: clients
-          }
+          },
+          provider: formattedProvider
         },
+
+        attributes: {
+          exclude: ["offerId"]
+        },
+        include: [
+          {
+            model: Offer,
+            as: "Offer",
+            attributes: ["offerId"],
+          }
+        ],
+        nest: true,
         raw: true
       })
 
