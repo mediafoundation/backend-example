@@ -54,7 +54,7 @@ const mockOffer = {
 }
 
 async function populateDeals(amount: number, provider: string, client: string, chainId: number) {
-  const offer = await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), chainId, "metadata", "pubKey")
+  await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), chainId, "metadata", "pubKey")
   for (let i = 0; i < amount; i++) {
     const copyDeal = structuredClone(mockDeal)
 
