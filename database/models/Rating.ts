@@ -14,16 +14,16 @@ import {Chain} from "./Chain"
 export class Rating extends Model<InferAttributes<Rating>, InferCreationAttributes<Rating>> {
   declare provider: ForeignKey<Provider["account"]>
   declare chainId: ForeignKey<Chain["chainId"]>
-  declare rating: number
+  declare sum: number
+  declare count: number
 }
 
 Rating.init({
-  rating: {
-    type: DataTypes.BIGINT,
-    validate: {
-      max: 5,
-      min: 1
-    }
+  sum: {
+    type: DataTypes.BIGINT
+  },
+  count: {
+    type: DataTypes.BIGINT
   }
 }, {
   sequelize,

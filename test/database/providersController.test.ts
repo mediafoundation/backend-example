@@ -39,7 +39,7 @@ const mockDeal = {
 }
 
 const mockOffer = {
-  id: 7n,
+  id: 1n,
   provider: "0x2C0BE604Bd7969162aA72f23dA18634a77aFBB31",
   publicKey: "ZQkZyAgdXpLKus918lXHTP9y9q3m8ddcUkYGSImiXxQ=",
   maximumDeals: 2000n,
@@ -54,6 +54,7 @@ const mockOffer = {
 }
 
 async function populateDeals(amount: number, provider: string, client: string, chainId: number) {
+  const offer = await OffersController.upsertOffer(OffersController.formatOffer(mockOffer), chainId, "metadata", "pubKey")
   for (let i = 0; i < amount; i++) {
     const copyDeal = structuredClone(mockDeal)
 
@@ -125,13 +126,15 @@ describe("Providers Controller", () => {
       for (let i = 0; i < 5; i++) {
         await Rating.create({
           provider: `Account ${i}`,
-          rating: i + 1,
+          sum: i + 1,
+          count: 1,
           chainId: 0
         })
         if(i < 4) {
           await Rating.create({
             provider: `Account ${i}`,
-            rating: i + 2,
+            sum: i + 2,
+            count: 1,
             chainId: 1
           })
         }
@@ -157,7 +160,8 @@ describe("Providers Controller", () => {
       await Chain.create({chainId: 2, name: "Chain name for 2"})
       await Rating.create({
         provider: "Account 6",
-        rating: 2,
+        sum: 2,
+        count: 1,
         chainId: 2
       })
       await ChainProvider.create({
@@ -177,13 +181,9 @@ describe("Providers Controller", () => {
 
     test("should filter providers by minRating", async () => {
       const result = await ProvidersController.getProviders({minRating: 3})
-      console.log(result.map(r => r.Ratings))
-      console.log((await ProvidersController.getProviders({})).map(r => r.Ratings))
-      console.log((await ProvidersController.getProviders({})).map(r => r.account))
       expect(result.length).toBe(3)
-      //expect().toBeGreaterThanOrEqual(3)
       result[0].Ratings!.map(rating => {
-        expect(rating.rating).toBeGreaterThanOrEqual(3)
+        expect(rating.sum / rating.count).toBeGreaterThanOrEqual(3)
       })
     })
 
@@ -198,7 +198,7 @@ describe("Providers Controller", () => {
       const result = await ProvidersController.getProviders({minRating: 2, page: 1, pageSize: 2})
       expect(result.length).toBe(2)
       result[0].Ratings!.map(rating => {
-        expect(rating.rating).toBeGreaterThanOrEqual(2)
+        expect(rating.sum / rating.count).toBeGreaterThanOrEqual(2)
       })
     })
   })
