@@ -5,21 +5,43 @@ import { createRelationsBetweenTables, resetMongoDB } from "./database/utils"
 import EventsUtils from "./utils/events"
 import { httpNetworks } from "./networks"
 
+/**
+ * Batch size for processing events.
+ */
 const BATCH_SIZE = 1000n
 
+/**
+ * Genesis block numbers for different marketplaces.
+ */
 const marketplaceGenesisBlock: { [index: number]: bigint } = {
   11155111: 6817833n,
   84532: 16170075n
 }
 
+/**
+ * Delays execution for a specified number of milliseconds.
+ * @param ms - The number of milliseconds to delay.
+ * @returns A promise that resolves after the specified delay.
+ */
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+/**
+ * Creates an SDK instance for a given blockchain.
+ * @param chain - The blockchain configuration.
+ * @returns An SDK instance.
+ */
 function createSdk(chain: any) {
   return new Sdk({ chain: chain, transport: [http(httpNetworks![chain.name][0])] })
 }
 
+/**
+ * Updates events in the database.
+ * @param events - The events to update.
+ * @param blockChain - The blockchain instance.
+ * @param chainId - The ID of the blockchain.
+ */
 async function updateEvents(events: any[], blockChain: Blockchain, chainId: number) {
   for (const event of events) {
     const blockTimestamp = await blockChain.getBlockTimestamp(event.blockNumber)
@@ -27,11 +49,25 @@ async function updateEvents(events: any[], blockChain: Blockchain, chainId: numb
   }
 }
 
+/**
+ * Retrieves events in a specified block range and updates the database.
+ * @param eventsHandler - The events handler instance.
+ * @param blockChain - The blockchain instance.
+ * @param chainId - The ID of the blockchain.
+ * @param fromBlock - The starting block number.
+ * @param toBlock - The ending block number.
+ */
 async function getEventsInRange(eventsHandler: EventsHandler, blockChain: Blockchain, chainId: number, fromBlock: bigint, toBlock: bigint) {
   const events = await eventsHandler.getMarketplacePastEvents({ eventName: undefined, fromBlock, toBlock })
   await updateEvents(events, blockChain, chainId)
 }
 
+/**
+ * Retrieves past events from the blockchain and updates the database.
+ * @param eventsHandler - The events handler instance.
+ * @param blockChain - The blockchain instance.
+ * @param chainId - The ID of the blockchain.
+ */
 async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchain, chainId: number) {
   console.log("Getting past events on chain:", chainId)
   const lastBlockOnDb = await lastReadBlockCollection.findOne({ chainId: chainId })
@@ -61,6 +97,13 @@ async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchai
   console.log("Finish getting past events on chain:", chainId)
 }
 
+/**
+ * Retrieves new events from the blockchain and updates the database.
+ * @param eventsHandler - The events handler instance.
+ * @param blockChain - The blockchain instance.
+ * @param marketplace - The marketplace instance.
+ * @param chainId - The ID of the blockchain.
+ */
 async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, marketplace: Marketplace, chainId: number) {
   const lastReadBlock = await lastReadBlockCollection.findOne({ chainId: chainId })
   const blockToRead = await blockChain.getBlockNumber()
@@ -83,6 +126,9 @@ async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, m
   }
 }
 
+/**
+ * Starts the event processing daemon.
+ */
 async function start() {
   await createRelationsBetweenTables()
   await resetMongoDB()
