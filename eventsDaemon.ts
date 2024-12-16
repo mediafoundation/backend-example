@@ -58,7 +58,21 @@ async function updateEvents(events: any[], blockChain: Blockchain, chainId: numb
  * @param toBlock - The ending block number.
  */
 async function getEventsInRange(eventsHandler: EventsHandler, blockChain: Blockchain, chainId: number, fromBlock: bigint, toBlock: bigint) {
-  const events = await eventsHandler.getMarketplacePastEvents({ eventName: undefined, fromBlock, toBlock })
+  //todo: Change any type
+  const events: any[] = []
+  const results = await Promise.allSettled([
+    eventsHandler.getMarketplacePastEvents({ eventName: undefined, fromBlock, toBlock }),
+    eventsHandler.getMarketplacePastEvents({ eventName: undefined, fromBlock, toBlock }),
+  ])
+
+  results.forEach(result => {
+    if(result.status == "fulfilled") {
+      events.push(...result.value)
+    }
+    else {
+      console.error("Error fetching events:", result.reason)
+    }
+  })
   await updateEvents(events, blockChain, chainId)
 }
 
