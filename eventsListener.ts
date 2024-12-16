@@ -1,5 +1,5 @@
 import { wssNetworks } from "./networks"
-import { Blockchain, EventsHandler, Marketplace, Sdk, validChains, webSocket } from "media-sdk"
+import {Blockchain, EventsHandler, Marketplace, RatingSystem, Sdk, validChains, webSocket} from "media-sdk"
 import EventsUtils from "./utils/events"
 import { createRelationsBetweenTables } from "./database/utils"
 
@@ -7,7 +7,7 @@ const RECONNECT_INTERVAL = 3600000 // 1 hour in milliseconds
 
 async function initializeListeners() {
   await createRelationsBetweenTables()
-  console.log("Db Connected")
+  console.log("Db relations created")
 
   const chains: any[] = Object.values(validChains)
   for (const chain of chains) {
@@ -15,8 +15,9 @@ async function initializeListeners() {
     let blockchain = new Blockchain(sdk)
     let marketplace = new Marketplace(sdk)
     let eventsListener = new EventsHandler(sdk)
+    let ratingService = new RatingSystem(sdk) // Assuming you have a RatingService
 
-    setupEventListeners(eventsListener, marketplace, blockchain, chain.id)
+    setupEventListeners(eventsListener, marketplace, blockchain, ratingService, chain.id)
 
     setInterval(() => {
       console.log(`Reconnecting to ${chain.name}...`)
@@ -24,7 +25,8 @@ async function initializeListeners() {
       blockchain = new Blockchain(sdk)
       marketplace = new Marketplace(sdk)
       eventsListener = new EventsHandler(sdk)
-      setupEventListeners(eventsListener, marketplace, blockchain, chain.id)
+      ratingService = new RatingSystem(sdk)
+      setupEventListeners(eventsListener, marketplace, blockchain, ratingService, chain.id)
     }, RECONNECT_INTERVAL)
   }
 }
@@ -47,14 +49,15 @@ function createSdk(chain: any) {
   })
 }
 
-function setupEventListeners(eventsListener: EventsHandler, marketplace: Marketplace, blockchain: Blockchain, chainId: string) {
+function setupEventListeners(eventsListener: EventsHandler, marketplace: Marketplace, blockchain: Blockchain, ratingService: any, chainId: string) {
   const events = [
     { name: "DealCreated", handler: EventsUtils.manageDealUpdated },
     { name: "DealAccepted", handler: EventsUtils.manageDealUpdated },
     { name: "DealCancelled", handler: EventsUtils.manageDealUpdated },
     { name: "OfferCreated", handler: EventsUtils.manageOfferUpdated },
     { name: "OfferUpdated", handler: EventsUtils.manageOfferUpdated },
-    { name: "OfferDeleted", handler: EventsUtils.manageOfferUpdated }
+    { name: "OfferDeleted", handler: EventsUtils.manageOfferUpdated },
+    { name: "RatingUpdated", handler: EventsUtils.manageRatingUpdated }
   ]
 
   for (const event of events) {
@@ -66,7 +69,11 @@ function setupEventListeners(eventsListener: EventsHandler, marketplace: Marketp
       callback: async (event: any) => {
         console.log(event)
         for (const eventElement of event) {
-          await event.handler(eventElement, marketplace, blockchain, chainId)
+          if (event.name === "RatingUpdated") {
+            await event.handler(eventElement, ratingService, chainId)
+          } else {
+            await event.handler(eventElement, marketplace, blockchain, chainId)
+          }
         }
       }
     }).then(() => {})
