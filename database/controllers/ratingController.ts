@@ -1,18 +1,13 @@
-import {DealsController} from "./dealsController"
 import {Rating} from "../models/Rating"
 
 export class RatingController {
-  static async rateProvider(provider: string, dealId: number, chainId: number, rating: number) {
-    const client = await DealsController.getDealClient(dealId, chainId)
-
-    if(client) {
-      await Rating.upsert({
-        provider: provider,
-        client: client,
-        chainId: chainId,
-        rating: rating
-      })
-    }
+  static async rateProvider(provider: string, chainId: number, sum: number, count: number) {
+    await Rating.upsert({
+      provider: provider,
+      chainId: chainId,
+      sum: sum,
+      count: count
+    })
   }
   
   /**
@@ -22,35 +17,28 @@ export class RatingController {
  * @param {number[]} chainIds - An array of chain IDs to consider for the average rating.
  * @returns {Promise<{ [chainId: number]: number | null }>} - A promise that resolves to an object mapping each chain ID to its average rating or null if no ratings are found.
  */
-  static async getAverageRating(provider: string, chainIds: number[]): Promise<{ [chainId: number]: number | null }> {
+  static async getAverageRating(provider: string, chainIds: number[]): Promise</*{ [chainId: number]: number | null }*/any> {
     const ratings = await Rating.findAll({
       where: {
         provider: provider,
         chainId: chainIds
-      }
+      },
+      raw: true
     })
 
     if (ratings.length === 0) {
       return Object.fromEntries(chainIds.map(chainId => [chainId, null]))
     }
 
-    const ratingMap = ratings.reduce((acc, rating) => {
-      if (!acc[rating.chainId]) {
-        acc[rating.chainId] = []
-      }
-      acc[rating.chainId].push(rating.rating)
-      return acc
-    }, {} as { [chainId: number]: number[] })
+    const averageRatings: {[k: string] : number | null} = {}
 
-    const averageRatings: {[k: string] : number | null} = Object.fromEntries(
-      Object.entries(ratingMap).map(([chainId, chainRatings]) => {
-        const totalRating = chainRatings.reduce((sum, rating) => sum + rating, 0)
-        return [Number(chainId), totalRating / chainRatings.length]
-      })
-    )
+    ratings.filter(ratings => ratings.chainId).forEach(rating => {
+      averageRatings[rating.chainId] = rating.sum / rating.count
+    })
 
-    const chainIdSet = new Set(chainIds)
-    chainIdSet.forEach(chainId => {
+    const chainIdsSet = new Set(chainIds.map(String))
+
+    chainIdsSet.forEach(chainId => {
       if (!averageRatings[chainId]) {
         averageRatings[chainId] = null
       }

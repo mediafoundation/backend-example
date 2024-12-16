@@ -168,7 +168,6 @@ const createRelationsBetweenTables = async () => {
   })
 
   Rating.belongsTo(Provider, { foreignKey: "provider" })
-  Rating.belongsTo(Client, { foreignKey: "client" })
   Rating.belongsTo(Chain, { foreignKey: "chainId" })
 }
 

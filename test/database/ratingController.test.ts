@@ -1,7 +1,6 @@
 import {resetSequelizeDB} from "../../database/utils"
 import {Chain} from "../../database/models/Chain"
 import {ProvidersController} from "../../database/controllers/providersController"
-import {DealsController} from "../../database/controllers/dealsController"
 import {RatingController} from "../../database/controllers/ratingController"
 import {Rating} from "../../database/models/Rating"
 import {closeMongoDB, sequelize} from "../../database/database"
@@ -40,7 +39,6 @@ beforeAll(async () => {
       name: `Chain name for ${i}`
     })
     await ProvidersController.upsertProvider(mockDeal.provider, i, undefined, JSON.stringify({metadata: "Some metadata"}), "Pub Key")
-    await DealsController.upsertDeal(DealsController.formatDeal(mockDeal), i)
   }
 })
 
@@ -70,23 +68,18 @@ describe("Rating Controller", () => {
     const rates = await Rating.findAll()
 
     expect(rates.length).toBe(1)
-    expect(rates[0].dataValues.rating).toBe(3)
-  })
-
-  it("Gets error if rating is not between 1 and 5", async () => {
-    await expect(RatingController.rateProvider(mockDeal.provider, 1, 1, 6)).rejects.toThrow("Validation error: Validation max on rating failed")
-    await expect(RatingController.rateProvider(mockDeal.provider, 1, 1, 0)).rejects.toThrow("Validation error: Validation min on rating failed")
+    expect(rates[0].dataValues.count).toBe(3)
   })
   
-  it("Get provider rating", async () => {
+  it("Get provider average rating", async () => {
     for (let i = 0; i < 3; i++) {
-      await RatingController.rateProvider(mockDeal.provider, 1, i, 4)
+      await RatingController.rateProvider(mockDeal.provider, 1, 3, 2)
     }
 
     const rating = await RatingController.getAverageRating(mockDeal.provider, [1, 2, 3, 4])
 
-    expect(rating[1]).toBe(4)
-    expect(rating[2]).toBe(4)
+    expect(rating[1]).toBe(1.5)
+    expect(rating[2]).toBeNull()
     expect(rating[3]).toBeNull()
     expect(rating[4]).toBeNull()
   }, 10000)

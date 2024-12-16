@@ -3,7 +3,7 @@
  * @description This file contains the main API endpoints for the application.
  */
 
-import {http, Marketplace, Resources, Sdk, validChains} from "media-sdk"
+import {http, Marketplace, RatingSystem, Resources, Sdk, validChains} from "media-sdk"
 import express from "express"
 import bodyParser from "body-parser"
 import cors from "cors"
@@ -665,10 +665,30 @@ app.get("/account/events", async (req, res) => {
 })
 
 app.post("/rateProvider", async (req, res) => {
-  const {provider, chainId, dealId, rating} = req.body
+  const {provider, chainId} = req.body
+
+  const chainIdFormatted = chainId ? chainId.toString() : ""
+  const chains = Object.keys(validChains)
+  if(!chains.includes(chainIdFormatted)) {
+    res.status(401).json({error: "Invalid chain"})
+    return
+  }
 
   try {
-    await RatingController.rateProvider(provider, chainId, dealId, rating)
+    const chain = validChains[chainIdFormatted as unknown as keyof typeof validChains]
+    const transports = httpNetworks ? httpNetworks[chain.name].map(transport => http(transport)) : undefined
+    const sdk = new Sdk({chain: chain, transport: transports})
+    const rating = new RatingSystem(sdk)
+    /*const providerRating = await rating.getAverageRating({
+      marketplaceId: process.env.MARKETPLACE_ID!,
+      provider: provider
+    })*/
+
+    const providerRating = await rating.getProviderRating({
+      marketplaceId: process.env.MARKETPLACE_ID!,
+      provider: provider
+    })
+    await RatingController.rateProvider(provider, chainId, Number(providerRating.sum), Number(providerRating.count))
     res.status(200).json({message: "Rating added"})
   } catch (e) {
     console.log(e)
@@ -688,10 +708,6 @@ app.get("/provider/rating", async (req, res) => {
     res.status(500).json({error: "Something went wrong"})
   }
 })
-
-// Start the server
-const port = 5000
-export const server = app.listen(port, () => console.log(`Server is running on port ${port}`))
 
 // Create relations between tables
 createRelationsBetweenTables()
