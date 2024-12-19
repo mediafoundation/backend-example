@@ -145,7 +145,11 @@ async function getEvents(eventsHandler: EventsHandler, blockChain: Blockchain, m
  */
 async function start() {
   await createRelationsBetweenTables()
-  await resetMongoDB()
+  const args = process.argv.slice(2)
+  const shouldReset = args.includes("--reset")
+  if(shouldReset) {
+    await resetMongoDB()
+  }
   try {
     const chains: any[] = Object.values(validChains)
     for (const chain of chains) {

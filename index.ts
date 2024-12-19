@@ -94,7 +94,11 @@ const init = async (chain: any) => {
 }
   
 async function start() {
-  await resetSequelizeDB()
+  const args = process.argv.slice(2)
+  const shouldReset = args.includes("--reset")
+  if(shouldReset) {
+    await resetSequelizeDB()
+  }
   try {
     const chains: any[] = Object.values(validChains)
     for (const chain of chains) {
