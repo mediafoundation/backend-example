@@ -1,7 +1,7 @@
 import {Sdk, MarketplaceViewer, Resources, validChains, Marketplace, http} from "media-sdk"
 import {DealsController} from "./database/controllers/dealsController"
 import {ResourcesController} from "./database/controllers/resourcesController"
-import {resetSequelizeDB} from "./database/utils"
+import {createRelationsBetweenTables, resetSequelizeDB} from "./database/utils"
 import {z} from "zod"
 import {OffersController} from "./database/controllers/offersController"
 import {Chain} from "./database/models/Chain"
@@ -86,7 +86,7 @@ const init = async (chain: any) => {
           console.error(e)
         } else {
           console.log("Deal Id: ", deal.id)
-          console.error("Unknown error", e.message, "With deal", deal)
+          console.error("Unknown error", e.message)
         }
       }
     }
@@ -98,6 +98,9 @@ async function start() {
   const shouldReset = args.includes("--reset")
   if(shouldReset) {
     await resetSequelizeDB()
+  }
+  else {
+    await createRelationsBetweenTables()
   }
   try {
     const chains: any[] = Object.values(validChains)

@@ -50,30 +50,45 @@ function createSdk(chain: any) {
 }
 
 function setupEventListeners(eventsListener: EventsHandler, marketplace: Marketplace, blockchain: Blockchain, ratingService: any, chainId: string) {
-  const events = [
+  const marketplaceEvents = [
     { name: "DealCreated", handler: EventsUtils.manageDealUpdated },
     { name: "DealAccepted", handler: EventsUtils.manageDealUpdated },
     { name: "DealCancelled", handler: EventsUtils.manageDealUpdated },
     { name: "OfferCreated", handler: EventsUtils.manageOfferUpdated },
     { name: "OfferUpdated", handler: EventsUtils.manageOfferUpdated },
     { name: "OfferDeleted", handler: EventsUtils.manageOfferUpdated },
-    { name: "RatingUpdated", handler: EventsUtils.manageRatingUpdated }
   ]
 
-  for (const event of events) {
+  const ratingEvents = [
+    { name: "RatedProvider", handler: EventsUtils.manageRatingUpdated },
+    { name: "RemovedRating", handler: EventsUtils.manageRatingUpdated }
+  ]
+
+  for (const event of marketplaceEvents) {
     eventsListener.listenForMarketplaceEvent({
       eventName: event.name,
       onError: (error: any) => {
-        console.log(error)
+        console.log("Error getting marketplace event", error)
       },
       callback: async (event: any) => {
         console.log(event)
         for (const eventElement of event) {
-          if (event.name === "RatingUpdated") {
-            await event.handler(eventElement, ratingService, chainId)
-          } else {
-            await event.handler(eventElement, marketplace, blockchain, chainId)
-          }
+          await event.handler(eventElement, marketplace, blockchain, chainId)
+        }
+      }
+    }).then(() => {})
+  }
+
+  for (const event of ratingEvents) {
+    eventsListener.listenForRatingSystemEvent({
+      eventName: event.name,
+      onError: (error: any) => {
+        console.log("Error getting rating event", error)
+      },
+      callback: async (event: any) => {
+        console.log(event)
+        for (const eventElement of event) {
+          await event.handler(eventElement, ratingService, blockchain, chainId)
         }
       }
     }).then(() => {})

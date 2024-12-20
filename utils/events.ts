@@ -1,7 +1,7 @@
 import {EventsController} from "../database/controllers/eventsController"
 import {OffersController} from "../database/controllers/offersController"
 import {DealsController} from "../database/controllers/dealsController"
-import {Blockchain, Marketplace, RatingSystem} from "media-sdk"
+import {Blockchain, Marketplace, Rating, RatingSystem} from "media-sdk"
 import {RatingController} from "../database/controllers/ratingController"
 
 export default class EventsUtils {

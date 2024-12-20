@@ -62,7 +62,7 @@ async function getEventsInRange(eventsHandler: EventsHandler, blockChain: Blockc
   const events: any[] = []
   const results = await Promise.allSettled([
     eventsHandler.getMarketplacePastEvents({ eventName: undefined, fromBlock, toBlock }),
-    eventsHandler.getMarketplacePastEvents({ eventName: undefined, fromBlock, toBlock }),
+    eventsHandler.getRatingPastEvents({ eventName: undefined, fromBlock, toBlock }),
   ])
 
   results.forEach(result => {
@@ -88,6 +88,7 @@ async function getPastEvents(eventsHandler: EventsHandler, blockChain: Blockchai
   let blockToRead = lastBlockOnDb ? BigInt(lastBlockOnDb.block) : marketplaceGenesisBlock[chainId]
 
   const currentBlock = await blockChain.getBlockNumber()
+  console.log("Start to fetch events from block:", blockToRead, "on chain", chainId)
   console.log("Current block", currentBlock, "on chain", chainId)
 
   while (blockToRead + BATCH_SIZE < currentBlock) {
@@ -152,10 +153,10 @@ async function start() {
   }
   try {
     const chains: any[] = Object.values(validChains)
-    for (const chain of chains) {
+    await Promise.all(chains.map(async (chain) => {
       const sdk = createSdk(chain)
       await getPastEvents(new EventsHandler(sdk), new Blockchain(sdk), chain.id)
-    }
+    }))
   } catch (e) {
     console.log("Error", e)
   }
@@ -168,10 +169,11 @@ start()
     setInterval(async () => {
       try {
         const chains: any[] = Object.values(validChains)
-        for (const chain of chains) {
+        await Promise.all(chains.map(async (chain) => {
           const sdk = createSdk(chain)
+          console.log(`Processing chain: ${chain.id}`)
           await getEvents(new EventsHandler(sdk), new Blockchain(sdk), new Marketplace(sdk), chain.id)
-        }
+        }))
       } catch (e) {
         console.log("Error", e)
       }
