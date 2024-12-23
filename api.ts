@@ -781,4 +781,7 @@ app.get("/provider/rating", validateParams({
 createRelationsBetweenTables()
   .then(() => {
     console.log("Tables created")
+    app.listen(5000, () => {
+      console.log("Server running on port 5000")
+    })
   })
