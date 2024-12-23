@@ -1,7 +1,8 @@
 import {EventsController} from "../database/controllers/eventsController"
 import {OffersController} from "../database/controllers/offersController"
 import {DealsController} from "../database/controllers/dealsController"
-import {Blockchain, Marketplace} from "media-sdk"
+import {Blockchain, Marketplace, RatingSystem} from "media-sdk"
+import {RatingController} from "../database/controllers/ratingController"
 
 export default class EventsUtils {
   static async manageOfferUpdated(event: any, marketplace: Marketplace, blockChain: Blockchain, chainId: number) {
@@ -31,5 +32,16 @@ export default class EventsUtils {
     })
 
     await DealsController.upsertDeal(DealsController.formatDeal(deal), chainId)
+  }
+
+  static async manageRatingUpdated(event: any, rating: RatingSystem, blockchain: Blockchain, chainId: number) {
+    const blockTimestamp = await blockchain.getBlockTimestamp(event.blockNumber)
+    await EventsController.upsertEvent(EventsController.formatEvent(event), chainId, Number(blockTimestamp.timestamp))
+    const providerRating = await rating.getProviderRating({
+      marketplaceId: Number(process.env.MARKETPLACE_Id),
+      provider: event.args._provider
+    })
+
+    await RatingController.rateProvider(event.args._provider, chainId, Number(providerRating.sum), Number(providerRating.count))
   }
 }
