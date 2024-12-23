@@ -1,13 +1,38 @@
-import { Request, Response, NextFunction } from "express"
+import {NextFunction, Request, Response} from "express"
 
 export enum ValidatorType {
   STRING = "string",
   NUMBER = "number",
   STRING_OPTIONAL = "string-optional",
   NUMBER_OPTIONAL = "number-optional",
+  NUMBER_ARRAY = "number[]",
+  NUMBER_ARRAY_OPTIONAL = "number[]-optional",
+  DATE = "date",
+  DATE_OPTIONAL = "date-optional",
 }
+
 type ValidatorSchema = {
   [key: string]: ValidatorType;
+};
+
+const isValidDate = (value: string): boolean => {
+  const dateRegex = /^(\d{4}[-/]\d{2}[-/]\d{2}|\d{2}[-/]\d{2}[-/]\d{4})$/
+  if (!dateRegex.test(value)) {
+    return false
+  }
+
+  const parsedDate = new Date(value)
+  const parts = value.includes("-")
+    ? value.split(/[-/]/).map(Number)
+    : value.split(/[-/]/).reverse().map(Number)
+
+  const [year, month, day] = parts.length === 3 && parts[0] > 31 ? parts : [parts[2], parts[1], parts[0]]
+
+  return (
+    parsedDate.getUTCFullYear() === year &&
+    parsedDate.getUTCMonth() + 1 === month &&
+    parsedDate.getUTCDate() === day
+  )
 }
 
 const validateParams = (schema: ValidatorSchema) => {
@@ -21,39 +46,43 @@ const validateParams = (schema: ValidatorSchema) => {
       const isOptional = expectedType.endsWith("-optional")
       const cleanExpectedType = expectedType.replace("-optional", "")
 
-      if (isOptional) {
-        if (value !== undefined && cleanExpectedType == "number" && isNaN(Number(value))) {
-          errors.push(`Optional parameter "${key}" must be ${expectedType.replace("-optional", "")}.`)
-        }
-        if(value !== undefined && cleanExpectedType == "string" && typeof value !== "string") {
-          errors.push(`Optional parameter "${key}" must be ${expectedType.replace("-optional", "")}.`)
-        }
-        /*if(value !== undefined && cleanExpectedType == "dateTime" && isNaN(Date.parse(value))) {
-          errors.push(`Optional parameter "${key}" must be ${expectedType.replace("-optional", "")}.`)
-        }*/
-        /*if(value !== undefined && expectedType.replace("-optional", "") == "boolean" && typeof value !== "boolean") {
-            errors.push(`Optional parameter "${key}" must be ${expectedType.replace("-optional", "")}.`)
-        }*/
-      } else {
-        if (value === undefined) {
-          errors.push(`Parameter "${key}" es required.`)
-        }
+      if (isOptional && value === undefined) {
+        continue
+      }
 
-        if (expectedType == "number" && isNaN(Number(value))) {
-          errors.push(`Parameter "${key}" must be ${expectedType}.`)
+      if (value === undefined) {
+        errors.push(`Parameter "${key}" is required.`)
+        continue
+      }
+
+      switch (cleanExpectedType) {
+      case "string":
+        if (typeof value !== "string") {
+          errors.push(`Parameter "${key}" must be a string.`)
         }
+        break
 
-        if(expectedType == "string" && typeof value !== "string") {
-          errors.push(`Parameter "${key}" must be ${expectedType}.`)
+      case "number":
+        if (isNaN(Number(value))) {
+          errors.push(`Parameter "${key}" must be a number.`)
         }
+        break
 
-        /*if(cleanExpectedType == "dateTime" && isNaN(Date.parse(value))) {
-          errors.push(`Optional parameter "${key}" must be ${expectedType.replace("-optional", "")}.`)
-        }*/
+      case "number[]":
+        if (!Array.isArray(value) || !value.every((item) => !isNaN(Number(item)))) {
+          errors.push(`Parameter "${key}" must be an array of numbers.`)
+        }
+        break
 
-        /*if(expectedType == "boolean" && typeof value !== "boolean") {
-            errors.push(`Parameter "${key}" must be ${expectedType}.`)
-        }*/
+      case "date":
+        if (typeof value !== "string" || !isValidDate(value)) {
+          errors.push(`Parameter "${key}" must be a valid date in formats YYYY-MM-DD, YYYY/MM/DD, DD-MM-YYYY, or DD/MM/YYYY.`)
+        }
+        break
+
+      default:
+        errors.push(`Unknown validation type for parameter "${key}".`)
+        break
       }
     }
 
