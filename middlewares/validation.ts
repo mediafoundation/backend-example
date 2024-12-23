@@ -35,7 +35,7 @@ const isValidDate = (value: string): boolean => {
   )
 }
 
-const validateParams = (schema: ValidatorSchema) => {
+export const validateParams = (schema: ValidatorSchema) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const errors: string[] = []
 
@@ -93,5 +93,3 @@ const validateParams = (schema: ValidatorSchema) => {
     next()
   }
 }
-
-export default validateParams
