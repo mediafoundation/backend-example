@@ -32,7 +32,7 @@
     "crypto": "^1.0.1",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "media-sdk": "^7.0.0",
+    "media-sdk": "^7.1.0",
     "mongodb": "6.5",
     "mysql2": "^3.6.1",
     "pg": "^8.11.3",
@@ -44,8 +44,10 @@
     "test": "npm run build && NODE_ENV=test jest",
     "build": "rm -r ./dist && tsc && cp .env ./dist/.env",
     "init": "npm run build && node dist/index.js",
+    "init:reset": "npm run build && node dist/index.js --reset",
     "startApi": "node ./dist/api.js",
     "startEventsDaemon": "node ./dist/eventsDaemon.js",
+    "startEventsDaemon:reset": "node ./dist/eventsDaemon.js --reset",
     "startEventsListener": "node ./dist/eventsListener.js"
   }
 }
