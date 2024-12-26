@@ -49,8 +49,18 @@ function createSdk(chain: any) {
   })
 }
 
+interface MarketplaceEvent {
+  name: string,
+  handler: (event: any, marketplace: Marketplace, blockchain: Blockchain, chainId: number) => Promise<void>
+}
+
+interface RatingEvent {
+  name: string,
+  handler: (event: any, ratingService: RatingSystem, blockchain: Blockchain, chainId: number) => Promise<void>
+}
+
 function setupEventListeners(eventsListener: EventsHandler, marketplace: Marketplace, blockchain: Blockchain, ratingService: any, chainId: string) {
-  const marketplaceEvents = [
+  const marketplaceEvents: MarketplaceEvent[] = [
     { name: "DealCreated", handler: EventsUtils.manageDealUpdated },
     { name: "DealAccepted", handler: EventsUtils.manageDealUpdated },
     { name: "DealCancelled", handler: EventsUtils.manageDealUpdated },
@@ -59,36 +69,36 @@ function setupEventListeners(eventsListener: EventsHandler, marketplace: Marketp
     { name: "OfferDeleted", handler: EventsUtils.manageOfferUpdated },
   ]
 
-  const ratingEvents = [
+  const ratingEvents: RatingEvent[] = [
     { name: "RatedProvider", handler: EventsUtils.manageRatingUpdated },
     { name: "RemovedRating", handler: EventsUtils.manageRatingUpdated }
   ]
 
-  for (const event of marketplaceEvents) {
+  for (const marketplaceEvent of marketplaceEvents) {
     eventsListener.listenForMarketplaceEvent({
-      eventName: event.name,
+      eventName: marketplaceEvent.name,
       onError: (error: any) => {
         console.log("Error getting marketplace event", error)
       },
-      callback: async (event: any) => {
+      callback: async (event) => {
         console.log(event)
         for (const eventElement of event) {
-          await event.handler(eventElement, marketplace, blockchain, chainId)
+          await marketplaceEvent.handler(eventElement, marketplace, blockchain, Number(chainId))
         }
       }
     }).then(() => {})
   }
 
-  for (const event of ratingEvents) {
+  for (const ratingEvent of ratingEvents) {
     eventsListener.listenForRatingSystemEvent({
-      eventName: event.name,
+      eventName: ratingEvent.name,
       onError: (error: any) => {
         console.log("Error getting rating event", error)
       },
       callback: async (event: any) => {
         console.log(event)
         for (const eventElement of event) {
-          await event.handler(eventElement, ratingService, blockchain, chainId)
+          await ratingEvent.handler(eventElement, ratingService, blockchain, Number(chainId))
         }
       }
     }).then(() => {})
