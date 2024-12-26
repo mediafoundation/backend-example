@@ -43,6 +43,14 @@ const validateType = (value: any, type: string): boolean => {
   case "number":
     return !isNaN(Number(value))
   case "number[]":
+    if(typeof value === "string") {
+      try {
+        value = JSON.parse(value)
+
+      } catch (e) {
+        return false
+      }
+    }
     return Array.isArray(value) && value.every((item) => !isNaN(Number(item)))
   case "date":
     return typeof value === "string" && isValidDate(value)
