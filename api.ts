@@ -68,13 +68,14 @@ function manageIncomingFilterRequest(req: any) {
  * @description Retrieves all resources.
  */
 app.get("/resources", validateParams({
-  chainId: ValidatorType.NUMBER_OPTIONAL
+  chainId: [ValidatorType.NUMBER_ARRAY_OPTIONAL, ValidatorType.NUMBER_OPTIONAL]
 }), async (req, res) => {
   const chainId = req.query.chainId
 
-  if(chainId) {
+  /*if(chainId) {
     try{
-      const resources = await ResourcesController.getResources(Number(chainId))
+      const isNumber = !isNaN(Number(chainId))
+      const resources = await ResourcesController.getResources(isNumber ? chainId : JSON.parse(chainId as string))
       res.json(resources)
     } catch (e) {
       console.log("Error:", e)
@@ -97,6 +98,16 @@ app.get("/resources", validateParams({
       console.log("Error:", e)
       res.status(500).json({error: "Something went wrong"})
     }
+  }*/
+
+  try{
+    const isNumber = !isNaN(Number(chainId))
+    const formattedChainId = chainId ? (isNumber ? Number(chainId) : JSON.parse(chainId as string)) : undefined
+    const resources = await ResourcesController.getResources(formattedChainId)
+    res.json(resources)
+  } catch (e) {
+    console.log("Error:", e)
+    res.status(500).json({error: "Something went wrong"})
   }
 })
 
