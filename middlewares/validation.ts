@@ -1,4 +1,4 @@
-import {NextFunction, Request, Response} from "express"
+import { NextFunction, Request, Response } from "express"
 
 export enum ValidatorType {
   STRING = "string",
@@ -12,7 +12,7 @@ export enum ValidatorType {
 }
 
 type ValidatorSchema = {
-  [key: string]: ValidatorType;
+  [key: string]: ValidatorType | ValidatorType[];
 };
 
 const isValidDate = (value: string): boolean => {
@@ -26,7 +26,8 @@ const isValidDate = (value: string): boolean => {
     ? value.split(/[-/]/).map(Number)
     : value.split(/[-/]/).reverse().map(Number)
 
-  const [year, month, day] = parts.length === 3 && parts[0] > 31 ? parts : [parts[2], parts[1], parts[0]]
+  const [year, month, day] =
+    parts.length === 3 && parts[0] > 31 ? parts : [parts[2], parts[1], parts[0]]
 
   return (
     parsedDate.getUTCFullYear() === year &&
@@ -35,16 +36,35 @@ const isValidDate = (value: string): boolean => {
   )
 }
 
+const validateType = (value: any, type: string): boolean => {
+  switch (type) {
+  case "string":
+    return typeof value === "string"
+  case "number":
+    return !isNaN(Number(value))
+  case "number[]":
+    return Array.isArray(value) && value.every((item) => !isNaN(Number(item)))
+  case "date":
+    return typeof value === "string" && isValidDate(value)
+  default:
+    return false
+  }
+}
+
 export const validateParams = (schema: ValidatorSchema) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const errors: string[] = []
 
     for (const key in schema) {
-      const expectedType = schema[key]
+      const expectedTypes = Array.isArray(schema[key])
+        ? (schema[key] as ValidatorType[])
+        : [schema[key] as ValidatorType]
       const value = req.body?.[key] ?? req.query?.[key] ?? req.params?.[key]
 
-      const isOptional = expectedType.endsWith("-optional")
-      const cleanExpectedType = expectedType.replace("-optional", "")
+      const isOptional = expectedTypes.some((type) => type.endsWith("-optional"))
+      const cleanExpectedTypes = expectedTypes.map((type) =>
+        type.replace("-optional", "")
+      )
 
       if (isOptional && value === undefined) {
         continue
@@ -55,34 +75,13 @@ export const validateParams = (schema: ValidatorSchema) => {
         continue
       }
 
-      switch (cleanExpectedType) {
-      case "string":
-        if (typeof value !== "string") {
-          errors.push(`Parameter "${key}" must be a string.`)
-        }
-        break
-
-      case "number":
-        if (isNaN(Number(value))) {
-          errors.push(`Parameter "${key}" must be a number.`)
-        }
-        break
-
-      case "number[]":
-        if (!Array.isArray(value) || !value.every((item) => !isNaN(Number(item)))) {
-          errors.push(`Parameter "${key}" must be an array of numbers.`)
-        }
-        break
-
-      case "date":
-        if (typeof value !== "string" || !isValidDate(value)) {
-          errors.push(`Parameter "${key}" must be a valid date in formats YYYY-MM-DD, YYYY/MM/DD, DD-MM-YYYY, or DD/MM/YYYY.`)
-        }
-        break
-
-      default:
-        errors.push(`Unknown validation type for parameter "${key}".`)
-        break
+      const isValid = cleanExpectedTypes.some((type) => validateType(value, type))
+      if (!isValid) {
+        errors.push(
+          `Parameter "${key}" must match one of the types: ${cleanExpectedTypes.join(
+            ", "
+          )}.`
+        )
       }
     }
 
