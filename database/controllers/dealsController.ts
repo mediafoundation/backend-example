@@ -83,12 +83,12 @@ export class DealsController {
     const offer = await OffersController.getOfferByIdAndChain(deal.offerId!, chainId)
 
     if(!offer) {
-      throw new Error(`Offer does not exists for deal ${deal.dealId} on chain ${chainId}`)
+      console.log(`Offer does not exists for deal ${deal.dealId} on chain ${chainId}... Setting to null`)
     }
 
     delete deal.offerId
     
-    const [instance, created] = await Deal.upsert({...deal, chainId: chainId, id: dealFromDb?.id, offerId: offer.offer.id})
+    const [instance, created] = await Deal.upsert({...deal, chainId: chainId, id: dealFromDb?.id, offerId: offer?.offer.id ?? null})
 
     // Create metadata for the deal
     const metadata = await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata})
