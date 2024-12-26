@@ -1,6 +1,6 @@
 import express from "express"
 import request from "supertest"
-import validateParams, {ValidatorType} from "../../middlewares/validation"
+import {validateParams, ValidatorType} from "../../middlewares/validation"
 
 const testApi = express()
 
