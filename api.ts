@@ -72,34 +72,6 @@ app.get("/resources", validateParams({
 }), async (req, res) => {
   const chainId = req.query.chainId
 
-  /*if(chainId) {
-    try{
-      const isNumber = !isNaN(Number(chainId))
-      const resources = await ResourcesController.getResources(isNumber ? chainId : JSON.parse(chainId as string))
-      res.json(resources)
-    } catch (e) {
-      console.log("Error:", e)
-      res.status(500).json({error: "Something went wrong"})
-    }
-  }
-
-  // Loop for all validChains
-  else {
-    const resources = []
-    const validChainKeys = Object.keys(validChains)
-    try {
-      for (const chain of validChainKeys) {
-        const resourcesFromDb = await ResourcesController.getResources(Number(chain))
-        resources.push(...resourcesFromDb)
-      }
-
-      res.json(resources)
-    } catch (e) {
-      console.log("Error:", e)
-      res.status(500).json({error: "Something went wrong"})
-    }
-  }*/
-
   try{
     const isNumber = !isNaN(Number(chainId))
     const formattedChainId = chainId ? (isNumber ? Number(chainId) : JSON.parse(chainId as string)) : undefined
@@ -116,15 +88,18 @@ app.get("/resources", validateParams({
  * @description Retrieves deals based on provided filters, page number and page size.
  */
 app.get("/deals", validateParams({
-  chainId: ValidatorType.NUMBER_OPTIONAL
+  chainId: [ValidatorType.NUMBER_OPTIONAL, ValidatorType.NUMBER_ARRAY_OPTIONAL]
 }), async (req, res) => {
-  const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
+  const chainId = req.query.chainId
 
   const managedFilters = manageIncomingFilterRequest(req)
 
   try{
     // Get deals from DealsController
-    const deals = await DealsController.getDeals(chainId, managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
+    const isNumber = !isNaN(Number(chainId))
+    const formattedChainId = chainId ? (isNumber ? Number(chainId) : JSON.parse(chainId as string)) : undefined
+    console.log("ChainId", formattedChainId)
+    const deals = await DealsController.getDeals(formattedChainId, managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
 
     // Send response
     res.json(deals)
