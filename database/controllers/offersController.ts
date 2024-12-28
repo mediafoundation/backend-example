@@ -120,7 +120,7 @@ export class OffersController{
     const includeOptions: any[] = [
       {
         model: Chain,
-        required: !!chainId,
+        required: !!chainId || !!minProviderRating,
         as: "Chain",
         attributes: [],
         where: {
@@ -155,11 +155,14 @@ export class OffersController{
         include: minProviderRating ? [
           {
             model: Rating,
+            required: true,
             attributes: [],
-            //where: chainIdFilter,
-            having: sequelize.literal(`
-              "Rating"."sum" / NULLIF("Rating"."count", 0) >= ${minProviderRating} AND "Rating"."chainId" = "Offer"."chainId"
-            `)
+            where: {
+              [Op.and]: [
+                sequelize.literal(`"Provider->Ratings"."sum" / NULLIF("Provider->Ratings"."count", 0) >= ${minProviderRating}`),
+                chainId ? { chainId: { [Op.in]: Array.isArray(chainId) ? chainId : [chainId] } } : {}
+              ]
+            }
           }
         ] : []
       }
