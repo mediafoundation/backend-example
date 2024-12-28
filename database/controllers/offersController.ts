@@ -113,9 +113,9 @@ export class OffersController{
 
     const chainIdFilter = Array.isArray(chainId) ? {
       chainId: { [Op.in]: chainId }
-    } : {
-      chainId: chainId ? chainId : null
-    }
+    } : chainId ? {
+      chainId: chainId
+    } : undefined
 
     const includeOptions: any[] = [
       {

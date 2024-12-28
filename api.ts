@@ -160,30 +160,33 @@ app.get("/providers", validateParams({
 
     const page = req.query.page ? Number(req.query.page) : undefined
     const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
-    const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
+    const chainId = req.query.chainId
     const account = req.query.provider
     const rating = req.query.rating ? Number(req.query.rating) : undefined
 
-    const providers = await ProvidersController.getProviders({chainId : chainId, page : page, pageSize : pageSize, account : account as string | undefined, minRating : rating})
+    const isNumber = !isNaN(Number(chainId))
+    const formattedChainId = chainId ? (isNumber ? Number(chainId) : JSON.parse(chainId as string)) : undefined
+    const providers = await ProvidersController.getProviders({chainId : formattedChainId, page : page, pageSize : pageSize, account : account as string | undefined, minRating : rating})
 
     for (const provider of providers) {
-      const dealsCount = await ProvidersController.countDeals(provider.account, chainId)
-      const offersCount = await ProvidersController.countOffers(provider.account, chainId)
-      const clientCount = await ProvidersController.countClients(provider.account, chainId)
+      const dealsCount = await ProvidersController.countDeals(provider.account, formattedChainId)
+      const offersCount = await ProvidersController.countOffers(provider.account, formattedChainId)
+      const clientCount = await ProvidersController.countClients(provider.account, formattedChainId)
       let providerRating = {}
       let providerMetadata: { [index: number]: any } | ProvidersMetadata | null = {}
       let registryTime: { [index: number]: any } | number = {}
 
+
       if(chainId) {
-        providerMetadata = await ProvidersController.getMetadata(provider.account, chainId)
-        registryTime = await ProvidersController.getProviderStartTime(provider.account, chainId)
-        providerRating = await RatingController.getAverageRating(provider.account, chainId)
+        providerMetadata = await ProvidersController.getMetadata(provider.account, formattedChainId)
+        registryTime = await ProvidersController.getProviderStartTime(provider.account, formattedChainId)
+        providerRating = await RatingController.getAverageRating(provider.account, formattedChainId)
       }
 
       else {
         const chains = provider.Chains
         for (const chain of chains!) {
-          providerMetadata[chain] = await ProvidersController.getMetadata(provider.account, [Number(chain)])
+          providerMetadata![chain] = await ProvidersController.getMetadata(provider.account, [Number(chain)])
           registryTime[chain] = (await ProvidersController.getProviderStartTime(provider.account, [Number(chain)]))[chain]
           providerRating = await RatingController.getAverageRating(provider.account, chains!)
         }
