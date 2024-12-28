@@ -1,5 +1,5 @@
 import {Offer} from "../models/offers/Offer"
-import {WhereOptions} from "sequelize"
+import {Op, WhereOptions} from "sequelize"
 import {OfferFormatted, OfferMetadataSchema, OfferRawSchema, OfferTransformed} from "../models/types/offer"
 import {NodeLocation} from "../models/NodeLocation"
 import {BandwidthLimit} from "../models/BandwidthLimit"
@@ -94,7 +94,7 @@ export class OffersController{
    * @returns Promise<Array<any>>
    */
   static async getOffers(
-    chainId: number | undefined = undefined,
+    chainId: number | number[] | undefined = undefined,
     offerFilter: WhereOptions<any> = {},
     metadataFilter: WhereOptions<any> = {},
     bandwidthLimitFilter: WhereOptions<any> = {},
@@ -105,13 +105,28 @@ export class OffersController{
   ): Promise<Array<any>> {
     const offset = page && pageSize ? (page - 1) * pageSize : undefined
 
+    const validChainIdsSubquery = `
+      SELECT DISTINCT "Rating"."chainId"
+      FROM "Rating"
+      WHERE "Rating"."sum" / NULLIF("Rating"."count", 0) >= ${minProviderRating || 0}
+    `
+
+    const chainIdFilter = Array.isArray(chainId) ? {
+      chainId: { [Op.in]: chainId }
+    } : {
+      chainId: chainId ? chainId : null
+    }
+
     const includeOptions: any[] = [
       {
         model: Chain,
         required: !!chainId,
         as: "Chain",
         attributes: [],
-        where: chainId ? { chainId } : undefined
+        where: {
+          ...chainIdFilter, // Usa el filtro original si existe
+          ...(minProviderRating ? { chainId: { [Op.in]: sequelize.literal(`(${validChainIdsSubquery})`) } } : {})
+        }
       },
       {
         model: NodeLocation,
@@ -141,17 +156,14 @@ export class OffersController{
           {
             model: Rating,
             attributes: [],
-            where: sequelize.literal(`(
-              SELECT AVG("rating")
-              FROM "Rating"
-              WHERE "Rating"."provider" = "Provider"."account"
-            ) >= ${minProviderRating}`)
+            //where: chainIdFilter,
+            having: sequelize.literal(`
+              "Rating"."sum" / NULLIF("Rating"."count", 0) >= ${minProviderRating} AND "Rating"."chainId" = "Offer"."chainId"
+            `)
           }
         ] : []
       }
     ]
-
-    console.log("offerFilter", offerFilter, includeOptions)
 
     const offers = await Offer.findAll({
       include: includeOptions,
