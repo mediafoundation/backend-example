@@ -126,18 +126,20 @@ app.get("/deals/:id/chainId/:chainId", validateParams({
  * @description Retrieves offers based on provided filters, page number and page size.
  */
 app.get("/offers", validateParams({
-  chainId: ValidatorType.NUMBER_OPTIONAL,
+  chainId: [ValidatorType.NUMBER_OPTIONAL, ValidatorType.NUMBER_ARRAY_OPTIONAL],
   minRating: ValidatorType.NUMBER_OPTIONAL
 }), async (req, res) => {
-  const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
+  const chainId = req.query.chainId
   const minRating = req.query.minRating ? Number(req.query.minRating) : undefined
   const managedFilters = manageIncomingFilterRequest(req)
   try {
-    const offers = await OffersController.getOffers(chainId, managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, minRating, managedFilters.page, managedFilters.pageSize)
+    const isNumber = !isNaN(Number(chainId))
+    const formattedChainId = chainId ? (isNumber ? Number(chainId) : JSON.parse(chainId as string)) : undefined
+    const offers = await OffersController.getOffers(formattedChainId, managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, minRating, managedFilters.page, managedFilters.pageSize)
     res.json(offers)
   } catch (e) {
     console.log(e)
-    res.status(500).json({error: "Some went wrong"})
+    res.status(500).json({error: "Something went wrong"})
   }
 })
 
