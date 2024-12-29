@@ -327,7 +327,7 @@ app.get("/providers/countNewClients", validateParams({
  */
 app.get("/providers/countActiveClients", validateParams({
   provider: ValidatorType.STRING,
-  chainId: ValidatorType.NUMBER_ARRAY_OPTIONAL,
+  chainId: [ValidatorType.NUMBER_ARRAY_OPTIONAL, ValidatorType.NUMBER_OPTIONAL],
   from: ValidatorType.NUMBER_OPTIONAL,
   to: ValidatorType.NUMBER_OPTIONAL
 }), async (req, res) => {
@@ -341,8 +341,11 @@ app.get("/providers/countActiveClients", validateParams({
     return
   }*/
 
+  const isNumber = !isNaN(Number(chainId))
+  const formattedChainId: number[] = chainId ? (isNumber ? [Number(chainId)] : JSON.parse(chainId as string)) : Object.keys(validChains).map(chain => Number(chain))
+
   try {
-    const result = await ProvidersController.getProviderActiveClients(provider!.toString(), chainId, fromTimestamp, toTimestamp)
+    const result = await ProvidersController.getProviderActiveClients(provider!.toString(), formattedChainId, fromTimestamp, toTimestamp)
     res.json(result)
   } catch (e) {
     console.log(e)
