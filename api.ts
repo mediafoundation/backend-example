@@ -24,6 +24,7 @@ import {Op} from "sequelize"
 import {RatingController} from "./database/controllers/ratingController"
 import {Offer} from "./database/models/offers/Offer"
 import {validateParams, ValidatorType} from "./middlewares/validation"
+import {validateChain} from "./middlewares/validChain"
 
 // Initialize express app
 export const app = express()
@@ -89,7 +90,7 @@ app.get("/resources", validateParams({
  */
 app.get("/deals", validateParams({
   chainId: [ValidatorType.NUMBER_OPTIONAL, ValidatorType.NUMBER_ARRAY_OPTIONAL]
-}), async (req, res) => {
+}), validateChain(Object.keys(validChains).map(chain => Number(chain))), async (req, res) => {
   const chainId = req.query.chainId
 
   const managedFilters = manageIncomingFilterRequest(req)
@@ -116,7 +117,7 @@ app.get("/deals", validateParams({
 app.get("/deals/:id/chainId/:chainId", validateParams({
   id: ValidatorType.NUMBER,
   chainId: ValidatorType.NUMBER
-}), async (req, res) => {
+}), validateChain(Object.keys(validChains).map(chain => Number(chain))), async (req, res) => {
   const deal = await DealsController.getDealByIdAndChain(Number(req.params.id), Number(req.params.chainId))
   res.json(deal)
 })
@@ -128,7 +129,7 @@ app.get("/deals/:id/chainId/:chainId", validateParams({
 app.get("/offers", validateParams({
   chainId: [ValidatorType.NUMBER_OPTIONAL, ValidatorType.NUMBER_ARRAY_OPTIONAL],
   minRating: ValidatorType.NUMBER_OPTIONAL
-}), async (req, res) => {
+}), validateChain(Object.keys(validChains).map(validateChain => Number(validateChain))), async (req, res) => {
   const chainId = req.query.chainId
   const minRating = req.query.minRating ? Number(req.query.minRating) : undefined
   const managedFilters = manageIncomingFilterRequest(req)
@@ -153,7 +154,7 @@ app.get("/providers", validateParams({
   rating: ValidatorType.NUMBER_OPTIONAL,
   page: ValidatorType.NUMBER_OPTIONAL,
   pageSize: ValidatorType.NUMBER_OPTIONAL
-}), async(req, res) => {
+}), validateChain(Object.keys(validChains).map(chain => Number(chain))), async(req, res) => {
   try {
 
     const result = []
@@ -222,7 +223,7 @@ app.get("/providers/countNewDeals", validateParams({
   chainId: ValidatorType.NUMBER_ARRAY_OPTIONAL,
   from: ValidatorType.NUMBER_OPTIONAL,
   to: ValidatorType.NUMBER_OPTIONAL
-}), async (req, res) => {
+}), validateChain(Object.keys(validChains).map(chain => Number(chain))), async (req, res) => {
   const provider = req.query.provider
   const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
   const fromDate = req.query.from ? Number(req.query.from) : undefined
