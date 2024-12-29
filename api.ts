@@ -247,26 +247,21 @@ app.get("/providers/countNewDeals", validateParams({
  */
 app.get("/providers/totalRevenue", validateParams({
   provider: ValidatorType.STRING,
-  chainId: ValidatorType.NUMBER_ARRAY,
+  chainId: ValidatorType.NUMBER_ARRAY_OPTIONAL,
   from: ValidatorType.NUMBER_OPTIONAL,
   to: ValidatorType.NUMBER_OPTIONAL
 }), async (req, res) => {
   try {
     const provider = req.query.provider
-    const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
+    const chainId = req.query.chainId
     const from: number | undefined = req.query.from ? Number(req.query.from) : undefined
     const to: number | undefined = req.query.to ? Number(req.query.to) : undefined
 
-    /*if(!provider || !chainId || !Array.isArray(JSON.parse(req.query.chainId as string))) {
-      res.status(500).json({error: "No provider or valid chainId provided"})
-      return
-    }
-    else {
-
-    }*/
+    const isNumber = !isNaN(Number(chainId))
+    const formattedChainId: number[] = chainId ? (isNumber ? [Number(chainId)] : JSON.parse(chainId as string)) : Object.keys(validChains).map(chain => Number(chain))
 
     const response: {[index: number]: any} = {}
-    for (const chain of chainId) {
+    for (const chain of formattedChainId) {
       const queryResult = await EventsController.calculateProviderRevenue(provider!.toString(), Number(chain), from, to)
       const dailyRevenue = queryResult.dailyRevenue
 

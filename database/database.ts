@@ -20,7 +20,7 @@ else{
     host: process.env.dbHost,
     dialect: process.env.dbDialect as Dialect,
     port: parseInt(process.env.dbPort!),
-    logging: true
+    logging: false
   })
 }
 
