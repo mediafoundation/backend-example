@@ -293,12 +293,12 @@ app.get("/providers/totalRevenue", validateParams({
  */
 app.get("/providers/countNewClients", validateParams({
   provider: ValidatorType.STRING,
-  chainId: ValidatorType.NUMBER_ARRAY,
+  chainId: [ValidatorType.NUMBER_ARRAY_OPTIONAL, ValidatorType.NUMBER_OPTIONAL],
   from: ValidatorType.NUMBER_OPTIONAL,
   to: ValidatorType.NUMBER_OPTIONAL
 }), async (req, res) => {
   const provider = req.query.provider
-  const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
+  const chainId = req.query.chainId
   const fromTimestamp = req.query.from ? Number(req.query.from) : undefined
   const toTimestamp = req.query.to ? Number(req.query.to) : undefined
 
@@ -307,8 +307,10 @@ app.get("/providers/countNewClients", validateParams({
     return
   }*/
 
+  const isNumber = !isNaN(Number(chainId))
+  const formattedChainId: number[] = chainId ? (isNumber ? [Number(chainId)] : JSON.parse(chainId as string)) : Object.keys(validChains).map(chain => Number(chain))
   try {
-    const result = await ProvidersController.getProviderNewClients(provider!.toString(), chainId, fromTimestamp, toTimestamp)
+    const result = await ProvidersController.getProviderNewClients(provider!.toString(), formattedChainId, fromTimestamp, toTimestamp)
     res.json({
       "clients": result
     })
