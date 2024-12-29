@@ -247,7 +247,7 @@ app.get("/providers/countNewDeals", validateParams({
  */
 app.get("/providers/totalRevenue", validateParams({
   provider: ValidatorType.STRING,
-  chainId: ValidatorType.NUMBER_ARRAY_OPTIONAL,
+  chainId: [ValidatorType.NUMBER_ARRAY_OPTIONAL, ValidatorType.NUMBER_OPTIONAL],
   from: ValidatorType.NUMBER_OPTIONAL,
   to: ValidatorType.NUMBER_OPTIONAL
 }), async (req, res) => {
