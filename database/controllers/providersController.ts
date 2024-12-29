@@ -10,7 +10,7 @@ import {ProvidersMetadata} from "../models/Providers/ProvidersMetadata"
 import {Rating} from "../models/Rating"
 
 interface ProviderFilters {
-  chainId?: number[] | undefined
+  chainId?: number | number[] | undefined
   page?: number | undefined
   pageSize?: number | undefined
   account?: string | undefined
@@ -25,45 +25,19 @@ export class ProvidersController {
     account = undefined,
     minRating = undefined
   }: ProviderFilters) {
-    const ratingFilter: {
-      chainId?: {
-        [Op.in]: number[] | number
-      },
-      [Op.and]?: any[]
-    } = {
-      [Op.and]: []
-    }
 
-    if (minRating) {
-      if (chainId) {
-        ratingFilter[Op.and]!.push(
-          sequelize.literal(`(
-            SELECT "sum" / "count"
-            FROM "Rating"
-            WHERE "Rating"."provider" = "Provider"."account"
-            AND "Rating"."chainId" = "ChainProvider"."chainId"
-          ) >= ${minRating}`)
-        )
-      } else {
-        ratingFilter[Op.and]!.push(
-          sequelize.literal(`(
-            SELECT "sum" / "count"
-            FROM "Rating"
-            WHERE "Rating"."provider" = "Provider"."account"
-          ) >= ${minRating}`)
-        )
-      }
-    }
-    const whereClause = chainId ? {
-      chainId: {
-        [Op.in]: chainId
-      }
-    } : {}
-    if (chainId) {
-      ratingFilter.chainId = {
-        [Op.in]: chainId
-      }
-    }
+    const chainIdFilter = Array.isArray(chainId) ? {
+      chainId: { [Op.in]: chainId }
+    } : chainId ? {
+      chainId: chainId
+    } : undefined
+
+    const validChainIdsSubquery = `
+      SELECT DISTINCT "Rating"."chainId"
+      FROM "Rating"
+      WHERE "Rating"."sum" / NULLIF("Rating"."count", 0) >= ${minRating || 0}
+    `
+
     const filter = account ? {account: account} : {}
     const offset = page && pageSize ? (page - 1) * pageSize : undefined
 
@@ -76,17 +50,25 @@ export class ProvidersController {
       include: [
         {
           model: Chain,
-          where: whereClause,
+          where: {
+            ...chainIdFilter,
+            ...(minRating ? { chainId: { [Op.in]: sequelize.literal(`(${validChainIdsSubquery})`) } } : {})
+          },
           through: {
             attributes: []
           },
           attributes: ["chainId"],
-          required: !!chainId
+          required: !!chainId || !!minRating
         },
 
         {
           model: Rating,
-          where: ratingFilter,
+          where: minRating ? {
+            [Op.and]: [
+              sequelize.literal(`"Ratings"."sum" / NULLIF("Ratings"."count", 0) >= ${minRating || 0} `),
+              chainId ? { chainId: { [Op.in]: Array.isArray(chainId) ? chainId : [chainId] } } : {}
+            ]
+          } : undefined,
           attributes: ["sum", "count", "chainId"],
           required: !!minRating,
         }
@@ -103,14 +85,17 @@ export class ProvidersController {
     return mappedProviders
   }
 
-  static async getMetadata(provider: string, chainId: number[]): Promise<ProvidersMetadata | null> {
+  static async getMetadata(provider: string, chainId: number | number[] | undefined) {
     //return await providersCollection.findOne({provider: provider, chainId: {$in: chainId}})
+    const chainIdFilter = Array.isArray(chainId) ? {
+      chainId: { [Op.in]: chainId }
+    } : chainId ? {
+      chainId: chainId
+    } : undefined
     return await ProvidersMetadata.findOne({
       where: {
         provider: provider,
-        chainId: {
-          [Op.in]: chainId
-        }
+        ...chainIdFilter
       },
       raw: true
     })
@@ -172,61 +157,46 @@ export class ProvidersController {
     }
   }
 
-  static async countDeals(provider: string, chainId: number[] | undefined = undefined) {
-    let result: ProviderAssociationCount | number = {}
+  static async countDeals(provider: string, chainId: number | number[] | undefined = undefined): Promise<ProviderAssociationCount | number> {
+    //let result: ProviderAssociationCount | number = {}
     const providerFromDb = await Provider.findOne({rejectOnEmpty: false, where: {account: provider}})
 
     if (!providerFromDb) {
       throw new Error("Provider not found")
     }
 
-    if (chainId === undefined) {
-      const chains = await Chain.findAll({attributes: {include: ["chainId"]}})
+    const chainIdFilter = Array.isArray(chainId) ? {
+      chainId: { [Op.in]: chainId }
+    } : chainId ? {
+      chainId: chainId
+    } : undefined
 
-      for (const chain of chains) {
-        result[chain.chainId] = await providerFromDb!.countDeals({where: {chainId: chain.chainId}})
-      }
-    } else {
-      result = await providerFromDb!.countDeals({
-        where: {
-          chainId: {
-            [Op.in]: chainId
-          }
-        }
-      })
-    }
-
-    return result
+    return  await providerFromDb!.countDeals({
+      where: chainIdFilter
+    })
   }
 
-  static async countOffers(provider: string, chainId: number[] | undefined = undefined) {
-    let result: ProviderAssociationCount | number = {}
+  static async countOffers(provider: string, chainId: number | number[] | undefined = undefined): Promise<ProviderAssociationCount | number> {
     const providerFromDb = await Provider.findOne({rejectOnEmpty: false, where: {account: provider}})
 
     if (!providerFromDb) {
       throw new Error("Provider not found")
     }
 
-    if (chainId === undefined) {
-      const chains = await Chain.findAll({attributes: {include: ["chainId"]}})
+    const chainIdFilter = Array.isArray(chainId) ? {
+      chainId: { [Op.in]: chainId }
+    } : chainId ? {
+      chainId: chainId
+    } : undefined
 
-      for (const chain of chains) {
-        result[chain.chainId] = await providerFromDb!.countOffers({where: {chainId: chain.chainId}})
+    return await providerFromDb!.countOffers({
+      where: {
+        chainId: chainIdFilter
       }
-    } else {
-      result = await providerFromDb!.countOffers({
-        where: {
-          chainId: {
-            [Op.in]: chainId
-          }
-        }
-      })
-    }
-
-    return result
+    })
   }
 
-  static async countClients(provider: string, chainId: number[] | undefined = undefined) {
+  static async countClients(provider: string, chainId: number | number[] | undefined = undefined) {
     let result: ProviderAssociationCount | number = {}
     const providerFromDb = await Provider.findOne({rejectOnEmpty: false, where: {account: provider}})
 
@@ -234,7 +204,13 @@ export class ProvidersController {
       throw new Error("Provider not found")
     }
 
-    if (chainId === undefined) {
+    const chainIdFilter = Array.isArray(chainId) ? {
+      chainId: { [Op.in]: chainId }
+    } : chainId ? {
+      chainId: chainId
+    } : undefined
+
+    /*if (chainId === undefined) {
       const chains = await Chain.findAll({attributes: {include: ["chainId"]}})
 
       for (const chain of chains) {
@@ -243,15 +219,15 @@ export class ProvidersController {
         result[chain.chainId] = await providerFromDb!.countClients({where: {account: clientsOnChain.map(chainClient => chainClient.client)}})
       }
     } else {
-      const clientsOnChain = await ChainClient.findAll({
-        where: {
-          chainId: {
-            [Op.in]: chainId
-          }
-        }
-      })
-      result = await providerFromDb!.countClients({where: {account: clientsOnChain.map(chainClient => chainClient.client)}})
-    }
+
+    }*/
+
+    const clientsOnChain = await ChainClient.findAll({
+      where: {
+        chainId: chainIdFilter
+      }
+    })
+    result = await providerFromDb!.countClients({where: {account: clientsOnChain.map(chainClient => chainClient.client)}})
 
     return result
   }
@@ -339,13 +315,11 @@ export class ProvidersController {
         chainId: chain,
         eventName: "ProviderRegistered"
       })
-      console.log(providerData, chain)
       if (result) {
         result[chain] = providerData?.timestamp || 0
       }
     }
 
-    console.log(result, provider, chainId)
     return result
   }
 }

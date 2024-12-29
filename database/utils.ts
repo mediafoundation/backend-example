@@ -111,6 +111,7 @@ const createRelationsBetweenTables = async () => {
   })
 
   Deal.belongsTo(Offer, {
+    onDelete: "SET NULL",
     foreignKey: "offerId",
     targetKey: "id",
     as: "Offer"

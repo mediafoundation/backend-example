@@ -1,4 +1,4 @@
-import {Sdk, MarketplaceViewer, Resources, validChains, Marketplace, http} from "media-sdk"
+import {Sdk, MarketplaceViewer, Resources, validChains, Marketplace, http, RatingSystem} from "media-sdk"
 import {DealsController} from "./database/controllers/dealsController"
 import {ResourcesController} from "./database/controllers/resourcesController"
 import {createRelationsBetweenTables, resetSequelizeDB} from "./database/utils"
@@ -7,6 +7,7 @@ import {OffersController} from "./database/controllers/offersController"
 import {Chain} from "./database/models/Chain"
 import {closeMongoDB, sequelize} from "./database/database"
 import {httpNetworks} from "./networks"
+import {RatingController} from "./database/controllers/ratingController"
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("dotenv").config()
 
@@ -16,6 +17,7 @@ const init = async (chain: any) => {
   
   const marketplaceViewer: MarketplaceViewer = new MarketplaceViewer(sdkInstance)
   const resourcesInstance: Resources = new Resources(sdkInstance)
+  const rating = new RatingSystem(sdkInstance)
   
   const providerAddresses: Array<string> = []
   
@@ -50,12 +52,14 @@ const init = async (chain: any) => {
   
   // Clear data on providerAddresses
   providerAddresses.filter((item, index) => providerAddresses.indexOf(item) === index)
-  
-  // Loop on provider addresses and get its resources and deals
-  
-  for (const providerAddress of providerAddresses) {
+
+  for (const providerAddress of new Set(providerAddresses)) {
     try {
       const resources = await resourcesInstance.getAllResourcesPaginating({address: providerAddress})
+      const providerRating = await rating.getProviderRating({
+        marketplaceId: process.env.MARKETPLACE_ID!,
+        provider: providerAddress as `0x${string}`
+      })
 
       for (const resource of resources) {
         try {
@@ -64,6 +68,12 @@ const init = async (chain: any) => {
         } catch (e) {
           console.log("Error for resource", resource.id, e)
         }
+      }
+      
+      try {
+        await RatingController.rateProvider(providerAddress, chain.id, Number(providerRating.sum), Number(providerRating.count))
+      } catch (e) {
+        console.log("Error upserting provider rating", e)
       }
     } catch (e) {
       console.log("Error getting resources", e)

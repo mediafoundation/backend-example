@@ -1,5 +1,5 @@
 import {Deal} from "../models/deals/Deal"
-import {WhereOptions} from "sequelize"
+import {Op, WhereOptions} from "sequelize"
 import {DealFormatted, DealRawSchema, DealTransformed, MetadataSchema} from "../models/types/deal"
 import {DealMetadata} from "../models/deals/DealsMetadata"
 import {NodeLocation} from "../models/NodeLocation"
@@ -83,12 +83,12 @@ export class DealsController {
     const offer = await OffersController.getOfferByIdAndChain(deal.offerId!, chainId)
 
     if(!offer) {
-      throw new Error(`Offer does not exists for deal ${deal.dealId} on chain ${chainId}`)
+      console.log(`Offer does not exists for deal ${deal.dealId} on chain ${chainId}... Setting to null`)
     }
 
     delete deal.offerId
     
-    const [instance, created] = await Deal.upsert({...deal, chainId: chainId, id: dealFromDb?.id, offerId: offer.offer.id})
+    const [instance, created] = await Deal.upsert({...deal, chainId: chainId, id: dealFromDb?.id, offerId: offer?.offer.id ?? null})
 
     // Create metadata for the deal
     const metadata = await instance.createMetadata({dealId: instance.dataValues.id, ...deal.metadata})
@@ -138,7 +138,7 @@ export class DealsController {
    * @returns Promise<Array<any>>
    */
   static async getDeals(
-    chainId: number | undefined = undefined,
+    chainId: number | number[] | undefined = undefined,
     dealFilter: WhereOptions<any> = {},
     metadataFilter: WhereOptions<any> = {},
     bandwidthFilter: WhereOptions<any> = {},
@@ -150,15 +150,19 @@ export class DealsController {
     // Calculate the offset
     const offset = page && pageSize ? (page - 1) * pageSize : undefined
 
+    const chainIdFilter = Array.isArray(chainId) ? {
+      chainId: { [Op.in]: chainId }
+    } : {
+      chainId: chainId ? chainId : null
+    }
+
     // Find all deals with the given filters
     const deals = await Deal.findAll({
       include: [
         {
           model: Chain,
           required: !!chainId,
-          where: {
-            chainId: chainId ? chainId : null
-          },
+          where: chainIdFilter,
           attributes: [],
           as: "Chain"
         },

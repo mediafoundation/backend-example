@@ -23,6 +23,7 @@ import {ChainProvider} from "./database/models/manyToMany/ChainProvider"
 import {Op} from "sequelize"
 import {RatingController} from "./database/controllers/ratingController"
 import {Offer} from "./database/models/offers/Offer"
+import {validateParams, ValidatorType} from "./middlewares/validation"
 
 // Initialize express app
 export const app = express()
@@ -66,34 +67,19 @@ function manageIncomingFilterRequest(req: any) {
  * @route GET /resources
  * @description Retrieves all resources.
  */
-app.get("/resources", async (req, res) => {
+app.get("/resources", validateParams({
+  chainId: [ValidatorType.NUMBER_ARRAY_OPTIONAL, ValidatorType.NUMBER_OPTIONAL]
+}), async (req, res) => {
   const chainId = req.query.chainId
 
-  if(chainId) {
-    try{
-      const resources = await ResourcesController.getResources(Number(chainId))
-      res.json(resources)
-    } catch (e) {
-      console.log("Error:", e)
-      res.status(500).json({error: "Something went wrong"})
-    }
-  }
-
-  // Loop for all validChains
-  else {
-    const resources = []
-    const validChainKeys = Object.keys(validChains)
-    try {
-      for (const chain of validChainKeys) {
-        const resourcesFromDb = await ResourcesController.getResources(Number(chain))
-        resources.push(...resourcesFromDb)
-      }
-
-      res.json(resources)
-    } catch (e) {
-      console.log("Error:", e)
-      res.status(500).json({error: "Something went wrong"})
-    }
+  try{
+    const isNumber = !isNaN(Number(chainId))
+    const formattedChainId = chainId ? (isNumber ? Number(chainId) : JSON.parse(chainId as string)) : undefined
+    const resources = await ResourcesController.getResources(formattedChainId)
+    res.json(resources)
+  } catch (e) {
+    console.log("Error:", e)
+    res.status(500).json({error: "Something went wrong"})
   }
 })
 
@@ -101,14 +87,19 @@ app.get("/resources", async (req, res) => {
  * @route GET /deals
  * @description Retrieves deals based on provided filters, page number and page size.
  */
-app.get("/deals", async (req, res) => {
-  const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
+app.get("/deals", validateParams({
+  chainId: [ValidatorType.NUMBER_OPTIONAL, ValidatorType.NUMBER_ARRAY_OPTIONAL]
+}), async (req, res) => {
+  const chainId = req.query.chainId
 
   const managedFilters = manageIncomingFilterRequest(req)
 
   try{
     // Get deals from DealsController
-    const deals = await DealsController.getDeals(chainId, managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
+    const isNumber = !isNaN(Number(chainId))
+    const formattedChainId = chainId ? (isNumber ? Number(chainId) : JSON.parse(chainId as string)) : undefined
+    console.log("ChainId", formattedChainId)
+    const deals = await DealsController.getDeals(formattedChainId, managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, managedFilters.page, managedFilters.pageSize)
 
     // Send response
     res.json(deals)
@@ -122,7 +113,10 @@ app.get("/deals", async (req, res) => {
  * @route GET /deals/:id/chainId/:chainId
  * @description Retrieves a deal by its id.
  */
-app.get("/deals/:id/chainId/:chainId", async (req, res) => {
+app.get("/deals/:id/chainId/:chainId", validateParams({
+  id: ValidatorType.NUMBER,
+  chainId: ValidatorType.NUMBER
+}), async (req, res) => {
   const deal = await DealsController.getDealByIdAndChain(Number(req.params.id), Number(req.params.chainId))
   res.json(deal)
 })
@@ -131,16 +125,21 @@ app.get("/deals/:id/chainId/:chainId", async (req, res) => {
  * @route GET /offers
  * @description Retrieves offers based on provided filters, page number and page size.
  */
-app.get("/offers", async (req, res) => {
-  const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
+app.get("/offers", validateParams({
+  chainId: [ValidatorType.NUMBER_OPTIONAL, ValidatorType.NUMBER_ARRAY_OPTIONAL],
+  minRating: ValidatorType.NUMBER_OPTIONAL
+}), async (req, res) => {
+  const chainId = req.query.chainId
   const minRating = req.query.minRating ? Number(req.query.minRating) : undefined
   const managedFilters = manageIncomingFilterRequest(req)
   try {
-    const offers = await OffersController.getOffers(chainId, managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, minRating, managedFilters.page, managedFilters.pageSize)
+    const isNumber = !isNaN(Number(chainId))
+    const formattedChainId = chainId ? (isNumber ? Number(chainId) : JSON.parse(chainId as string)) : undefined
+    const offers = await OffersController.getOffers(formattedChainId, managedFilters.genericFilter, managedFilters.metadataFilter, managedFilters.bandwidthFilter, managedFilters.nodeLocationFilter, minRating, managedFilters.page, managedFilters.pageSize)
     res.json(offers)
   } catch (e) {
     console.log(e)
-    res.status(500).json({error: "Some went wrong"})
+    res.status(500).json({error: "Something went wrong"})
   }
 })
 
@@ -148,37 +147,46 @@ app.get("/offers", async (req, res) => {
  * @route GET /providers
  * @description Retrieves providers based on provided filters, page number and page size.
  */
-app.get("/providers", async(req, res) => {
+app.get("/providers", validateParams({
+  chainId: ValidatorType.NUMBER_ARRAY_OPTIONAL,
+  provider: ValidatorType.STRING_OPTIONAL,
+  rating: ValidatorType.NUMBER_OPTIONAL,
+  page: ValidatorType.NUMBER_OPTIONAL,
+  pageSize: ValidatorType.NUMBER_OPTIONAL
+}), async(req, res) => {
   try {
 
     const result = []
 
     const page = req.query.page ? Number(req.query.page) : undefined
     const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
-    const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
+    const chainId = req.query.chainId
     const account = req.query.provider
     const rating = req.query.rating ? Number(req.query.rating) : undefined
 
-    const providers = await ProvidersController.getProviders({chainId : chainId, page : page, pageSize : pageSize, account : account as string | undefined, minRating : rating})
+    const isNumber = !isNaN(Number(chainId))
+    const formattedChainId = chainId ? (isNumber ? Number(chainId) : JSON.parse(chainId as string)) : undefined
+    const providers = await ProvidersController.getProviders({chainId : formattedChainId, page : page, pageSize : pageSize, account : account as string | undefined, minRating : rating})
 
     for (const provider of providers) {
-      const dealsCount = await ProvidersController.countDeals(provider.account, chainId)
-      const offersCount = await ProvidersController.countOffers(provider.account, chainId)
-      const clientCount = await ProvidersController.countClients(provider.account, chainId)
+      const dealsCount = await ProvidersController.countDeals(provider.account, formattedChainId)
+      const offersCount = await ProvidersController.countOffers(provider.account, formattedChainId)
+      const clientCount = await ProvidersController.countClients(provider.account, formattedChainId)
       let providerRating = {}
       let providerMetadata: { [index: number]: any } | ProvidersMetadata | null = {}
       let registryTime: { [index: number]: any } | number = {}
 
+
       if(chainId) {
-        providerMetadata = await ProvidersController.getMetadata(provider.account, chainId)
-        registryTime = await ProvidersController.getProviderStartTime(provider.account, chainId)
-        providerRating = await RatingController.getAverageRating(provider.account, chainId)
+        providerMetadata = await ProvidersController.getMetadata(provider.account, formattedChainId)
+        registryTime = await ProvidersController.getProviderStartTime(provider.account, formattedChainId)
+        providerRating = await RatingController.getAverageRating(provider.account, formattedChainId)
       }
 
       else {
         const chains = provider.Chains
         for (const chain of chains!) {
-          providerMetadata[chain] = await ProvidersController.getMetadata(provider.account, [Number(chain)])
+          providerMetadata![chain] = await ProvidersController.getMetadata(provider.account, [Number(chain)])
           registryTime[chain] = (await ProvidersController.getProviderStartTime(provider.account, [Number(chain)]))[chain]
           providerRating = await RatingController.getAverageRating(provider.account, chains!)
         }
@@ -209,7 +217,12 @@ app.get("/providers", async(req, res) => {
  * @route GET /providers/countNewDeals
  * @description Retrieves the count of new deals for a provider.
  */
-app.get("/providers/countNewDeals", async (req, res) => {
+app.get("/providers/countNewDeals", validateParams({
+  provider: ValidatorType.STRING,
+  chainId: ValidatorType.NUMBER_ARRAY_OPTIONAL,
+  from: ValidatorType.NUMBER_OPTIONAL,
+  to: ValidatorType.NUMBER_OPTIONAL
+}), async (req, res) => {
   const provider = req.query.provider
   const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
   const fromDate = req.query.from ? Number(req.query.from) : undefined
@@ -232,40 +245,42 @@ app.get("/providers/countNewDeals", async (req, res) => {
  * @route GET /providers/totalRevenue
  * @description Retrieves the total revenue for a provider.
  */
-app.get("/providers/totalRevenue", async (req, res) => {
+app.get("/providers/totalRevenue", validateParams({
+  provider: ValidatorType.STRING,
+  chainId: [ValidatorType.NUMBER_ARRAY_OPTIONAL, ValidatorType.NUMBER_OPTIONAL],
+  from: ValidatorType.NUMBER_OPTIONAL,
+  to: ValidatorType.NUMBER_OPTIONAL
+}), async (req, res) => {
   try {
     const provider = req.query.provider
-    const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
+    const chainId = req.query.chainId
     const from: number | undefined = req.query.from ? Number(req.query.from) : undefined
     const to: number | undefined = req.query.to ? Number(req.query.to) : undefined
 
-    if(!provider || !chainId || !Array.isArray(JSON.parse(req.query.chainId as string))) {
-      res.status(500).json({error: "No provider or valid chainId provided"})
-      return
-    }
-    else {
-      const response: {[index: number]: any} = {}
-      for (const chain of chainId) {
-        const queryResult = await EventsController.calculateProviderRevenue(provider.toString(), Number(chain), from, to)
-        const dailyRevenue = queryResult.dailyRevenue
+    const isNumber = !isNaN(Number(chainId))
+    const formattedChainId: number[] = chainId ? (isNumber ? [Number(chainId)] : JSON.parse(chainId as string)) : Object.keys(validChains).map(chain => Number(chain))
 
-        const formattedData: { [key: string]: string } = {}
+    const response: {[index: number]: any} = {}
+    for (const chain of formattedChainId) {
+      const queryResult = await EventsController.calculateProviderRevenue(provider!.toString(), Number(chain), from, to)
+      const dailyRevenue = queryResult.dailyRevenue
 
-        for (const key in dailyRevenue) {
-          const timestamp = Number(key)
-          const bigNumber = dailyRevenue[key]
-          formattedData[timestamp] = bigNumber.toString()
-        }
+      const formattedData: { [key: string]: string } = {}
 
-        response[Number(chain)] = {
-          dailyRevenue: formattedData,
-          totalRevenue: queryResult.totalRevenue.toString(),
-          collectedRevenue: queryResult.collectedRevenue.toString(),
-          uncollectedRevenue: queryResult.uncollectedRevenue.toString()
-        }
+      for (const key in dailyRevenue) {
+        const timestamp = Number(key)
+        const bigNumber = dailyRevenue[key]
+        formattedData[timestamp] = bigNumber.toString()
       }
-      res.json(response)
+
+      response[Number(chain)] = {
+        dailyRevenue: formattedData,
+        totalRevenue: queryResult.totalRevenue.toString(),
+        collectedRevenue: queryResult.collectedRevenue.toString(),
+        uncollectedRevenue: queryResult.uncollectedRevenue.toString()
+      }
     }
+    res.json(response)
   } catch (e) {
     console.log(e)
     res.status(500).json({error: e})
@@ -276,19 +291,26 @@ app.get("/providers/totalRevenue", async (req, res) => {
  * @route GET /providers/countNewClients
  * @description Retrieves the count of new clients for a provider.
  */
-app.get("/providers/countNewClients", async (req, res) => {
+app.get("/providers/countNewClients", validateParams({
+  provider: ValidatorType.STRING,
+  chainId: [ValidatorType.NUMBER_ARRAY_OPTIONAL, ValidatorType.NUMBER_OPTIONAL],
+  from: ValidatorType.NUMBER_OPTIONAL,
+  to: ValidatorType.NUMBER_OPTIONAL
+}), async (req, res) => {
   const provider = req.query.provider
-  const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
+  const chainId = req.query.chainId
   const fromTimestamp = req.query.from ? Number(req.query.from) : undefined
   const toTimestamp = req.query.to ? Number(req.query.to) : undefined
 
-  if(!provider || !chainId || !Array.isArray(JSON.parse(req.query.chainId as string))) {
+  /*if(!provider || !chainId || !Array.isArray(JSON.parse(req.query.chainId as string))) {
     res.status(500).json({error: "No provider or chainId provided"})
     return
-  }
+  }*/
 
+  const isNumber = !isNaN(Number(chainId))
+  const formattedChainId: number[] = chainId ? (isNumber ? [Number(chainId)] : JSON.parse(chainId as string)) : Object.keys(validChains).map(chain => Number(chain))
   try {
-    const result = await ProvidersController.getProviderNewClients(provider as string, chainId, fromTimestamp, toTimestamp)
+    const result = await ProvidersController.getProviderNewClients(provider!.toString(), formattedChainId, fromTimestamp, toTimestamp)
     res.json({
       "clients": result
     })
@@ -303,19 +325,27 @@ app.get("/providers/countNewClients", async (req, res) => {
  * @route GET /providers/countActiveClients
  * @description Retrieves the count of active clients for a provider.
  */
-app.get("/providers/countActiveClients", async (req, res) => {
+app.get("/providers/countActiveClients", validateParams({
+  provider: ValidatorType.STRING,
+  chainId: [ValidatorType.NUMBER_ARRAY_OPTIONAL, ValidatorType.NUMBER_OPTIONAL],
+  from: ValidatorType.NUMBER_OPTIONAL,
+  to: ValidatorType.NUMBER_OPTIONAL
+}), async (req, res) => {
   const provider = req.query.provider
   const chainId = req.query.chainId && Array.isArray(JSON.parse(req.query.chainId as string)) ? JSON.parse(req.query.chainId as string).map((value: number) => parseInt(value.toString())) : undefined
   const fromTimestamp = req.query.from ? Number(req.query.from) : undefined
   const toTimestamp = req.query.to ? Number(req.query.to) : undefined
 
-  if(!provider) {
+  /*if(!provider) {
     res.status(500).json({error: "No provider provided"})
     return
-  }
+  }*/
+
+  const isNumber = !isNaN(Number(chainId))
+  const formattedChainId: number[] = chainId ? (isNumber ? [Number(chainId)] : JSON.parse(chainId as string)) : Object.keys(validChains).map(chain => Number(chain))
 
   try {
-    const result = await ProvidersController.getProviderActiveClients(provider as string, chainId, fromTimestamp, toTimestamp)
+    const result = await ProvidersController.getProviderActiveClients(provider!.toString(), formattedChainId, fromTimestamp, toTimestamp)
     res.json(result)
   } catch (e) {
     console.log(e)
@@ -332,7 +362,10 @@ app.get("/providers/countActiveClients", async (req, res) => {
  * @param {object} res - The response object.
  * @returns {JSON} - The deal details associated with the given provider and client or an error message in case of failure.
  */
-app.get("/providerClient", async (req, res) => {
+app.get("/providerClient", validateParams({
+  provider: ValidatorType.STRING,
+  client: ValidatorType.STRING
+}), async (req, res) => {
   const {provider, client} = req.query
 
   const formattedProvider = provider ? provider.toString() : ""
@@ -389,7 +422,9 @@ app.get("/providerClient", async (req, res) => {
  * @param {object} res - The response object.
  * @returns {JSON} - The clients and their deals associated with the given provider or an error message in case of failure.
  */
-app.get("/allProvidersClients", async (req, res) => {
+app.get("/allProvidersClients", validateParams({
+  provider: ValidatorType.STRING
+}), async (req, res) => {
   const {provider} = req.query
 
   const formattedProvider = provider ? provider.toString() : ""
@@ -481,7 +516,10 @@ app.get("/allProvidersClients", async (req, res) => {
  * @route GET /upsertOffer
  * @description This endpoint is used to update or insert an offer in the database.
  */
-app.get("/upsertOffer", async (req, res) => {
+app.get("/upsertOffer", validateParams({
+  chainId: ValidatorType.NUMBER,
+  offerId: ValidatorType.NUMBER
+}), async (req, res) => {
   const {chainId, offerId} = req.query
 
   const chainIdFormatted = chainId ? chainId.toString() : ""
@@ -490,7 +528,7 @@ app.get("/upsertOffer", async (req, res) => {
   const chains = Object.keys(validChains)
 
   if(!chains.includes(chainIdFormatted)) {
-    res.status(500).json({error: "Invalid chain"})
+    res.status(401).json({error: "ChainId does not belong to any valid chain"})
     return
   }
 
@@ -526,7 +564,10 @@ app.get("/upsertOffer", async (req, res) => {
  * @route GET /upsertDeal
  * @description This endpoint is used to update or insert a deal in the database.
  */
-app.get("/upsertDeal", async (req, res) => {
+app.get("/upsertDeal", validateParams({
+  chainId: ValidatorType.NUMBER,
+  dealId: ValidatorType.NUMBER
+}), async (req, res) => {
   const {chainId, dealId} = req.query
 
   const chainIdFormatted = chainId ? chainId.toString() : ""
@@ -535,7 +576,7 @@ app.get("/upsertDeal", async (req, res) => {
   const chains = Object.keys(validChains)
 
   if(!chains.includes(chainIdFormatted)) {
-    res.status(500).json({error: "Invalid chain"})
+    res.status(401).json({error: "ChainId does not belong to any valid chain"})
     return
   }
 
@@ -564,7 +605,11 @@ app.get("/upsertDeal", async (req, res) => {
  * @route GET /upsertResource
  * @description This endpoint is used to update or insert a resource in the database.
  */
-app.get("/upsertResource", async (req, res) => {
+app.get("/upsertResource", validateParams({
+  address: ValidatorType.STRING,
+  resourceId: ValidatorType.NUMBER,
+  chainId: ValidatorType.NUMBER
+}), async (req, res) => {
   const {address, resourceId, chainId} = req.query
 
   const addressFormatted = address ? address.toString() : ""
@@ -574,7 +619,7 @@ app.get("/upsertResource", async (req, res) => {
   const chains = Object.keys(validChains)
 
   if(!chains.includes(chainIdFormatted)) {
-    res.status(500).json({error: "Invalid chain"})
+    res.status(401).json({error: "ChainId does not belong to any valid chain"})
     return
   }
 
@@ -603,7 +648,10 @@ app.get("/upsertResource", async (req, res) => {
  * @route GET /upsertProvider
  * @description This endpoint is used to update or insert a provider in the database.
  */
-app.get("/upsertProvider", async (req, res) => {
+app.get("/upsertProvider", validateParams({
+  provider: ValidatorType.STRING,
+  chainId: ValidatorType.NUMBER
+}), async (req, res) => {
   const {provider, chainId} = req.query
 
   const providerFormatted = provider ? provider.toString() : ""
@@ -612,7 +660,7 @@ app.get("/upsertProvider", async (req, res) => {
   const chains = Object.keys(validChains)
 
   if(!chains.includes(chainIdFormatted)) {
-    res.status(500).json({error: "Invalid chain"})
+    res.status(401).json({error: "ChainId does not belong to any valid chain"})
     return
   }
 
@@ -644,19 +692,24 @@ app.get("/upsertProvider", async (req, res) => {
  * @param {number | undefined} chainId - The chain ID from the query parameters, parsed to a number if provided.
  * @returns {JSON} - The events associated with the given account and chainId or an error message in case of failure.
  */
-app.get("/account/events", async (req, res) => {
+app.get("/account/events", validateParams({
+  account: ValidatorType.STRING,
+  chainId: ValidatorType.NUMBER,
+  page: ValidatorType.NUMBER_OPTIONAL,
+  pageSize: ValidatorType.NUMBER_OPTIONAL
+}), async (req, res) => {
   const account = req.query.account
   const chainId = req.query.chainId ? Number(req.query.chainId) : undefined
   const page = req.query.page ? Number(req.query.page) : undefined
   const pageSize = req.query.pageSize ? Number(req.query.pageSize) : undefined
     
-  if(!account || !chainId) {
+  /*if(!account || !chainId) {
     res.status(500).json({error: "No account provided or chainId provided"})
     return
-  }
+  }*/
     
   try {
-    const events = await EventsController.getAccountEvents(account.toString(), chainId, page, pageSize)
+    const events = await EventsController.getAccountEvents(account!.toString(), chainId!, page, pageSize)
     res.json(events)
   } catch (e) {
     console.log(e)
@@ -664,13 +717,16 @@ app.get("/account/events", async (req, res) => {
   }
 })
 
-app.post("/rateProvider", async (req, res) => {
+app.post("/rateProvider", validateParams({
+  provider: ValidatorType.STRING,
+  chainId: ValidatorType.NUMBER
+}), async (req, res) => {
   const {provider, chainId} = req.body
 
   const chainIdFormatted = chainId ? chainId.toString() : ""
   const chains = Object.keys(validChains)
   if(!chains.includes(chainIdFormatted)) {
-    res.status(401).json({error: "Invalid chain"})
+    res.status(401).json({error: "ChainId does not belong to any valid chain"})
     return
   }
 
@@ -696,7 +752,10 @@ app.post("/rateProvider", async (req, res) => {
   }
 })
 
-app.get("/provider/rating", async (req, res) => {
+app.get("/provider/rating", validateParams({
+  provider: ValidatorType.STRING,
+  chainIds: ValidatorType.NUMBER_ARRAY_OPTIONAL
+}), async (req, res) => {
   const {provider, chainIds} = req.query
   const chainId = chainIds && Array.isArray(JSON.parse(chainIds as string)) ? JSON.parse(chainIds as string).map((value: number) => parseInt(value.toString())) : undefined
 
@@ -713,4 +772,7 @@ app.get("/provider/rating", async (req, res) => {
 createRelationsBetweenTables()
   .then(() => {
     console.log("Tables created")
+    app.listen(5000, () => {
+      console.log("Server running on port 5000")
+    })
   })
