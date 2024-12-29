@@ -9,11 +9,18 @@ export enum ValidatorType {
   NUMBER_ARRAY_OPTIONAL = "number[]-optional",
   DATE = "date",
   DATE_OPTIONAL = "date-optional",
+  ADDRESS = "address",
+  ADDRESS_OPTIONAL = "address-optional",
 }
 
 type ValidatorSchema = {
   [key: string]: ValidatorType | ValidatorType[];
 };
+
+const isValidAddress = (value: string): boolean => {
+  const addressRegex = /^0x[a-fA-F0-9]{40}$/
+  return addressRegex.test(value)
+}
 
 const isValidDate = (value: string): boolean => {
   const dateRegex = /^(\d{4}[-/]\d{2}[-/]\d{2}|\d{2}[-/]\d{2}[-/]\d{4})$/
@@ -54,6 +61,8 @@ const validateType = (value: any, type: string): boolean => {
     return Array.isArray(value) && value.every((item) => !isNaN(Number(item)))
   case "date":
     return typeof value === "string" && isValidDate(value)
+  case "address":
+    return typeof value === "string" && isValidAddress(value)
   default:
     return false
   }

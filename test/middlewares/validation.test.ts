@@ -32,6 +32,20 @@ testApi.get("/test3", validateParams({
   res.status(200).send(`Numbers: ${numbers}, Optional Date: ${optionalDate}`)
 })
 
+testApi.get("/testAddress", validateParams({
+  address: ValidatorType.ADDRESS
+}), (req, res) => {
+  const { address } = req.query
+  res.status(200).send(`Address: ${address}`)
+})
+
+testApi.get("/testAddressOptional", validateParams({
+  address: ValidatorType.ADDRESS_OPTIONAL
+}), (req, res) => {
+  const { address } = req.query
+  res.status(200).send(`Address: ${address}`)
+})
+
 describe("Validation middleware", () => {
   describe("Test 1", () => {
     it("should return 400 if a required parameter is missing", async () => {
@@ -136,6 +150,38 @@ describe("Validation middleware", () => {
     it("should return 200 if all required parameters are present and optional date array parameter is valid", async () => {
       const response = await request(testApi).get("/test3").query({numbers: [1, 2]})
       expect(response.status).toBe(200)
+    })
+  })
+
+  describe("Validation middleware for address", () => {
+    it("should return 400 if address parameter is missing", async () => {
+      const response = await request(testApi).get("/testAddress")
+      expect(response.status).toBe(400)
+    })
+
+    it("should return 200 if address parameter is valid", async () => {
+      const response = await request(testApi).get("/testAddress").query({ address: "0x1234567890abcdef1234567890abcdef12345678" })
+      expect(response.status).toBe(200)
+    })
+
+    it("should return 400 if address parameter is invalid", async () => {
+      const response = await request(testApi).get("/testAddress").query({ address: "invalid-address" })
+      expect(response.status).toBe(400)
+    })
+
+    it("should return 200 if address parameter is valid and optional", async () => {
+      const response = await request(testApi).get("/testAddressOptional").query({ address: "0x1234567890abcdef1234567890abcdef12345678" })
+      expect(response.status).toBe(200)
+    })
+
+    it("should return 200 if address parameter is missing and optional", async () => {
+      const response = await request(testApi).get("/testAddressOptional")
+      expect(response.status).toBe(200)
+    })
+
+    it("should return 400 if address parameter is invalid and optional", async () => {
+      const response = await request(testApi).get("/testAddressOptional").query({ address: "invalid-address" })
+      expect(response.status).toBe(400)
     })
   })
 })
